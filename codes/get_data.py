@@ -5,7 +5,9 @@ pdb_todf.py."""
 
 
 import sys
+import numpy as np
 import pandas as pd
+import multiprocessing as multip
 import pdb_to_df as pdbf
 import read_param as param
 import logger
@@ -43,12 +45,35 @@ class ProcessData:
         """find all the chains at the intrface"""
         df_apt: pd.DataFrame = self.residues_atoms['APT']
         unprotonated_aptes: list[int] = []
-        for ind in interface_aptes:
+        # Split the interface_aptes list into chunks
+        num_processes: int = int(multip.cpu_count()/2)
+        chunk_size: int = len(interface_aptes) // num_processes
+        chunks: list[np.ndarray] = [interface_aptes[i:i+chunk_size] for i in
+                                    range(0, len(interface_aptes), chunk_size)]
+        # Create a Pool of processes
+        pool = multip.Pool(processes=num_processes)
+        # Process the chunks in parallel
+        results = pool.starmap(self.process_chunk,
+                               [(chunk, df_apt) for chunk in chunks])
+        # Combine the results
+        for result in results:
+            unprotonated_aptes.extend(result)
+        # Close the pool to release resources
+        pool.close()
+        pool.join()
+        return unprotonated_aptes
+
+    def process_chunk(self,
+                      chunk: np.ndarray,  # Chunk of a APTES indices
+                      df_apt: pd.DataFrame  # For the APTES at the interface
+                      ):
+        unprotonated_aptes_chunk: list[int] = []  # Index of unprotonated APTES
+        for ind in chunk:
             df_i = df_apt[df_apt['mol'] == ind]
             # Check if 'NH3' is present in 'atom_name'
             if not df_i['atom_name'].str.contains('NH3').any():
-                unprotonated_aptes.append(ind)
-        return unprotonated_aptes
+                unprotonated_aptes_chunk.append(ind)
+        return unprotonated_aptes_chunk
 
     def __get_aptes_indices(self,
                             zrange: tuple[float, float]  # Bound of interface
