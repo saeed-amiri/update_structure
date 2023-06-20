@@ -7,7 +7,8 @@ pdb_todf.py."""
 import sys
 import pandas as pd
 import pdb_to_df as pdbf
-
+import read_param as param
+import logger
 
 class ProcessData:
     """process dataframe of the structure and plit them"""
@@ -15,6 +16,9 @@ class ProcessData:
                  fname: str  # Name of the pdb file
                  ) -> None:
         self.atoms: pd.DataFrame = pdbf.Pdb(fname).atoms
+        self.param: dict[str, float]  # All the parameters from input
+        self.param = param.ReadParam(
+            log=logger.setup_logger('read_param.log')).param
         self.residues_atoms: dict[str, pd.DataFrame]  # Atoms info for each res
         self.residues_atoms = self.process_data()
 
