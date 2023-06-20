@@ -33,11 +33,25 @@ class ProcessData:
         interface"""
         zrange: tuple[float, float]  # Lower and upper bound of interface
         zrange = self.__get_interface_range()
+        interface_aptes: list[int]  # Indices of all the APTES at interface
+        self.__get_aptes_indices(zrange)
+
+    def __get_aptes_indices(self,
+                            zrange: tuple[float, float]  # Bound of interface
+                            ) -> list[int]:
+        """get the index of all the aptes at the interface range"""
+        # Filter the DataFrame based on the specified conditions
+        df_apt = self.residues_atoms['APT']
+        filtered_df = df_apt[(df_apt['atom_name'] == 'N') &
+                             (df_apt['z'].between(zrange[0], zrange[1]))]
+
+        # Get the 'mol' values for the filtered atoms
+        return filtered_df['mol'].values
 
     def __get_interface_range(self) -> tuple[float, float]:
         """find all the aptes at interface"""
-        return (self.param['INTERFACE']-self.param['INTERFACE_WIDTH']/2,
-                self.param['INTERFACE']+self.param['INTERFACE_WIDTH']/2)
+        return (self.param['INTERFACE']-self.param['INTERFACE_WIDTH']/2+100,
+                self.param['INTERFACE']+self.param['INTERFACE_WIDTH']/2+100)
 
     def __get_atoms(self) -> dict[str, pd.DataFrame]:
         """get all the atoms for each residue"""
