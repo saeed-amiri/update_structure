@@ -18,10 +18,10 @@ class ProcessData:
     def __init__(self,
                  fname: str  # Name of the pdb file
                  ) -> None:
-        self.atoms: pd.DataFrame = pdbf.Pdb(fname).atoms
         self.param: dict[str, float]  # All the parameters from input
         self.param = param.ReadParam(
             log=logger.setup_logger('read_param.log')).param
+        self.atoms: pd.DataFrame = pdbf.Pdb(fname).atoms
         self.residues_atoms: dict[str, pd.DataFrame]  # Atoms info for each res
         self.residues_atoms = self.__get_atoms()
         # All the unprtonated aptes to be protonated:
