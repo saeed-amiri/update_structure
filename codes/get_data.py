@@ -5,9 +5,9 @@ pdb_todf.py."""
 
 
 import sys
+import multiprocessing as multip
 import numpy as np
 import pandas as pd
-import multiprocessing as multip
 import pdb_to_df as pdbf
 import read_param as param
 import logger
@@ -37,7 +37,7 @@ class ProcessData:
         zrange = self.__get_interface_range()
         interface_aptes: list[int]  # Indices of all the APTES at interface
         interface_aptes = self.__get_aptes_indices(zrange)
-        unprot_aptes: list[int] = self.__get_unprto_chain(interface_aptes)
+        unprot_aptes_ind: list[int] = self.__get_unprto_chain(interface_aptes)
 
     def __get_unprto_chain(self,
                            interface_aptes: list[int]  # Indices of APTES
@@ -48,25 +48,27 @@ class ProcessData:
         # Split the interface_aptes list into chunks
         num_processes: int = int(multip.cpu_count()/2)
         chunk_size: int = len(interface_aptes) // num_processes
-        chunks: list[np.ndarray] = [interface_aptes[i:i+chunk_size] for i in
-                                    range(0, len(interface_aptes), chunk_size)]
+        chunks = [interface_aptes[i:i+chunk_size] for i in
+                  range(0, len(interface_aptes), chunk_size)]
         # Create a Pool of processes
-        pool = multip.Pool(processes=num_processes)
-        # Process the chunks in parallel
-        results = pool.starmap(self.process_chunk,
-                               [(chunk, df_apt) for chunk in chunks])
+        with multip.Pool(processes=num_processes) as pool:
+            # Process the chunks in parallel
+            results = pool.starmap(self.process_chunk,
+                                   [(chunk, df_apt) for chunk in chunks])
         # Combine the results
         for result in results:
             unprotonated_aptes.extend(result)
         # Close the pool to release resources
         pool.close()
         pool.join()
+        del df_apt
         return unprotonated_aptes
 
-    def process_chunk(self,
-                      chunk: np.ndarray,  # Chunk of a APTES indices
+    @staticmethod
+    def process_chunk(chunk: np.ndarray,  # Chunk of a APTES indices
                       df_apt: pd.DataFrame  # For the APTES at the interface
-                      ):
+                      ) -> list[int]:
+        """get index of unprotonated aptes"""
         unprotonated_aptes_chunk: list[int] = []  # Index of unprotonated APTES
         for ind in chunk:
             df_i = df_apt[df_apt['mol'] == ind]
@@ -85,6 +87,7 @@ class ProcessData:
                              (df_apt['z'].between(zrange[0], zrange[1]))]
 
         # Get the 'mol' values for the filtered atoms
+        del df_apt
         return filtered_df['mol'].values
 
     def __get_interface_range(self) -> tuple[float, float]:
