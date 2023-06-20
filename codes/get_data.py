@@ -24,13 +24,11 @@ class ProcessData:
             log=logger.setup_logger('read_param.log')).param
         self.residues_atoms: dict[str, pd.DataFrame]  # Atoms info for each res
         self.residues_atoms = self.__get_atoms()
-        self.process_data()
+        # All the unprtonated aptes to be protonated:
+        self.unproton_aptes: pd.DataFrame = self.process_data()
+        print(self.unproton_aptes)
 
-    def process_data(self):
-        """process here"""
-        self.__check_aptes()
-
-    def __check_aptes(self) -> None:
+    def process_data(self) -> np.ndarray:
         """check and finds the unprotonated aptes group which has N at
         interface"""
         zrange: tuple[float, float]  # Lower and upper bound of interface
@@ -38,6 +36,14 @@ class ProcessData:
         interface_aptes: list[int]  # Indices of all the APTES at interface
         interface_aptes = self.__get_aptes_indices(zrange)
         unprot_aptes_ind: list[int] = self.__get_unprto_chain(interface_aptes)
+        return self.get_aptes_unproto(unprot_aptes_ind)
+
+    def get_aptes_unproto(self,
+                          unprot_aptes_ind: list[int]  # Index of the APTES
+                          ) -> pd.DataFrame:
+        """get all atoms in the chains of the unprotonated APTES"""
+        df_apt: pd.DataFrame = self.residues_atoms['APT']
+        return df_apt[df_apt['mol'].isin(unprot_aptes_ind)]
 
     def __get_unprto_chain(self,
                            interface_aptes: list[int]  # Indices of APTES
