@@ -34,7 +34,21 @@ class ProcessData:
         zrange: tuple[float, float]  # Lower and upper bound of interface
         zrange = self.__get_interface_range()
         interface_aptes: list[int]  # Indices of all the APTES at interface
-        self.__get_aptes_indices(zrange)
+        interface_aptes = self.__get_aptes_indices(zrange)
+        unprot_aptes: list[int] = self.__get_unprto_chain(interface_aptes)
+
+    def __get_unprto_chain(self,
+                           interface_aptes: list[int]  # Indices of APTES
+                           ) -> list[int]:
+        """find all the chains at the intrface"""
+        df_apt: pd.DataFrame = self.residues_atoms['APT']
+        unprotonated_aptes: list[int] = []
+        for ind in interface_aptes:
+            df_i = df_apt[df_apt['mol'] == ind]
+            # Check if 'NH3' is present in 'atom_name'
+            if not df_i['atom_name'].str.contains('NH3').any():
+                unprotonated_aptes.append(ind)
+        return unprotonated_aptes
 
     def __get_aptes_indices(self,
                             zrange: tuple[float, float]  # Bound of interface
