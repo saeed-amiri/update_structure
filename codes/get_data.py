@@ -25,18 +25,20 @@ class ProcessData:
         self.residues_atoms: dict[str, pd.DataFrame]  # Atoms info for each res
         self.residues_atoms = self.__get_atoms()
         # All the unprtonated aptes to be protonated:
-        self.unproton_aptes: pd.DataFrame = self.process_data()
-        print(self.unproton_aptes)
+        self.unproton_aptes: pd.DataFrame  # Atoms info
+        self.unprot_aptes_ind: list[int]  # Index of the APTES
+        self.unproton_aptes, self.unprot_aptes_ind = self.process_data()
 
-    def process_data(self) -> np.ndarray:
+    def process_data(self) -> tuple[np.ndarray, list[int]]:
         """check and finds the unprotonated aptes group which has N at
         interface"""
         zrange: tuple[float, float]  # Lower and upper bound of interface
         zrange = self.__get_interface_range()
         interface_aptes: list[int]  # Indices of all the APTES at interface
         interface_aptes = self.__get_aptes_indices(zrange)
-        unprot_aptes_ind: list[int] = self.__get_unprto_chain(interface_aptes)
-        return self.get_aptes_unproto(unprot_aptes_ind)
+        unprot_aptes_ind: list[int]  # Index of the APTES to be protonated
+        unprot_aptes_ind = self.__get_unprto_chain(interface_aptes)
+        return self.get_aptes_unproto(unprot_aptes_ind), unprot_aptes_ind
 
     def get_aptes_unproto(self,
                           unprot_aptes_ind: list[int]  # Index of the APTES
