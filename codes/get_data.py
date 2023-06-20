@@ -10,6 +10,7 @@ import pdb_to_df as pdbf
 import read_param as param
 import logger
 
+
 class ProcessData:
     """process dataframe of the structure and plit them"""
     def __init__(self,
@@ -20,10 +21,10 @@ class ProcessData:
         self.param = param.ReadParam(
             log=logger.setup_logger('read_param.log')).param
         self.residues_atoms: dict[str, pd.DataFrame]  # Atoms info for each res
-        self.residues_atoms = self.process_data()
+        self.residues_atoms = self.__get_atoms()
 
-    def process_data(self) -> dict[str, pd.DataFrame]:
-        """do it"""
+    def __get_atoms(self) -> dict[str, pd.DataFrame]:
+        """get all the atoms for each residue"""
         residues: list[str] = self.__get_residues_names()
         residues_atoms: dict[str, pd.DataFrame] = \
             self.__get_residues_atoms(residues)
