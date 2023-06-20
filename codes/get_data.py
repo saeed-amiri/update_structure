@@ -54,7 +54,7 @@ class ProcessData:
         df_apt: pd.DataFrame = self.residues_atoms['APT']
         unprotonated_aptes: list[int] = []
         # Split the interface_aptes list into chunks
-        num_processes: int = int(multip.cpu_count()/2)
+        num_processes: int = multip.cpu_count() // 2
         chunk_size: int = len(interface_aptes) // num_processes
         chunks = [interface_aptes[i:i+chunk_size] for i in
                   range(0, len(interface_aptes), chunk_size)]
@@ -67,8 +67,6 @@ class ProcessData:
         for result in results:
             unprotonated_aptes.extend(result)
         # Close the pool to release resources
-        pool.close()
-        pool.join()
         del df_apt
         return unprotonated_aptes
 
