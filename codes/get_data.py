@@ -66,7 +66,6 @@ class ProcessData:
         # Combine the results
         for result in results:
             unprotonated_aptes.extend(result)
-        # Close the pool to release resources
         del df_apt
         return unprotonated_aptes
 
