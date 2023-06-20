@@ -6,3 +6,11 @@ residues. Initially, the script locates a plausible area for the
 hydrogen atom and subsequently checks for the presence of other atoms.
 Finally, the script places the hydrogen atom in a suitable position.
 """
+
+
+import sys
+import get_data
+
+
+if __name__ == '__main__':
+    get_data.ProcessData(sys.argv[1])
