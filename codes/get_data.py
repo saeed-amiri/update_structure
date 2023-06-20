@@ -22,6 +22,22 @@ class ProcessData:
             log=logger.setup_logger('read_param.log')).param
         self.residues_atoms: dict[str, pd.DataFrame]  # Atoms info for each res
         self.residues_atoms = self.__get_atoms()
+        self.process_data()
+
+    def process_data(self):
+        """process here"""
+        self.__check_aptes()
+
+    def __check_aptes(self) -> None:
+        """check and finds the unprotonated aptes group which has N at
+        interface"""
+        zrange: tuple[float, float]  # Lower and upper bound of interface
+        zrange = self.__get_interface_range()
+
+    def __get_interface_range(self) -> tuple[float, float]:
+        """find all the aptes at interface"""
+        return (self.param['INTERFACE']-self.param['INTERFACE_WIDTH']/2,
+                self.param['INTERFACE']+self.param['INTERFACE_WIDTH']/2)
 
     def __get_atoms(self) -> dict[str, pd.DataFrame]:
         """get all the atoms for each residue"""
