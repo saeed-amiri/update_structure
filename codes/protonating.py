@@ -37,10 +37,29 @@ class FindHPosition(get_data.ProcessData):
                     chunk: list[int]  # Chunk of the indices for loop over
                     ) -> None:
         """doing the calculations"""
+        df_i: pd.DataFrame  # Local df for each residue index
+        df_nh: pd.DataFrame  # Local df for each residue index
+        v_nh1: np.ndarray  # Vector from N to H1
+        v_nh2: np.ndarray  # Vector from N to H2
+        v_mean: np.float64  # Mean length of the NH bonds
+        nh_angle: np.float64  # Angle between the two NH bonds, in radians
         for ind in chunk:
             df_i = self.unproton_aptes[self.unproton_aptes['mol'] == ind]
             df_nh = df_i[df_i['atom_name'].isin(['N', 'HN1', 'HN2'])]
-            self.__get_vectors(df_nh)
+            v_nh1, v_nh2 = self.__get_vectors(df_nh)
+            v_mean, nh_angle = self.__get_hbond_len_angle(v_nh1, v_nh2)
+
+    @staticmethod
+    def __get_hbond_len_angle(v_nh1: np.ndarray,  # Vector from N to H1
+                              v_nh2: np.ndarray  # Vector from N to H2
+                              ) -> tuple[np.float64, np.float64]:
+        """calculate the N-H bonds length and return their average
+        also, get the angle between them"""
+        v1_len: np.float64 = np.linalg.norm(v_nh1)
+        v2_len: np.float64 = np.linalg.norm(v_nh2)
+        dot_product: np.float64 = np.dot(v_nh1, v_nh2)
+        angle_rad: np.float64 = np.arccos(dot_product / (v1_len * v2_len))
+        return np.mean([v1_len, v2_len]), angle_rad
 
     def __get_vectors(self,
                       df_nh: pd.DataFrame  # Contains only N and NHs
