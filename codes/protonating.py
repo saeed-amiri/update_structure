@@ -51,6 +51,69 @@ class FindHPosition(get_data.ProcessData):
             v_nh1, v_nh2 = self.__get_vectors(df_nh)
             v_mean, nh_angle = self.__get_hbond_len_angle(v_nh1, v_nh2)
             atoms_around_n = self.__get_atoms_around_n(df_nh, v_mean)
+            self.__get_possible_posotion(v_nh1, v_nh2, v_mean)
+
+    def __get_possible_posotion(self,
+                                v_nh1: np.ndarray,  # Vector from N to H1
+                                v_nh2: np.ndarray,  # Vector from N to H2
+                                v_mean: np.float64,  # Length of N-H bond
+                                num_samples: int = 100  # How many points
+                                ) -> None:
+        """find all the points which have the angle and distance
+        conditions.
+        """
+        # Normalize the vectors
+        v1_norm: np.ndarray = v_nh1 / np.linalg.norm(v_nh1)
+        v2_norm: np.ndarray = v_nh2 / np.linalg.norm(v_nh2)
+
+        # Compute the axis of rotation
+        axis: np.ndarray = np.cross(v1_norm, v2_norm)
+        # Compute the angle increment
+        increment: float = 2 * np.pi / num_samples
+
+        # Initialize the list of vectors
+        vectors: list[np.ndarray] = []
+
+        # Generate the vectors
+        for i in range(num_samples):
+            angle = i * increment
+            rotated_vector = self.rotate_vector(v1_norm, axis, angle)
+            normalized_vector = rotated_vector / np.linalg.norm(rotated_vector)
+            vector_with_length_d = normalized_vector * v_mean
+            vectors.append(vector_with_length_d)
+        return vectors
+
+    @staticmethod
+    def rotate_vector(vector: np.ndarray,  # Normelized vector of one N-H
+                      axis: np.ndarray,  # Direction of the axis to rotate
+                      angle: float  # Angle for rotation
+                      ) -> list[np.ndarray]:
+        """return a list of all possible rotation"""
+        # Normalize the axis vector
+        axis = axis / np.linalg.norm(axis)
+
+        # Compute the rotation matrix
+        cos_theta: np.float64 = np.cos(angle)
+        sin_theta: np.float64 = np.sin(angle)
+        rot_matrix = \
+            np.array([
+                      [cos_theta + axis[0]**2*(1 - cos_theta),
+                       axis[0]*axis[1]*(1 - cos_theta) - axis[2]*sin_theta,
+                       axis[0]*axis[2]*(1 - cos_theta) + axis[1]*sin_theta],
+
+                      [axis[1]*axis[0]*(1 - cos_theta) + axis[2]*sin_theta,
+                       cos_theta + axis[1]**2*(1 - cos_theta),
+                       axis[1]*axis[2]*(1 - cos_theta) - axis[0]*sin_theta],
+
+                      [axis[2]*axis[0]*(1 - cos_theta) - axis[1]*sin_theta,
+                       axis[2]*axis[1]*(1 - cos_theta) + axis[0]*sin_theta,
+                       cos_theta + axis[2]**2*(1 - cos_theta)]
+                     ])
+
+        # Rotate the vector
+        rotated_vector = np.dot(rot_matrix, vector)
+
+        return rotated_vector
 
     def __get_atoms_around_n(self,
                              df_nh: pd.DataFrame,  # N and H dataframe
