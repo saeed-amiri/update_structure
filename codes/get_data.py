@@ -28,6 +28,7 @@ class ProcessData:
         self.unproton_aptes: pd.DataFrame  # Atoms info
         self.unprot_aptes_ind: list[int]  # Index of the APTES
         self.unproton_aptes, self.unprot_aptes_ind = self.process_data()
+        self.np_diameter: np.float64 = self.__get_np_size()
 
     def process_data(self) -> tuple[np.ndarray, list[int]]:
         """check and finds the unprotonated aptes group which has N at
@@ -105,7 +106,7 @@ class ProcessData:
         residues: list[str] = self.__get_residues_names()
         residues_atoms: dict[str, pd.DataFrame] = \
             self.__get_residues_atoms(residues)
-        self.__get_np_box(residues_atoms)
+        residues_atoms['box'] = self.__get_np_box(residues_atoms)
         return residues_atoms
 
     def __get_residues_atoms(self,
@@ -120,15 +121,14 @@ class ProcessData:
 
     def __get_np_box(self,
                      residues_atoms: dict[str, pd.DataFrame]
-                     ) -> None:
+                     ) -> pd.DataFrame:
         """get area around NP and get a box of all the residue in that
         box"""
-        np_diameter: np.float64 = self.__get_np_size(residues_atoms['APT'])
         xrange: tuple[float, float]  # Range of NP in x direction
         yrange: tuple[float, float]  # Range of NP in y direction
         zrange: tuple[float, float]  # Range of NP in z direction
         xrange, yrange, zrange = self.__get_np_range(residues_atoms['APT'])
-        self.__get_inside_box(xrange, yrange, zrange)
+        return self.__get_inside_box(xrange, yrange, zrange)
 
     def __get_inside_box(self,
                          xrange: tuple[float, float],  # Range of NP in x
@@ -162,11 +162,10 @@ class ProcessData:
             (aptes_atoms['z'].min(), aptes_atoms['z'].max())
         return xrange, yrange, zrange
 
-    @staticmethod
-    def __get_np_size(aptes_atoms: pd.DataFrame  # All APTES atoms
-                      ) -> np.float64:
+    def __get_np_size(self) -> np.float64:
         """get the maximum radius of NP, since APTES are most outward,
         here only looking at APTES residues"""
+        aptes_atoms: pd.DataFrame = self.residues_atoms['APT']
         diameter: list[float] = []  # To save the diameters in each direction
         for xyz in ['x', 'y', 'z']:
             diameter.append(aptes_atoms[xyz].max() - aptes_atoms[xyz].min())
