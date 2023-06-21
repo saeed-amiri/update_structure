@@ -105,6 +105,7 @@ class ProcessData:
         residues: list[str] = self.__get_residues_names()
         residues_atoms: dict[str, pd.DataFrame] = \
             self.__get_residues_atoms(residues)
+        self.__get_np_box(residues_atoms)
         return residues_atoms
 
     def __get_residues_atoms(self,
@@ -116,6 +117,41 @@ class ProcessData:
         for res in residues:
             residues_atoms[res] = self.atoms[self.atoms['residue_name'] == res]
         return residues_atoms
+
+    def __get_np_box(self,
+                     residues_atoms: dict[str, pd.DataFrame]
+                     ) -> None:
+        """get area around NP and get a box of all the residue in that
+        box"""
+        np_diameter: np.float64 = self.__get_np_size(residues_atoms['APT'])
+        xrange: tuple[float, float]  # Range of NP in x direction
+        yrange: tuple[float, float]  # Range of NP in y direction
+        zrange: tuple[float, float]  # Range of NP in z direction
+        xrange, yrange, zrange = self.__get_np_range(residues_atoms['APT'])
+
+    @staticmethod
+    def __get_np_range(aptes_atoms: pd.DataFrame  # All APTES atoms
+                       ) -> tuple[tuple[float, float],
+                                  tuple[float, float],
+                                  tuple[float, float]]:
+        """get the xyz range of NP"""
+        xrange: tuple[float, float] = \
+            (aptes_atoms['x'].min() - aptes_atoms['x'].max())
+        yrange: tuple[float, float] = \
+            (aptes_atoms['y'].min() - aptes_atoms['y'].max())
+        zrange: tuple[float, float] = \
+            (aptes_atoms['z'].min() - aptes_atoms['z'].max())
+        return xrange, yrange, zrange
+
+    @staticmethod
+    def __get_np_size(aptes_atoms: pd.DataFrame  # All APTES atoms
+                      ) -> np.float64:
+        """get the maximum radius of NP, since APTES are most outward,
+        here only looking at APTES residues"""
+        diameter: list[float] = []  # To save the diameters in each direction
+        for xyz in ['x', 'y', 'z']:
+            diameter.append(aptes_atoms[xyz].max() - aptes_atoms[xyz].min())
+        return np.max(diameter)
 
     def __get_residues_names(self) -> list[str]:
         """get the list of the residues in the system"""
