@@ -29,6 +29,9 @@ Inputs:
         INTERFACE=12
         # interface thickness
         INTERFACE_WIDTH=10
+        ############### Computation parameters ###########
+        Number of points to make to try to put H of new protonation there
+        @NUMSAMPLE=100
     -itp files:
         It needs itp file for the following:
             -protonated APTES,
