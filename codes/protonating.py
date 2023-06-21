@@ -14,6 +14,7 @@ import pandas as pd
 import numpy as np
 from scipy.spatial import KDTree
 import get_data
+from colors_text import TextColor as bcolors
 
 
 class FindHPosition(get_data.ProcessData):
@@ -45,41 +46,74 @@ class FindHPosition(get_data.ProcessData):
         v_mean: np.float64  # Mean length of the NH bonds
         nh_angle: np.float64  # Angle between the two NH bonds, in radians
         atoms_around_n: pd.DataFrame  # Atoms in a radius of N
+        possible_loc: list[np.ndarray]  # Possible locations for putting H
+        h_loc: np.ndarray  # Possible location for H
         for ind in chunk:
             df_i = self.unproton_aptes[self.unproton_aptes['mol'] == ind]
             df_nh = df_i[df_i['atom_name'].isin(['N', 'HN1', 'HN2'])]
             v_nh1, v_nh2 = self.__get_vectors(df_nh)
             v_mean, nh_angle = self.__get_hbond_len_angle(v_nh1, v_nh2)
             atoms_around_n = self.__get_atoms_around_n(df_nh, v_mean)
-            self.__get_possible_posotion(v_nh1, v_nh2, v_mean)
+            possible_loc = self.__get_possible_pos(v_nh1, v_nh2, v_mean, df_nh)
+            h_loc = self.__find_h_place(atoms_around_n, possible_loc, v_mean)
 
-    def __get_possible_posotion(self,
-                                v_nh1: np.ndarray,  # Vector from N to H1
-                                v_nh2: np.ndarray,  # Vector from N to H2
-                                v_mean: np.float64,  # Length of N-H bond
-                                num_samples: int = 100  # How many points
-                                ) -> None:
+    def __find_h_place(self,
+                       atoms_around_n: pd.DataFrame,  # Atoms in radius of N
+                       possible_loc: list[np.ndarray],  # Possible for H
+                       v_mean: np.float64  # Mean of N-H bonds
+                       ) -> np.ndarray:
+        """try to find the best position for H amoung the possible one"""
+        in_flag: bool  # To check if the point meets the conditio
+        loc: np.ndarray  = np.array([-1, -1, -1])  # initial point, CAN'T BE -1
+        for loc in possible_loc:
+            in_flag = False
+            for _, row in atoms_around_n.iterrows():
+                atom_i = np.array([row['x'], row['y'], row['z']])
+                distance = np.linalg.norm(loc-atom_i)
+                if distance >= v_mean:
+                    in_flag = True
+                else:
+                    in_flag = False
+                    break
+            if in_flag:
+                break
+        if not in_flag:
+            sys.exit(f'{bcolors.FAIL}{self.__module__}:\n'
+                     '\tError! Could not find a location for H atom\n'
+                     f'{bcolors.ENDC}')
+        return loc
+
+    def __get_possible_pos(self,
+                           v_nh1: np.ndarray,  # Vector from N to H1
+                           v_nh2: np.ndarray,  # Vector from N to H2
+                           v_mean: np.float64,  # Length of N-H bond
+                           df_nh: pd.DataFrame,  # N and H infos
+                           ) -> list[np.ndarray]:
         """find all the points which have the angle and distance
         conditions.
         """
+        num_samples: int = int(self.param['NUMSAMPLE'])  # How many points
         # Normalize the vectors
         v1_norm: np.ndarray = v_nh1 / np.linalg.norm(v_nh1)
         v2_norm: np.ndarray = v_nh2 / np.linalg.norm(v_nh2)
 
         # Compute the axis of rotation
         axis: np.ndarray = np.cross(v1_norm, v2_norm)
-        # Compute the angle increment
-        increment: float = 2 * np.pi / num_samples
 
         # Initialize the list of vectors
         vectors: list[np.ndarray] = []
+        n_pos = [float(df_nh[df_nh['atom_name'] == 'N']['x']),
+                 float(df_nh[df_nh['atom_name'] == 'N']['y']),
+                 float(df_nh[df_nh['atom_name'] == 'N']['z'])]
 
         # Generate the vectors
         for i in range(num_samples):
-            angle = i * increment
+            # increment: 2 * np.pi / num_samples
+            angle = i * 2 * np.pi / num_samples
             rotated_vector = self.rotate_vector(v1_norm, axis, angle)
             normalized_vector = rotated_vector / np.linalg.norm(rotated_vector)
             vector_with_length_d = normalized_vector * v_mean
+            vector_with_length_d += n_pos
             vectors.append(vector_with_length_d)
         return vectors
 
