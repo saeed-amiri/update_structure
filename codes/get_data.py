@@ -15,20 +15,24 @@ import logger
 
 class ProcessData:
     """process dataframe of the structure and plit them"""
+
+    atoms: pd.DataFrame  # All atoms dataframe
+    param: dict[str, float]  # All the parameters from input file
+    residues_atoms: dict[str, pd.DataFrame]  # Atoms info for each residue
+    unproton_aptes: pd.DataFrame  # APTES which should be protonated
+    unprot_aptes_ind: list[int]  # Index of APTES which should be protonated
+    np_diameter: np.float64  # Diameter of NP, based on APTES positions
+
     def __init__(self,
                  fname: str  # Name of the pdb file
                  ) -> None:
-        self.param: dict[str, float]  # All the parameters from input
         self.param = param.ReadParam(
             log=logger.setup_logger('read_param.log')).param
-        self.atoms: pd.DataFrame = pdbf.Pdb(fname).atoms
-        self.residues_atoms: dict[str, pd.DataFrame]  # Atoms info for each res
+        self.atoms = pdbf.Pdb(fname).atoms
         self.residues_atoms = self.__get_atoms()
         # All the unprtonated aptes to be protonated:
-        self.unproton_aptes: pd.DataFrame  # Atoms info
-        self.unprot_aptes_ind: list[int]  # Index of the APTES
         self.unproton_aptes, self.unprot_aptes_ind = self.process_data()
-        self.np_diameter: np.float64 = self.__get_np_size()
+        self.np_diameter = self.__get_np_size()
 
     def process_data(self) -> tuple[np.ndarray, list[int]]:
         """check and finds the unprotonated aptes group which has N at
