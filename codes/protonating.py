@@ -48,7 +48,19 @@ class FindHPosition(get_data.ProcessData):
             df_nh = df_i[df_i['atom_name'].isin(['N', 'HN1', 'HN2'])]
             v_nh1, v_nh2 = self.__get_vectors(df_nh)
             v_mean, nh_angle = self.__get_hbond_len_angle(v_nh1, v_nh2)
+            self.__get_atoms_around_n(df_nh, v_mean)
 
+    def __get_atoms_around_n(self,
+                             df_nh: pd.DataFrame,  # N and H dataframe
+                             v_mean: np.float64  # Average length of N-H bonds
+                             ) -> pd.DataFrame:
+        """Generate a dataframe that includes atoms within a specified
+        radius of N atoms. This is a more efficient way to check for
+        overlaps with new H since it only considers the relevant atoms.
+        The analysis is limited to the atoms in the box enclosing the
+        NP, which contains significantly fewer atoms than the entire
+        system."""
+        
     @staticmethod
     def __get_hbond_len_angle(v_nh1: np.ndarray,  # Vector from N to H1
                               v_nh2: np.ndarray  # Vector from N to H2
