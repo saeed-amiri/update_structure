@@ -12,6 +12,7 @@ import sys
 import multiprocessing as multip
 import pandas as pd
 import numpy as np
+from scipy.spatial import KDTree
 import get_data
 
 
@@ -43,12 +44,13 @@ class FindHPosition(get_data.ProcessData):
         v_nh2: np.ndarray  # Vector from N to H2
         v_mean: np.float64  # Mean length of the NH bonds
         nh_angle: np.float64  # Angle between the two NH bonds, in radians
+        atoms_around_n: pd.DataFrame  # Atoms in a radius of N
         for ind in chunk:
             df_i = self.unproton_aptes[self.unproton_aptes['mol'] == ind]
             df_nh = df_i[df_i['atom_name'].isin(['N', 'HN1', 'HN2'])]
             v_nh1, v_nh2 = self.__get_vectors(df_nh)
             v_mean, nh_angle = self.__get_hbond_len_angle(v_nh1, v_nh2)
-            self.__get_atoms_around_n(df_nh, v_mean)
+            atoms_around_n = self.__get_atoms_around_n(df_nh, v_mean)
 
     def __get_atoms_around_n(self,
                              df_nh: pd.DataFrame,  # N and H dataframe
@@ -60,7 +62,22 @@ class FindHPosition(get_data.ProcessData):
         The analysis is limited to the atoms in the box enclosing the
         NP, which contains significantly fewer atoms than the entire
         system."""
-        
+        # Extract the x, y, z coordinates from the dataframe
+        coordinates: np.ndarray = \
+            self.residues_atoms['box'][['x', 'y', 'z']].values
+        # Build the KD-tree
+        tree = KDTree(coordinates)
+        # Getting the position of the N atom
+        n_pos = [float(df_nh[df_nh['atom_name'] == 'N']['x']),
+                 float(df_nh[df_nh['atom_name'] == 'N']['y']),
+                 float(df_nh[df_nh['atom_name'] == 'N']['z'])]
+
+        radius: float = float(v_mean) + 2
+        # Find the indices of points within the radius
+        indices: list[int] = tree.query_ball_point(n_pos, radius)
+        # Return the points within the radius
+        return self.residues_atoms['box'].iloc[indices]
+
     @staticmethod
     def __get_hbond_len_angle(v_nh1: np.ndarray,  # Vector from N to H1
                               v_nh2: np.ndarray  # Vector from N to H2
