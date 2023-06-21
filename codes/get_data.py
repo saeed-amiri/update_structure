@@ -128,6 +128,25 @@ class ProcessData:
         yrange: tuple[float, float]  # Range of NP in y direction
         zrange: tuple[float, float]  # Range of NP in z direction
         xrange, yrange, zrange = self.__get_np_range(residues_atoms['APT'])
+        self.__get_inside_box(xrange, yrange, zrange)
+
+    def __get_inside_box(self,
+                         xrange: tuple[float, float],  # Range of NP in x
+                         yrange: tuple[float, float],  # Range of NP in y
+                         zrange: tuple[float, float]  # Range of NP in z
+                         ) -> pd.DataFrame:
+        """get atoms inside the box"""
+        epsilon: float = 3  # increase the box in each direction
+        atoms_box: pd.DataFrame  # Atoms inside the box
+        atoms_box = self.atoms[
+                               (self.atoms['x'] >= xrange[0]-epsilon) &
+                               (self.atoms['x'] <= xrange[1]+epsilon) &
+                               (self.atoms['y'] >= yrange[0]-epsilon) &
+                               (self.atoms['y'] <= yrange[1]+epsilon) &
+                               (self.atoms['z'] >= zrange[0]-epsilon) &
+                               (self.atoms['z'] <= zrange[1]+epsilon)
+                               ]
+        return atoms_box
 
     @staticmethod
     def __get_np_range(aptes_atoms: pd.DataFrame  # All APTES atoms
@@ -136,11 +155,11 @@ class ProcessData:
                                   tuple[float, float]]:
         """get the xyz range of NP"""
         xrange: tuple[float, float] = \
-            (aptes_atoms['x'].min() - aptes_atoms['x'].max())
+            (aptes_atoms['x'].min(), aptes_atoms['x'].max())
         yrange: tuple[float, float] = \
-            (aptes_atoms['y'].min() - aptes_atoms['y'].max())
+            (aptes_atoms['y'].min(), aptes_atoms['y'].max())
         zrange: tuple[float, float] = \
-            (aptes_atoms['z'].min() - aptes_atoms['z'].max())
+            (aptes_atoms['z'].min(), aptes_atoms['z'].max())
         return xrange, yrange, zrange
 
     @staticmethod
