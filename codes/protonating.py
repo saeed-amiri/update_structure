@@ -19,43 +19,54 @@ from colors_text import TextColor as bcolors
 
 class FindHPosition(get_data.ProcessData):
     """Find an area in which the new H could set"""
+    h_porotonations: dict[int, np.ndarray] = {}  # All H atoms & index of APT
+
     def __init__(self,
                  fname: str  # Name of the pdb file
                  ) -> None:
         super().__init__(fname)
-        self.get_area()
+        self.h_porotonations = self.get_area()
 
-    def get_area(self) -> None:
+    def get_area(self) -> dict[int, np.ndarray]:
         """find an area around the N, a cone with angle equal to the
         angle HN1-N-HN2"""
+        results: list[dict[int, np.ndarray]]  # All the H locations wtih index
         num_processes: int = multip.cpu_count() // 2
         chunk_size: int = len(self.unprot_aptes_ind) // num_processes
         chunks = [self.unprot_aptes_ind[i:i+chunk_size] for i in
                   range(0, len(self.unprot_aptes_ind), chunk_size)]
         with multip.Pool(processes=num_processes) as pool:
-            pool.starmap(self.process_ind, [(chunk,) for chunk in chunks])
+            results = \
+                pool.starmap(self.process_ind, [(chunk,) for chunk in chunks])
+        h_porotonations: dict[int, np.ndarray] = {}  # All the dicts
+        for item in results:
+            h_porotonations.update(item)
+        return h_porotonations
 
     def process_ind(self,
                     chunk: list[int]  # Chunk of the indices for loop over
-                    ) -> None:
+                    ) -> dict[int, np.ndarray]:
         """doing the calculations"""
         df_i: pd.DataFrame  # Local df for each residue index
         df_nh: pd.DataFrame  # Local df for each residue index
         v_nh1: np.ndarray  # Vector from N to H1
         v_nh2: np.ndarray  # Vector from N to H2
         v_mean: np.float64  # Mean length of the NH bonds
-        nh_angle: np.float64  # Angle between the two NH bonds, in radians
+        # nh_angle: np.float64  # Angle between the two NH bonds, in radians
         atoms_around_n: pd.DataFrame  # Atoms in a radius of N
         possible_loc: list[np.ndarray]  # Possible locations for putting H
         h_loc: np.ndarray  # Possible location for H
+        all_h_locs: dict[int, np.ndarray] = {}  # To save all the locations
         for ind in chunk:
             df_i = self.unproton_aptes[self.unproton_aptes['mol'] == ind]
             df_nh = df_i[df_i['atom_name'].isin(['N', 'HN1', 'HN2'])]
             v_nh1, v_nh2 = self.__get_vectors(df_nh)
-            v_mean, nh_angle = self.__get_hbond_len_angle(v_nh1, v_nh2)
+            v_mean, _ = self.__get_hbond_len_angle(v_nh1, v_nh2)
             atoms_around_n = self.__get_atoms_around_n(df_nh, v_mean)
             possible_loc = self.__get_possible_pos(v_nh1, v_nh2, v_mean, df_nh)
             h_loc = self.__find_h_place(atoms_around_n, possible_loc, v_mean)
+            all_h_locs[ind] = h_loc
+        return all_h_locs
 
     def __find_h_place(self,
                        atoms_around_n: pd.DataFrame,  # Atoms in radius of N
@@ -64,7 +75,7 @@ class FindHPosition(get_data.ProcessData):
                        ) -> np.ndarray:
         """try to find the best position for H amoung the possible one"""
         in_flag: bool  # To check if the point meets the conditio
-        loc: np.ndarray  = np.array([-1, -1, -1])  # initial point, CAN'T BE -1
+        loc: np.ndarray = np.array([-1, -1, -1])  # initial point, CAN'T BE -1
         for loc in possible_loc:
             in_flag = False
             for _, row in atoms_around_n.iterrows():
