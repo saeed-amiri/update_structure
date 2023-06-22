@@ -46,23 +46,40 @@ class IonizationSol(proton.FindHPosition):
         x_lim: float = x_dims[1] - x_dims[0]
         y_lim: float = y_dims[1] - y_dims[0]
         z_lim: float = z_dims[1] - z_dims[0]
-        chunk_num: np.float64 = np.floor(np.cbrt(len(self.unprot_aptes_ind)))
+        chunk_num: int = int(np.cbrt(len(self.unprot_aptes_ind)))
+        chunk_axis: tuple[int, int, int] = self.__get_chunk_numbers(chunk_num)
         x_chunks: list[tuple[float, float]] = \
-            self.__get_axis_chunk(x_dims, x_lim, chunk_num)  # Chunks intervals
+            self.__get_axis_chunk(x_dims, x_lim, chunk_axis[0])  # Chunks range
         y_chunks: list[tuple[float, float]] = \
-            self.__get_axis_chunk(y_dims, y_lim, chunk_num)  # Chunks intervals
+            self.__get_axis_chunk(y_dims, y_lim, chunk_axis[1])  # Chunks range
         z_chunks: list[tuple[float, float]] = \
-            self.__get_axis_chunk(z_dims, z_lim, chunk_num)  # Chunks intervals
+            self.__get_axis_chunk(z_dims, z_lim, chunk_axis[2])  # Chunks range
         return x_chunks, y_chunks, z_chunks
+
+    def __get_chunk_numbers(self,
+                            chunk_num: int,  # initial chunk number in each ax
+                            ) -> tuple[int, int, int]:
+        """find best numbers for dividing the box into chunks"""
+        proton_num: int = int(len(self.unprot_aptes_ind))
+        chunck_axis: tuple[int, int, int]
+        if chunk_num**3 == proton_num:
+            chunck_axis = (chunk_num, chunk_num, chunk_num)
+        elif chunk_num**3 < proton_num:
+            x_chunk, y_chunk, z_chunk = chunk_num, chunk_num, chunk_num
+            while x_chunk * y_chunk * z_chunk < proton_num:
+                x_chunk += 1
+            chunck_axis = x_chunk, y_chunk, z_chunk
+        return chunck_axis
 
     @staticmethod
     def __get_axis_chunk(dims: np.ndarray,  # Dimensions of the axis
                          lims: float,  # Limites of the box
-                         chunk_num: np.float64  # Number of chunks
+                         chunk_num: int  # Number of chunks
                          ) -> list[tuple[float, float]]:
         """return the chunks of the aixs"""
         chunk_intervals: list[tuple[float, float]] = []
-        for i in range(int(chunk_num)):
+        print(chunk_num)
+        for i in range(chunk_num):
             x_0 = dims[0]+i*lims/chunk_num
             x_1 = x_0 + lims/chunk_num
             chunk_intervals.append((x_0, x_1))
