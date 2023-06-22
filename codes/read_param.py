@@ -26,7 +26,8 @@ class ReadParam:
     """read param file here"""
     fname: str = 'update_param'
     essential_key: list[str] = [
-        "ANGLE", "RADIUS", "INTERFACE", "INTERFACE_WIDTH"]
+        "ANGLE", "RADIUS", "INTERFACE", "INTERFACE_WIDTH", "NUMSAMPLE",
+        "ION_DISTANCE", "ION_ATTEPTS"]
 
     def __init__(self,
                  log: logger.logging.Logger
