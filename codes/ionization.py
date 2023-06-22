@@ -50,8 +50,7 @@ class IonizationSol(proton.FindHPosition):
                   for z_i in z_chunks]
 
         with multip.Pool() as pool:
-            df_list = pool.starmap(self._process_chunk_box,
-                                   [chunk for chunk in chunks])
+            df_list = pool.starmap(self._process_chunk_box, chunks)
 
     @staticmethod
     def _process_chunk_box(sol_atoms: pd.DataFrame,  # All Sol phase atoms
