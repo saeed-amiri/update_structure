@@ -6,6 +6,7 @@ protonation."""
 
 
 import sys
+import multiprocessing as multip
 import numpy as np
 import pandas as pd
 import protonating as proton
@@ -33,6 +34,40 @@ class IonizationSol(proton.FindHPosition):
         x_dims, y_dims, z_dims = self.__get_box_size(sol_atoms)
         x_chunks, y_chunks, z_chunks = \
             self.__get_chunk_interval(x_dims, y_dims, z_dims)
+        self.__get_chunk_atoms(sol_atoms, x_chunks, y_chunks, z_chunks)
+
+    def __get_chunk_atoms(self,
+                          sol_atoms: pd.DataFrame,  # All Sol phase atoms
+                          x_chunks: list[tuple[float, float]],  # intervals
+                          y_chunks: list[tuple[float, float]],  # intervals
+                          z_chunks: list[tuple[float, float]],  # intervals
+                          ) -> None:
+        """get atoms within each chunk box"""
+
+        chunks = [(sol_atoms, x_i, y_i, z_i)
+                  for x_i in x_chunks
+                  for y_i in y_chunks
+                  for z_i in z_chunks]
+
+        with multip.Pool() as pool:
+            df_list = pool.starmap(self.process_chunk_box,
+                                   [chunk for chunk in chunks])
+
+    @staticmethod
+    def process_chunk_box(sol_atoms: pd.DataFrame,  # All Sol phase atoms
+                            x_i: np.ndarray,  # interval for the box
+                            y_i: np.ndarray,  # interval for the box
+                            z_i: np.ndarray  # interval for the box
+                            ) -> pd.DataFrame:
+        """process the chunk box"""
+        df_i = sol_atoms[(sol_atoms['x'] >= x_i[0]) &
+                         (sol_atoms['x'] < x_i[1]) &
+                         (sol_atoms['y'] >= y_i[0]) &
+                         (sol_atoms['y'] < y_i[1]) &
+                         (sol_atoms['z'] >= z_i[0]) &
+                         (sol_atoms['z'] < z_i[1])
+                         ]
+        return df_i
 
     def __get_chunk_interval(self,
                              x_dims: np.ndarray,  # Dimensions of sol box in x
@@ -78,7 +113,6 @@ class IonizationSol(proton.FindHPosition):
                          ) -> list[tuple[float, float]]:
         """return the chunks of the aixs"""
         chunk_intervals: list[tuple[float, float]] = []
-        print(chunk_num)
         for i in range(chunk_num):
             x_0 = dims[0]+i*lims/chunk_num
             x_1 = x_0 + lims/chunk_num
