@@ -7,6 +7,7 @@ protonation."""
 
 import sys
 import multiprocessing as multip
+from scipy.spatial import cKDTree
 import numpy as np
 import pandas as pd
 import protonating as proton
@@ -50,15 +51,17 @@ class IonizationSol(proton.FindHPosition):
                   for z_i in z_chunks]
 
         with multip.Pool() as pool:
-            df_list = pool.starmap(self._process_chunk_box, chunks)
+            ion_poses = pool.starmap(self._process_chunk_box, chunks)
+        print(ion_poses)
 
-    @staticmethod
-    def _process_chunk_box(sol_atoms: pd.DataFrame,  # All Sol phase atoms
+    def _process_chunk_box(self,
+                           sol_atoms: pd.DataFrame,  # All Sol phase atoms
                            x_i: np.ndarray,  # interval for the box
                            y_i: np.ndarray,  # interval for the box
                            z_i: np.ndarray  # interval for the box
                            ) -> pd.DataFrame:
-        """process the chunk box"""
+        """process the chunk box, getting atoms in each box, and find
+        positions for all the needed ions"""
         df_i = sol_atoms[(sol_atoms['x'] >= x_i[0]) &
                          (sol_atoms['x'] < x_i[1]) &
                          (sol_atoms['y'] >= y_i[0]) &
@@ -66,7 +69,52 @@ class IonizationSol(proton.FindHPosition):
                          (sol_atoms['z'] >= z_i[0]) &
                          (sol_atoms['z'] < z_i[1])
                          ]
-        return df_i
+        coordinates: np.ndarray = df_i[['x', 'y', 'z']].values
+        box_dims = (x_i, y_i, z_i)
+        ion_pos: np.ndarray = \
+            self.find_position_with_min_distance(coordinates,
+                                                 box_dims)
+        return ion_pos
+
+    def find_position_with_min_distance(self,
+                                        atoms: np.ndarray,  # Coords of atoms
+                                        box_dims: tuple[np.ndarray,
+                                                        np.ndarray,
+                                                        np.ndarray],  # Boxdims
+                                        ) -> np.ndarray:
+        """find the best place for ions in each box"""
+        d_ion = self.param['ION_DISTANCE']  # Distance of Ions and others
+        num_attempts = int(self.param['ION_ATTEPTS'])  # Number to try to find
+
+        min_x, max_x = box_dims[0]
+        min_y, max_y = box_dims[1]
+        min_z, max_z = box_dims[2]
+
+        # Build a kd-tree from the atom coordinates
+        tree = cKDTree(atoms)
+
+        for _ in range(num_attempts):
+            # Generate random positions within the specified ranges
+            # for each dimension, Don't want to be at the edge of the box
+            position = \
+                np.random.uniform(low=[min_x, min_y, min_z],
+                                  high=[max_x, max_y, max_z-1])
+
+            # Query the kd-tree for the nearest neighbors within distance d
+            _, distances = tree.query(position,
+                                      k=1,
+                                      distance_upper_bound=d_ion)
+
+            # If any distance is less than d, continue to the next attempt
+            if np.any(distances < d_ion):
+                continue
+
+            # If all distances are greater than or equal to d,return
+            # the position
+            return position
+
+        # If no suitable position is found after all attempts, return None
+        return np.array([-1, -1, -1])
 
     def __get_chunk_interval(self,
                              x_dims: np.ndarray,  # Dimensions of sol box in x
