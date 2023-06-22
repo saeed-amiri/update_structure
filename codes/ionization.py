@@ -26,16 +26,23 @@ class IonizationSol(proton.FindHPosition):
         x_dims: np.ndarray  # Dimensions of the sol box in x
         y_dims: np.ndarray  # Dimensions of the sol box in y
         z_dims: np.ndarray  # Dimensions of the sol box in z
+        x_chunks: list[tuple[float, float]]
+        y_chunks: list[tuple[float, float]]
+        z_chunks: list[tuple[float, float]]
         sol_atoms: pd.DataFrame = self.__get_sol_phase_atoms()
         x_dims, y_dims, z_dims = self.__get_box_size(sol_atoms)
-        self.__get_chunk_interval(x_dims, y_dims, z_dims)
+        x_chunks, y_chunks, z_chunks = \
+            self.__get_chunk_interval(x_dims, y_dims, z_dims)
 
     def __get_chunk_interval(self,
                              x_dims: np.ndarray,  # Dimensions of sol box in x
                              y_dims: np.ndarray,  # Dimensions of sol box in y
                              z_dims: np.ndarray  # Dimensions of sol box in z
-                             ) -> None:
-        """get dimension of each chunk-box"""
+                             ) -> tuple[list[tuple[float, float]],
+                                        list[tuple[float, float]],
+                                        list[tuple[float, float]]]:
+        """get dimension of each chunk-box and return the dimension of
+        each chunk-box"""
         x_lim: float = x_dims[1] - x_dims[0]
         y_lim: float = y_dims[1] - y_dims[0]
         z_lim: float = z_dims[1] - z_dims[0]
@@ -46,7 +53,7 @@ class IonizationSol(proton.FindHPosition):
             self.__get_axis_chunk(y_dims, y_lim, chunk_num)  # Chunks intervals
         z_chunks: list[tuple[float, float]] = \
             self.__get_axis_chunk(z_dims, z_lim, chunk_num)  # Chunks intervals
-        print(len(x_chunks), len(y_chunks), len(z_chunks))
+        return x_chunks, y_chunks, z_chunks
 
     @staticmethod
     def __get_axis_chunk(dims: np.ndarray,  # Dimensions of the axis
