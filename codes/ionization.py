@@ -7,10 +7,11 @@ protonation."""
 
 import sys
 import multiprocessing as multip
-from scipy.spatial import cKDTree
+from scipy.spatial import cKDTree, KDTree
 import numpy as np
 import pandas as pd
 import protonating as proton
+from colors_text import TextColor as bcolors
 
 
 class IonizationSol(proton.FindHPosition):
@@ -38,6 +39,37 @@ class IonizationSol(proton.FindHPosition):
             self.__get_chunk_interval(x_dims, y_dims, z_dims)
         ion_poses = \
             self.__get_chunk_atoms(sol_atoms, x_chunks, y_chunks, z_chunks)
+        self.__check_poses(ion_poses)
+
+    def __check_poses(self,
+                      ion_poses: list[np.ndarray]  # Possible position for ions
+                      ) -> np.ndarray:
+        """check for probable ovrlapping of positions"""
+        atoms: np.ndarray = np.vstack(ion_poses)
+        # Build a KDTree from the atom coordinates
+        tree = KDTree(atoms)
+        # Query the tree for the closest pair of atoms
+        min_distance, _ = tree.query(atoms, k=2, workers=12)
+        # Return the indices and the minimum distance
+        if np.min(min_distance[:, 1]) < self.param['ION_DISTANCE']:
+            atoms = \
+                self.__drop_near_ions(atoms, self.param['ION_DISTANCE'], tree)
+        if len(atoms) < len(self.unprot_aptes_ind):
+            sys.exit(f'{bcolors.FAIL}{self.__module__}:\n'
+                     f'\t Number of ions positoins: `{len(atoms)}` is smaller'
+                     f' than protonation: `{len(self.unprot_aptes_ind)}`')
+        return atoms
+
+    @staticmethod
+    def __drop_near_ions(atoms: np.ndarray,  # All the ion poistions
+                         distance: float,  # Minimum distance between ions
+                         tree: KDTree  # From the atom coordinates
+                         ) -> np.ndarray:
+        # Query the tree for atoms within distance d
+        atom_indices = tree.query_ball_tree(tree, r=distance)
+        # Remove duplicate indices
+        unique_indices = np.unique(np.concatenate(atom_indices))
+        return atoms[unique_indices]
 
     def __get_chunk_atoms(self,
                           sol_atoms: pd.DataFrame,  # All Sol phase atoms
