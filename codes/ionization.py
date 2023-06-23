@@ -37,21 +37,28 @@ class IonizationSol(proton.FindHPosition):
         z_chunks: list[tuple[np.float64, np.float64]]
         ion_poses_list: list[np.ndarray]  # Possible position for ions
         ion_poses: np.ndarray  # Main poistions for the ions
+
         # Find the all the atoms in the water (sol) phase
         sol_atoms: pd.DataFrame = self.__get_sol_phase_atoms()
+
         # Get the dimension of the ares
         x_dims, y_dims, z_dims = self.__get_box_size(sol_atoms)
+
         # Get the chunk boxes to find atoms in them
         x_chunks, y_chunks, z_chunks = \
             self.__get_chunk_interval(x_dims, y_dims, z_dims)
+
         # Find possible poistions for all the ions
         ion_poses_list = \
             self.__get_chunk_atoms(sol_atoms, x_chunks, y_chunks, z_chunks)
+
         # Sanity check of the ions_positions
         ion_poses = self.__check_poses(ion_poses_list)
+
         # Get the ions poistion based on the protonation
         ion_poses = \
             self.__random_pos_selction(ion_poses, len(self.unprot_aptes_ind))
+
         return ion_poses
 
     def __check_poses(self,
@@ -59,10 +66,13 @@ class IonizationSol(proton.FindHPosition):
                       ) -> np.ndarray:
         """check for probable ovrlapping of positions"""
         atoms: np.ndarray = np.vstack(ion_poses)
+
         # Build a KDTree from the atom coordinates
         tree = KDTree(atoms)
+
         # Query the tree for the closest pair of atoms
         min_distance, _ = tree.query(atoms, k=2, workers=12)
+
         # Return the indices and the minimum distance
         if np.min(min_distance[:, 1]) < self.param['ION_DISTANCE']:
             atoms = \
@@ -89,8 +99,10 @@ class IonizationSol(proton.FindHPosition):
                          tree: KDTree  # From the atom coordinates
                          ) -> np.ndarray:
         """drop the poistions which are very colse to eachother"""
+
         # Query the tree for atoms within distance d
         atom_indices = tree.query_ball_tree(tree, r=distance)
+
         # Remove duplicate indices
         unique_indices = np.unique(np.concatenate(atom_indices))
         return atoms[unique_indices]
