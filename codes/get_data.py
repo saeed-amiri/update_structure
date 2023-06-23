@@ -102,14 +102,27 @@ class ProcessData:
 
     def __get_interface_range(self) -> tuple[float, float]:
         """find all the aptes at interface"""
+        z_range: tuple[float, float]
         if self.param['LINE'] == 'WITHIN':
-            return \
+            z_range = \
                 (self.param['INTERFACE']-self.param['INTERFACE_WIDTH']/2+
                  self.param['INTERFACE_ZLOC'],
                 self.param['INTERFACE']+self.param['INTERFACE_WIDTH']/2+
                  self.param['INTERFACE_ZLOC'])
         elif self.param['LINE'] == 'INTERFACE':
-            return(0, self.param['INTERFACE']+self.param['INTERFACE_ZLOC'])
+            z_range = (0, self.param['INTERFACE']+self.param['INTERFACE_ZLOC'])
+        elif self.param['LINE'] == 'LOWERBOUND':
+            z_range = (0, self.param['INTERFACE']-
+                       self.param['INTERFACE_WIDTH']/2+
+                       self.param['INTERFACE_ZLOC'])
+        elif self.param['LINE'] == 'UPPERBOUND':
+            z_range = (0, self.param['INTERFACE']+
+                       self.param['INTERFACE_WIDTH']/2+
+                       self.param['INTERFACE_ZLOC'])
+        else:
+            sys.exit(f'{self.__module__}:\n'
+                     '\tError! INTERFACE selection failed')
+        return z_range
 
     def __get_atoms(self) -> dict[str, pd.DataFrame]:
         """get all the atoms for each residue"""
