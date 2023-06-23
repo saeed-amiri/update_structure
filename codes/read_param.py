@@ -27,7 +27,7 @@ class ReadParam:
     fname: str = 'update_param'
     essential_key: list[str] = [
         "ANGLE", "RADIUS", "INTERFACE", "INTERFACE_WIDTH", "NUMSAMPLE",
-        "ION_DISTANCE", "ION_ATTEPTS"]
+        "ION_DISTANCE", "ION_ATTEPTS", "INTERFACE_ZLOC", "LINE"]
 
     def __init__(self,
                  log: logger.logging.Logger
@@ -62,7 +62,10 @@ class ReadParam:
         """process line by spliting by ="""
         line = my_tools.drop_string(line, "@")
         data = line.split('=')
-        return data[0], float(data[1])
+        try:
+            return data[0], float(data[1])
+        except ValueError:
+            return data[0], data[1]
 
     def __sanity_check(self) -> None:
         """check if all the important keys are exist and have value"""
@@ -71,12 +74,6 @@ class ReadParam:
             sys.exit(f'{bcolors.FAIL}{self.__module__}:\n'
                      f'\tNot all the information provided in `{self.fname}`'
                      f'{bcolors.ENDC}')
-        # Check if each key has a float value
-        for key, _ in self.param.items():
-            if not isinstance(self.param[key], float):
-                sys.exit(f'{bcolors.FAIL}{self.__module__}:\n'
-                         f'\tIncorrect essentail value in `{self.fname}`'
-                         f'{bcolors.ENDC}')
 
 
 if __name__ == '__main__':
