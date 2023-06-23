@@ -18,24 +18,31 @@ Inputs:
     -update_param:
         this file contains information about interface and nanoparticle
         and has a structure as follows:
-        # All the distance values are in angstroms and angles in degree
-        ############### CONSTANT VALUES ##############
-        # The contact angle of the nanoparticle (NP)
-        ANGLE=90
-        # Estimated radius of the NP before functionalization with APTES
-        RADIUS=25
-        ############### INTERACTIVE VALUES ###########
-        # Intereface location -> calculated by analyzing-script
-        INTERFACE=12
-        # interface thickness
-        INTERFACE_WIDTH=10
-        ############### Computation parameters ###########
-        Number of points to make to try to put H of new protonation there
-        @NUMSAMPLE=100
-        Distance to put between ION and other atoms
-        @ION_DISTANCE=1
-        Number of times try to find a place for an ion
-        @ION_ATTEPTS=100
+            # All the distance values are in angstroms and angles in degree
+            ############### CONSTANT VALUES ##############
+            # The contact angle of the nanoparticle (NP)
+            ANGLE=90
+            # Estimated radius of the NP before functionalization with APTES
+            RADIUS=25
+            ############### INTERACTIVE VALUES ###########
+            # Intereface location -> calculated by analyzing-script
+            INTERFACE=12
+            # interface thickness
+            INTERFACE_WIDTH=10
+            How to select atoms, under intereface: INTERFACE
+            under upper bound of the interface: UPPERBOUND
+            under lower bound of the interface: LOWERBOUND
+            within the interface: WHITIN
+            @LINE=INTERFACE
+            the center of mass of the interface
+            @INTERFACE_ZLOC=100
+            ############### Computation parameters ###########
+            Number of points to make to try to put H of new protonation there
+            @NUMSAMPLE=100
+            Distance to put between ION and other atoms
+            @ION_DISTANCE=1
+            Number of times try to find a place for an ion
+            @ION_ATTEPTS=100
     -itp files:
         It needs itp file for the following:
             -protonated APTES,
