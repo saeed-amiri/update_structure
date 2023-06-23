@@ -32,6 +32,10 @@ Inputs:
         ############### Computation parameters ###########
         Number of points to make to try to put H of new protonation there
         @NUMSAMPLE=100
+        Distance to put between ION and other atoms
+        @ION_DISTANCE=1
+        Number of times try to find a place for an ion
+        @ION_ATTEPTS=100
     -itp files:
         It needs itp file for the following:
             -protonated APTES,
