@@ -121,6 +121,8 @@ class Pdb:
         x_i: float = float(line[30:39].strip())
         y_i: float = float(line[39:47].strip())
         z_i: float = float(line[47:55].strip())
+        occupancy: float = float(line[55:61])
+        temperature: float = float(line[61:67])
         atom_symbol: str = line[76:78].strip()
         return [atom_id,
                 atom_name,
@@ -129,6 +131,8 @@ class Pdb:
                 x_i,
                 y_i,
                 z_i,
+                occupancy,
+                temperature,
                 atom_symbol]
 
     @staticmethod
@@ -161,6 +165,8 @@ class Pdb:
                               'x',
                               'y',
                               'z',
+                              'occupancy',
+                              'temperature',
                               'atom_symbol']
         df_i = pd.DataFrame(data, columns=columns)
         return df_i
