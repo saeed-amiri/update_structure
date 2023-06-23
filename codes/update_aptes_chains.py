@@ -6,9 +6,47 @@ follows:
 """
 
 import sys
+import numpy as np
 import pandas as pd
-import get_data
+import protonating
 from colors_text import TextColor as bcolors
+
+
+class PrepareHPosition:
+    """Prepare the hydrogens. Based on the positions, we have to make
+    h atoms to be added to the pdb file"""
+    def __init__(self,
+                 atoms: pd.DataFrame,  # All atoms coordinates
+                 df_aptes: pd.DataFrame,  # All the APTES informations
+                 h_positions: dict[int, np.ndarray]  # Index and coordinates
+                 ) -> None:
+        self.update_aptes(atoms, df_aptes, h_positions)
+
+    def update_aptes(self,
+                     atoms: pd.DataFrame,  # All the atoms info
+                     df_aptes: pd.DataFrame,  # Aptes chains
+                     h_positions: dict[int, np.ndarray]  # Pos for H
+                     ) -> None:
+        """update the aptes dataframe by adding new HN3 atoms"""
+        self.__prepare_hydrogens(atoms, h_positions)
+
+    @staticmethod
+    def __prepare_hydrogens(atoms: pd.DataFrame,  # All the atoms info
+                            h_positions: dict[int, np.ndarray]  # Pos for H
+                            ) -> pd.DataFrame:
+        """prepare the aptes based on the structure of the main df"""
+        final_atom: int = atoms.iloc[-1]['atom_id']
+        cols: list[str] = ['records', 'atom_id', 'atom_name',
+                           'residue_number', 'residue_name', 'x', 'y', 'z',
+                           'occupancy', 'temperature', 'atom_symbol']
+        hn3_atoms: pd.DataFrame = pd.DataFrame(columns=cols)
+
+        for i, (key, value) in enumerate(h_positions.items()):
+            hn3_atoms.loc[i] = \
+                ['ATOM', final_atom + i + 1, 'HN3', key, 'APT', value[0],
+                 value[2], value[1], 1.0, 0.0, 'H']
+
+        return hn3_atoms
 
 
 class WritePdbTest:
@@ -31,7 +69,7 @@ class WritePdbTest:
               f'\tPDB file is `{fout}`{bcolors.ENDC}\n')
         pdb_df['records'] = ['ATOM' for _ in range(len(pdb_df))]
         pdb_df['occupancy'] = [' ' for _ in range(len(pdb_df))]
-        pdb_df['atom_id'] = [' ' for _ in range(len(pdb_df))]
+        # pdb_df['atom_id'] = [' ' for _ in range(len(pdb_df))]
         pdb_df['temperature'] = [' ' for _ in range(len(pdb_df))]
         pdb_df['Segment_id'] = [' ' for _ in range(len(pdb_df))]
         pdb_df['charge'] = [' ' for _ in range(len(pdb_df))]
@@ -48,7 +86,7 @@ class WritePdbTest:
                 line: list[str]  # line with length of pdb line fill by spaces
                 line = [' '*79]
                 line[0:6] = f'{row[1]["records"]:<6s}'
-                line[6:11] = f'{row[1]["atom_id"]:>5s}'
+                line[6:11] = f'{row[1]["atom_id"]:>5d}'
                 line[11:12] = ' '
                 line[12:16] = f'{row[1]["atom_name"]:<4s}'
                 line[16:17] = ' '
@@ -82,5 +120,9 @@ class WritePdbTest:
 
 
 if __name__ == '__main__':
-    data = get_data.ProcessData(sys.argv[1])
-    WritePdbTest(data.residues_atoms['APT'], 'APTES')
+    data = protonating.FindHPosition(sys.argv[1])
+    # WritePdbTest(data.residues_atoms['APT'], 'APTES')
+    print(data.residues_atoms['APT'])
+    PrepareHPosition(data.atoms,
+                     data.residues_atoms['APT'],
+                     data.h_porotonations)
