@@ -102,8 +102,14 @@ class ProcessData:
 
     def __get_interface_range(self) -> tuple[float, float]:
         """find all the aptes at interface"""
-        return (self.param['INTERFACE']-self.param['INTERFACE_WIDTH']/2+100,
-                self.param['INTERFACE']+self.param['INTERFACE_WIDTH']/2+100)
+        if self.param['LINE'] == 'WITHIN':
+            return \
+                (self.param['INTERFACE']-self.param['INTERFACE_WIDTH']/2+
+                 self.param['INTERFACE_ZLOC'],
+                self.param['INTERFACE']+self.param['INTERFACE_WIDTH']/2+
+                 self.param['INTERFACE_ZLOC'])
+        elif self.param['LINE'] == 'INTERFACE':
+            return(0, self.param['INTERFACE']+self.param['INTERFACE_ZLOC'])
 
     def __get_atoms(self) -> dict[str, pd.DataFrame]:
         """get all the atoms for each residue"""
