@@ -17,13 +17,16 @@ from colors_text import TextColor as bcolors
 class IonizationSol(proton.FindHPosition):
     """ionizing the water phase of the box. The number is equal to the
     number of deprotonation of the APTES"""
+
+    ion_poses: np.ndarray  # Positoin for ions
+
     def __init__(self,
                  fname: str  # Name of the pdb file
                  ) -> None:
         super().__init__(fname)
-        self.mk_ionization()
+        self.ion_poses = self.mk_ionization()
 
-    def mk_ionization(self) -> None:
+    def mk_ionization(self) -> np.ndarray:
         """get the numbers of ions and their locations in the water
         phase"""
         x_dims: np.ndarray  # Dimensions of the sol box in x
@@ -32,14 +35,24 @@ class IonizationSol(proton.FindHPosition):
         x_chunks: list[tuple[np.float64, np.float64]]
         y_chunks: list[tuple[np.float64, np.float64]]
         z_chunks: list[tuple[np.float64, np.float64]]
-        ion_poses: list[np.ndarray]  # Possible position for ions
+        ion_poses_list: list[np.ndarray]  # Possible position for ions
+        ion_poses: np.ndarray  # Main poistions for the ions
+        # Find the all the atoms in the water (sol) phase
         sol_atoms: pd.DataFrame = self.__get_sol_phase_atoms()
+        # Get the dimension of the ares
         x_dims, y_dims, z_dims = self.__get_box_size(sol_atoms)
+        # Get the chunk boxes to find atoms in them
         x_chunks, y_chunks, z_chunks = \
             self.__get_chunk_interval(x_dims, y_dims, z_dims)
-        ion_poses = \
+        # Find possible poistions for all the ions
+        ion_poses_list = \
             self.__get_chunk_atoms(sol_atoms, x_chunks, y_chunks, z_chunks)
-        self.__check_poses(ion_poses)
+        # Sanity check of the ions_positions
+        ion_poses = self.__check_poses(ion_poses_list)
+        # Get the ions poistion based on the protonation
+        ion_poses = \
+            self.__random_pos_selction(ion_poses, len(self.unprot_aptes_ind))
+        return ion_poses
 
     def __check_poses(self,
                       ion_poses: list[np.ndarray]  # Possible position for ions
@@ -54,10 +67,20 @@ class IonizationSol(proton.FindHPosition):
         if np.min(min_distance[:, 1]) < self.param['ION_DISTANCE']:
             atoms = \
                 self.__drop_near_ions(atoms, self.param['ION_DISTANCE'], tree)
-        if len(atoms) < len(self.unprot_aptes_ind):
+        return atoms
+
+    def __random_pos_selction(self,
+                              atoms: np.ndarray,  # All the positions for ions
+                              n_portons: int  # Number of protonations
+                              ) -> np.ndarray:
+        """select random positions for the ions"""
+        if len(atoms) < n_portons:
             sys.exit(f'{bcolors.FAIL}{self.__module__}:\n'
                      f'\t Number of ions positoins: `{len(atoms)}` is smaller'
-                     f' than protonation: `{len(self.unprot_aptes_ind)}`')
+                     f' than protonation: `{n_portons}`')
+        else:
+            np.random.shuffle(atoms)  # Shuffle the rows randomly
+            atoms = atoms[:n_portons]  # Select the first n rows
         return atoms
 
     @staticmethod
@@ -65,6 +88,7 @@ class IonizationSol(proton.FindHPosition):
                          distance: float,  # Minimum distance between ions
                          tree: KDTree  # From the atom coordinates
                          ) -> np.ndarray:
+        """drop the poistions which are very colse to eachother"""
         # Query the tree for atoms within distance d
         atom_indices = tree.query_ball_tree(tree, r=distance)
         # Remove duplicate indices
