@@ -15,20 +15,31 @@ from colors_text import TextColor as bcolors
 class PrepareHPosition:
     """Prepare the hydrogens. Based on the positions, we have to make
     h atoms to be added to the pdb file"""
+
+    update_aptes: pd.DataFrame  # Updated apted chains
+
     def __init__(self,
                  atoms: pd.DataFrame,  # All atoms coordinates
                  df_aptes: pd.DataFrame,  # All the APTES informations
                  h_positions: dict[int, np.ndarray]  # Index and coordinates
                  ) -> None:
-        self.update_aptes(atoms, df_aptes, h_positions)
+        self.update_aptes = self.update_aptes_df(atoms, df_aptes, h_positions)
 
-    def update_aptes(self,
-                     atoms: pd.DataFrame,  # All the atoms info
-                     df_aptes: pd.DataFrame,  # Aptes chains
-                     h_positions: dict[int, np.ndarray]  # Pos for H
-                     ) -> None:
+    def update_aptes_df(self,
+                        atoms: pd.DataFrame,  # All the atoms info
+                        df_aptes: pd.DataFrame,  # Aptes chains
+                        h_positions: dict[int, np.ndarray]  # Pos for H
+                        ) -> pd.DataFrame:
         """update the aptes dataframe by adding new HN3 atoms"""
-        self.__prepare_hydrogens(atoms, h_positions)
+        nh3_atoms: pd.DataFrame = self.__prepare_hydrogens(atoms, h_positions)
+        return self.__append_hydrogens(df_aptes, nh3_atoms)
+
+    @staticmethod
+    def __append_hydrogens(df_aptes: pd.DataFrame,  # Aptes chains
+                           hn3_atoms: pd.DataFrame  # H atoms to append
+                           ) -> pd.DataFrame:
+        """append NH3 atoms to the main df"""
+        return pd.concat([df_aptes, hn3_atoms], ignore_index=False)
 
     @staticmethod
     def __prepare_hydrogens(atoms: pd.DataFrame,  # All the atoms info
@@ -44,7 +55,7 @@ class PrepareHPosition:
         for i, (key, value) in enumerate(h_positions.items()):
             hn3_atoms.loc[i] = \
                 ['ATOM', final_atom + i + 1, 'HN3', key, 'APT', value[0],
-                 value[2], value[1], 1.0, 0.0, 'H']
+                 value[1], value[2], 1.0, 0.0, 'H']
 
         return hn3_atoms
 
@@ -121,8 +132,8 @@ class WritePdbTest:
 
 if __name__ == '__main__':
     data = protonating.FindHPosition(sys.argv[1])
-    # WritePdbTest(data.residues_atoms['APT'], 'APTES')
-    print(data.residues_atoms['APT'])
-    PrepareHPosition(data.atoms,
-                     data.residues_atoms['APT'],
-                     data.h_porotonations)
+    updated = PrepareHPosition(data.atoms,
+                               data.residues_atoms['APT'],
+                               data.h_porotonations)
+    WritePdbTest(updated.update_aptes, 'APTES2')
+    WritePdbTest(data.residues_atoms['SOL'], 'SOL')
