@@ -8,13 +8,13 @@ follows:
 import sys
 import numpy as np
 import pandas as pd
-import protonating
+import ionization
 from colors_text import TextColor as bcolors
 
 
-class PrepareHPosition:
-    """Prepare the hydrogens. Based on the positions, we have to make
-    h atoms to be added to the pdb file"""
+class UpdateAptesDf:
+    """Updates APTES dataframe, by adding the hydrogens. Based on the
+    positions, we have to make H atoms to be added to the pdb file"""
 
     update_aptes: pd.DataFrame  # Updated apted chains
 
@@ -131,9 +131,9 @@ class WritePdbTest:
 
 
 if __name__ == '__main__':
-    data = protonating.FindHPosition(sys.argv[1])
-    updated = PrepareHPosition(data.atoms,
-                               data.residues_atoms['APT'],
-                               data.h_porotonations)
-    WritePdbTest(updated.update_aptes, 'APTES2')
+    data = ionization.IonizationSol(sys.argv[1])
+    updated = UpdateAptesDf(data.atoms,
+                            data.residues_atoms['APT'],
+                            data.h_porotonations)
+    WritePdbTest(updated.update_aptes, 'APTES3')
     WritePdbTest(data.residues_atoms['SOL'], 'SOL')
