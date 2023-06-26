@@ -83,7 +83,7 @@ class ProcessData:
         for ind in chunk:
             df_i = df_apt[df_apt['mol'] == ind]
             # Check if 'NH3' is present in 'atom_name'
-            if not df_i[df_i['atom_name'].isin(['HN3'])]:
+            if df_i[df_i['atom_name'].isin(['HN3'])].empty:
                 unprotonated_aptes_chunk.append(ind)
         return unprotonated_aptes_chunk
 
