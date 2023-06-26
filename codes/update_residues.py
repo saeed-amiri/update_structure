@@ -110,7 +110,7 @@ class UpdateIonDf:
             res_id = get_pdb_index(i+1, final_res, pdb_max=9999)
             ions_atoms.loc[i] = \
                 ['ATOM', atom_id, 'CLA', res_id, 'CLA', pos[0],
-                 pos[1], pos[2], 1.0, 0.0, 'CL']
+                 pos[1], pos[2], 1.0, 0.0, 'Cl']
         return ions_atoms
 
 
