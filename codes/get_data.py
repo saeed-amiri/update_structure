@@ -39,10 +39,10 @@ class ProcessData:
         interface"""
         zrange: tuple[float, float]  # Lower and upper bound of interface
         zrange = self.__get_interface_range()
-        interface_aptes: list[int]  # Indices of all the APTES at interface
-        interface_aptes = self.__get_aptes_indices(zrange)
+        sol_phase_aptes: list[int]  # Indices of all the APTES at interface
+        sol_phase_aptes = self.__get_aptes_indices(zrange)
         unprot_aptes_ind: list[int]  # Index of the APTES to be protonated
-        unprot_aptes_ind = self.__get_unprto_chain(interface_aptes)
+        unprot_aptes_ind = self.__get_unprto_chain(sol_phase_aptes)
         return self.get_aptes_unproto(unprot_aptes_ind), unprot_aptes_ind
 
     def get_aptes_unproto(self,
@@ -53,16 +53,16 @@ class ProcessData:
         return df_apt[df_apt['mol'].isin(unprot_aptes_ind)]
 
     def __get_unprto_chain(self,
-                           interface_aptes: list[int]  # Indices of APTES
+                           sol_phase_aptes: list[int]  # Indices of APTES
                            ) -> list[int]:
         """find all the chains at the intrface"""
         df_apt: pd.DataFrame = self.residues_atoms['APT']
         unprotonated_aptes: list[int] = []
-        # Split the interface_aptes list into chunks
+        # Split the sol_phase_aptes list into chunks
         num_processes: int = multip.cpu_count() // 2
-        chunk_size: int = len(interface_aptes) // num_processes
-        chunks = [interface_aptes[i:i+chunk_size] for i in
-                  range(0, len(interface_aptes), chunk_size)]
+        chunk_size: int = len(sol_phase_aptes) // num_processes
+        chunks = [sol_phase_aptes[i:i+chunk_size] for i in
+                  range(0, len(sol_phase_aptes), chunk_size)]
         # Create a Pool of processes
         with multip.Pool(processes=num_processes) as pool:
             # Process the chunks in parallel
@@ -105,19 +105,19 @@ class ProcessData:
         z_range: tuple[float, float]
         if self.param['LINE'] == 'WITHIN':
             z_range = \
-                (self.param['INTERFACE']-self.param['INTERFACE_WIDTH']/2+
+                (self.param['INTERFACE']-self.param['INTERFACE_WIDTH']/2 +
                  self.param['INTERFACE_ZLOC'],
-                self.param['INTERFACE']+self.param['INTERFACE_WIDTH']/2+
+                 self.param['INTERFACE']+self.param['INTERFACE_WIDTH']/2 +
                  self.param['INTERFACE_ZLOC'])
         elif self.param['LINE'] == 'INTERFACE':
             z_range = (0, self.param['INTERFACE']+self.param['INTERFACE_ZLOC'])
         elif self.param['LINE'] == 'LOWERBOUND':
-            z_range = (0, self.param['INTERFACE']-
-                       self.param['INTERFACE_WIDTH']/2+
+            z_range = (0, self.param['INTERFACE'] -
+                       self.param['INTERFACE_WIDTH']/2 +
                        self.param['INTERFACE_ZLOC'])
         elif self.param['LINE'] == 'UPPERBOUND':
-            z_range = (0, self.param['INTERFACE']+
-                       self.param['INTERFACE_WIDTH']/2+
+            z_range = (0, self.param['INTERFACE'] +
+                       self.param['INTERFACE_WIDTH']/2 +
                        self.param['INTERFACE_ZLOC'])
         else:
             sys.exit(f'{self.__module__}:\n'
