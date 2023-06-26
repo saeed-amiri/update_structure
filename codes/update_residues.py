@@ -15,7 +15,7 @@ class UpdateAptesDf:
     """Updates APTES dataframe, by adding the hydrogens. Based on the
     positions, we have to make H atoms to be added to the pdb file"""
 
-    update_aptes: pd.DataFrame  # Updated apted chains
+    update_aptes: pd.DataFrame  # Updated aptes chains
 
     def __init__(self,
                  atoms: pd.DataFrame,  # All atoms coordinates
@@ -59,8 +59,43 @@ class UpdateAptesDf:
         return hn3_atoms
 
 
+class UpdateIonDf:
+    """update ion dataframe by adding the prepared ions to it"""
+
+    update_ion: pd.DataFrame  # Updated ions
+
+    def __init__(self,
+                 ) -> None:
+        pass
+
+
+class UpdateResidues:
+    """get all the dataframes as an object"""
+
+    # To append all the residues to the dict
+    updated_residues: dict[str, pd.DataFrame] = {}
+
+    def __init__(self,
+                 fname: str  # Name of the input file (pdb)
+                 ) -> None:
+        data = ionization.IonizationSol(fname)
+        self.get_residues(data)
+
+    def get_residues(self,
+                     data: ionization.IonizationSol  # All the data
+                     ) -> None:
+        """get all the residues"""
+        self.updated_residues['aptes'] = self.__get_aptes(data)
+
+    @staticmethod
+    def __get_aptes(data: ionization.IonizationSol  # All the data
+                    ) -> pd.DataFrame:
+        """get updated aptes dataframe"""
+        updated_aptes = UpdateAptesDf(data.atoms,
+                                      data.residues_atoms['APT'],
+                                      data.h_porotonations)
+        return updated_aptes.update_aptes
+
+
 if __name__ == '__main__':
-    data = ionization.IonizationSol(sys.argv[1])
-    updated = UpdateAptesDf(data.atoms,
-                            data.residues_atoms['APT'],
-                            data.h_porotonations)
+    UpdateResidues(sys.argv[1])
