@@ -133,6 +133,8 @@ class UpdateResidues:
 
     # To append all the residues to the dict
     updated_residues: dict[str, pd.DataFrame] = {}
+    # To append new atoms to the main atoms
+    updated_atoms: pd.DataFrame
 
     def __init__(self,
                  fname: str  # Name of the input file (pdb)
@@ -144,29 +146,38 @@ class UpdateResidues:
                      data: ionization.IonizationSol  # All the data
                      ) -> None:
         """get all the residues"""
-        self.updated_residues['APT'] = self.get_aptes(data)
-        self.updated_residues['SOL'] = self.get_sol(data)
         self.updated_residues['D10'] = self.get_oil(data)
+        self.updated_residues['SOL'] = self.get_sol(data)
         self.updated_residues['COR'] = self.get_cor(data)
-        self.updated_residues['CLA'] = self.get_ions(data)
+        self.updated_residues['CLA'], new_ions = self.get_ions(data)
+        self.updated_residues['APT'], new_hn3 = self.get_aptes(data)
+        self.updated_atoms = self.get_atoms(data.atoms, new_hn3, new_ions)
+
+    @staticmethod
+    def get_atoms(atoms: pd.DataFrame,  # Initial system
+                  new_hn3: pd.DataFrame,  # New NH3 atoms
+                  new_ions: pd.DataFrame,  # New Ions atoms
+                  ) -> pd.DataFrame:
+        """append the new atoms to the main dataframe with all atoms"""
+        return pd.concat([atoms, new_hn3, new_ions])
 
     @staticmethod
     def get_ions(data: ionization.IonizationSol  # All the data
-                 ) -> pd.DataFrame:
+                 ) -> tuple[pd.DataFrame, pd.DataFrame]:
         """get updated ions data frame"""
         updated_ions = UpdateIonDf(data.atoms,
                                    data.residues_atoms['CLA'],
                                    data.ion_poses)
-        return updated_ions.update_ions
+        return updated_ions.update_ions, updated_ions.new_ions
 
     @staticmethod
     def get_aptes(data: ionization.IonizationSol  # All the data
-                  ) -> pd.DataFrame:
+                  ) -> tuple[pd.DataFrame, pd.DataFrame]:
         """get updated aptes dataframe"""
         updated_aptes = UpdateAptesDf(data.atoms,
                                       data.residues_atoms['APT'],
                                       data.h_porotonations)
-        return updated_aptes.update_aptes
+        return updated_aptes.update_aptes, updated_aptes.new_nh3
 
     @staticmethod
     def get_sol(data: ionization.IonizationSol  # All the data
