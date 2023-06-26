@@ -58,7 +58,7 @@ class ReadParam:
 
     @staticmethod
     def __process_line(line: str  # Line that read from the file
-                       ) -> tuple[str, float]:
+                       ) -> tuple[str, typing.Any]:
         """process line by spliting by ="""
         line = my_tools.drop_string(line, "@")
         data = line.split('=')
