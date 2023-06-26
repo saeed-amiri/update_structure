@@ -135,6 +135,9 @@ class UpdateResidues:
     updated_residues: dict[str, pd.DataFrame] = {}
     # To append new atoms to the main atoms
     updated_atoms: pd.DataFrame
+    # To return new atoms seperatly
+    new_hn3: pd.DataFrame
+    new_ions: pd.DataFrame
 
     def __init__(self,
                  fname: str  # Name of the input file (pdb)
@@ -152,6 +155,8 @@ class UpdateResidues:
         self.updated_residues['CLA'], new_ions = self.get_ions(data)
         self.updated_residues['APT'], new_hn3 = self.get_aptes(data)
         self.updated_atoms = self.get_atoms(data.atoms, new_hn3, new_ions)
+        self.new_ions = new_ions
+        self.new_hn3 = new_hn3
 
     @staticmethod
     def get_atoms(atoms: pd.DataFrame,  # Initial system
