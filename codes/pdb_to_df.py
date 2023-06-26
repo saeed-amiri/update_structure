@@ -114,8 +114,9 @@ class Pdb:
         if len(line) != 79:
             # exit(f"ERROR! wrong line length: {len(line)} != 79")
             pass
+        records: str = line[0:6].strip()
         atom_id: int = int(line[6:11].strip())
-        atom_name: str = line[13:16].strip()
+        atom_name: str = line[12:16].strip()
         residue_name: str = line[17:20].strip()
         residue_number: str = line[22:27].strip()
         x_i: float = float(line[30:39].strip())
@@ -124,7 +125,8 @@ class Pdb:
         occupancy: float = float(line[55:61])
         temperature: float = float(line[61:67])
         atom_symbol: str = line[76:78].strip()
-        return [atom_id,
+        return [records,
+                atom_id,
                 atom_name,
                 residue_name,
                 residue_number,
@@ -138,15 +140,17 @@ class Pdb:
     @staticmethod
     def __process_hetatm(line: str) -> list:
         """Process the line on based on the PDB file, started with HATATM"""
+        records: str = line[0:6].strip()
         atom_id: int = int(line[6:11].strip())
-        atom_name: str = line[13:16].strip()
+        atom_name: str = line[12:16].strip()
         residue_name: str = line[17:20].strip()
         residue_number: str = line[22:27].strip()
         x_i: float = float(line[30:39].strip())
         y_i: float = float(line[39:47].strip())
         z_i: float = float(line[47:55].strip())
         atom_symbol: str = line[76:78].strip()
-        return [atom_id,
+        return [records,
+                atom_id,
                 atom_name,
                 residue_name,
                 residue_number,
@@ -158,7 +162,8 @@ class Pdb:
     @staticmethod
     def mk_df(data: list[list]) -> pd.DataFrame:
         """Making DataFrame from PDB file"""
-        columns: list[str] = ['atom_id',
+        columns: list[str] = ['records',
+                              'atom_id',
                               'atom_name',
                               'residue_name',
                               'residue_number',
