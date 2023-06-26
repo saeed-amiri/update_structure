@@ -10,3 +10,13 @@ correctly, the program requires the interface located at the beginning
 of the simulation for comparison purposes and the ability to change
 the NP's location.
 """
+
+
+import sys
+import update_residues
+import write_pdb_file
+
+
+if __name__ == '__main__':
+    up_data = update_residues.UpdateResidues(sys.argv[1])
+    write_pdb_file.WritePdb(up_data)
