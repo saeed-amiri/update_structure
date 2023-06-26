@@ -85,16 +85,37 @@ class UpdateResidues:
                      data: ionization.IonizationSol  # All the data
                      ) -> None:
         """get all the residues"""
-        self.updated_residues['aptes'] = self.__get_aptes(data)
+        self.updated_residues['APT'] = self.get_aptes(data)
+        self.updated_residues['SOL'] = self.get_sol(data)
+        self.updated_residues['D10'] = self.get_sol(data)
+        self.updated_residues['COR'] = self.get_sol(data)
 
     @staticmethod
-    def __get_aptes(data: ionization.IonizationSol  # All the data
-                    ) -> pd.DataFrame:
+    def get_aptes(data: ionization.IonizationSol  # All the data
+                  ) -> pd.DataFrame:
         """get updated aptes dataframe"""
         updated_aptes = UpdateAptesDf(data.atoms,
                                       data.residues_atoms['APT'],
                                       data.h_porotonations)
         return updated_aptes.update_aptes
+
+    @staticmethod
+    def get_sol(data: ionization.IonizationSol  # All the data
+                ) -> pd.DataFrame:
+        """return water residues"""
+        return data.residues_atoms['SOL']
+
+    @staticmethod
+    def get_oil(data: ionization.IonizationSol  # All the data
+                ) -> pd.DataFrame:
+        """return oil residues"""
+        return data.residues_atoms['D10']
+
+    @staticmethod
+    def get_cor(data: ionization.IonizationSol  # All the data
+                ) -> pd.DataFrame:
+        """return core atoms of NP residues"""
+        return data.residues_atoms['COR']
 
 
 if __name__ == '__main__':
