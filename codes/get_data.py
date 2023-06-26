@@ -39,7 +39,7 @@ class ProcessData:
         interface"""
         zrange: tuple[float, float]  # Lower and upper bound of interface
         zrange = self.__get_interface_range()
-        sol_phase_aptes: list[int]  # Indices of all the APTES at interface
+        sol_phase_aptes: list[int]  # Indices of all the APTES at sol phase
         sol_phase_aptes = self.__get_aptes_indices(zrange)
         unprot_aptes_ind: list[int]  # Index of the APTES to be protonated
         unprot_aptes_ind = self.__get_unprto_chain(sol_phase_aptes)
@@ -83,7 +83,7 @@ class ProcessData:
         for ind in chunk:
             df_i = df_apt[df_apt['mol'] == ind]
             # Check if 'NH3' is present in 'atom_name'
-            if not df_i['atom_name'].str.contains('NH3').any():
+            if not df_i[df_i['atom_name'].isin(['HN3'])]:
                 unprotonated_aptes_chunk.append(ind)
         return unprotonated_aptes_chunk
 
