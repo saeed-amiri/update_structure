@@ -58,7 +58,8 @@ class FindHPosition(get_data.ProcessData):
         h_loc: np.ndarray  # Possible location for H
         all_h_locs: dict[int, np.ndarray] = {}  # To save all the locations
         for ind in chunk:
-            df_i = self.unproton_aptes[self.unproton_aptes['mol'] == ind]
+            df_i = self.unproton_aptes[
+                self.unproton_aptes['residue_number'] == ind]
             df_nh = df_i[df_i['atom_name'].isin(['N', 'HN1', 'HN2'])]
             v_nh1, v_nh2 = self.__get_vectors(df_nh)
             v_mean, _ = self.__get_hbond_len_angle(v_nh1, v_nh2)

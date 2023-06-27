@@ -50,7 +50,7 @@ class ProcessData:
                           ) -> pd.DataFrame:
         """get all atoms in the chains of the unprotonated APTES"""
         df_apt: pd.DataFrame = self.residues_atoms['APT']
-        return df_apt[df_apt['mol'].isin(unprot_aptes_ind)]
+        return df_apt[df_apt['residue_number'].isin(unprot_aptes_ind)]
 
     def __get_unprto_chain(self,
                            sol_phase_aptes: list[int]  # Indices of APTES
@@ -81,7 +81,7 @@ class ProcessData:
         """get index of unprotonated aptes"""
         unprotonated_aptes_chunk: list[int] = []  # Index of unprotonated APTES
         for ind in chunk:
-            df_i = df_apt[df_apt['mol'] == ind]
+            df_i = df_apt[df_apt['residue_number'] == ind]
             # Check if 'NH3' is present in 'atom_name'
             if df_i[df_i['atom_name'].isin(['HN3'])].empty:
                 unprotonated_aptes_chunk.append(ind)
@@ -96,9 +96,9 @@ class ProcessData:
         filtered_df = df_apt[(df_apt['atom_name'] == 'N') &
                              (df_apt['z'].between(zrange[0], zrange[1]))]
 
-        # Get the 'mol' values for the filtered atoms
+        # Get the 'residue_number' values for the filtered atoms
         del df_apt
-        return filtered_df['mol'].values
+        return filtered_df['residue_number'].values
 
     def __get_interface_range(self) -> tuple[float, float]:
         """find all the aptes at interface"""
