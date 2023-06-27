@@ -8,9 +8,11 @@ field values are set in different files, we only need to update the
 sections for the extra H in each chain, including angles and dihedrals.
 """
 
+import sys
 import numpy as np
 import pandas as pd
 import itp_to_df as itp
+from colors_text import TextColor as bcolors
 
 
 class UpdateItp(itp.Itp):
@@ -50,18 +52,30 @@ class UpdateAtom:
                      hn3: pd.DataFrame  # New HN3 to add to the atoms
                      ) -> None:
         """update the atoms"""
-        last_atom: np.int64  # index of the final atoms
-        last_res: np.int64  # index of the final residues
-        last_atom, last_res = self.__get_indices(atoms)
+        lst_atom: np.int64  # index of the final atoms
+        lst_atom = self.__get_indices(atoms, hn3)
 
-    @staticmethod
-    def __get_indices(atoms) -> tuple[np.int64, np.int64]:
-        """return the maximum value of the atoms and residue numbers"""
+    def __get_indices(self,
+                      atoms: pd.DataFrame,  # Atoms of the itp file
+                      hn3: pd.DataFrame  # New HN3 to add to the atoms
+                      ) -> np.int64:
+        """return the maximum value of the atoms and check mismatch
+        residue numbers"""
+        atoms['atomnr'] = pd.to_numeric(atoms['atomnr'], errors='coerce')
+        atoms['resnr'] = pd.to_numeric(atoms['resnr'], errors='coerce')
+
         max_atomnr: np.int64 = np.max(atoms['atomnr'])
-        lst_atomnr: int = list(atoms['atomnr'])[-1]
+        lst_atomnr: int = atoms['atomnr'].iloc[-1]
         max_resnr: np.int64 = np.max(atoms['resnr'])
-        lst_resnr: int = list(atoms['resnr'])[-1]
-        return np.max(max_atomnr, lst_atomnr), np.max(max_resnr, lst_resnr)
+        lst_resnr: int = atoms['resnr'].iloc[-1]
+
+        lst_nh3_res: np.int64  # index of the final residue
+        lst_nh3_res = list(hn3['residue_number'])[-1]
+        if np.max(np.array([max_resnr, lst_resnr])) != lst_nh3_res:
+            sys.exit(f'{bcolors.FAIL}{self.__module__}:\n'
+                     '\tThere is mismatch in the new HN3 and initial'
+                     f' APTES list.\n{bcolors.ENDC}')
+        return np.max(np.array([max_atomnr, lst_atomnr]))
 
 
 if __name__ == '__main__':
