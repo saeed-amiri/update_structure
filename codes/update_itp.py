@@ -15,11 +15,11 @@ import itp_to_df as itp
 class UpdateItp(itp.Itp):
     """updating the itp file for each section"""
     # object from itp class
-    # atoms: pd.DataFrame  # Section of initial itp file
-    # bonds: pd.DataFrame  # Section of initial itp file
-    # angles: pd.DataFrame  # Section of initial itp file
-    # dihedrals: pd.DataFrame  # Section of initial itp file
-    # molecules: pd.DataFrame  # Section of initial itp file
+    # atoms: pd.DataFrame -> Section of initial itp file
+    # bonds: pd.DataFrame -> Section of initial itp file
+    # angles: pd.DataFrame -> Section of initial itp file
+    # dihedrals: pd.DataFrame -> Section of initial itp file
+    # molecules: pd.DataFrame -> Section of initial itp file
 
     def __init__(self,
                  fname: str,  # Name of the itp file
