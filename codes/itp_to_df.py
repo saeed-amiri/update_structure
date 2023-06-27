@@ -60,6 +60,7 @@ class Itp:
     def __init__(self,
                  fname: str  # Name of the itp file
                  ) -> None:
+        print(f"Reading '{fname}' ...")
         self.get_itp(fname)
 
     def get_itp(self,
