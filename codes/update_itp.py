@@ -8,6 +8,7 @@ field values are set in different files, we only need to update the
 sections for the extra H in each chain, including angles and dihedrals.
 """
 
+import numpy as np
 import pandas as pd
 import itp_to_df as itp
 
@@ -32,6 +33,35 @@ class UpdateItp(itp.Itp):
                    hn3: pd.DataFrame  # NH3 atoms
                    ) -> None:
         """get all the data and return final df"""
+        UpdateAtom(self.atoms, hn3)
+
+
+class UpdateAtom:
+    """update atom section by adding new hn3 and updating the N, HN1,
+    HN2"""
+    def __init__(self,
+                 atoms: pd.DataFrame,  # Atoms form the itp file
+                 hn3: pd.DataFrame  # New HN3 to add to the atoms
+                 ) -> None:
+        self.update_atoms(atoms, hn3)
+
+    def update_atoms(self,
+                     atoms: pd.DataFrame,  # Atoms form the itp file
+                     hn3: pd.DataFrame  # New HN3 to add to the atoms
+                     ) -> None:
+        """update the atoms"""
+        last_atom: np.int64  # index of the final atoms
+        last_res: np.int64  # index of the final residues
+        last_atom, last_res = self.__get_indices(atoms)
+
+    @staticmethod
+    def __get_indices(atoms) -> tuple[np.int64, np.int64]:
+        """return the maximum value of the atoms and residue numbers"""
+        max_atomnr: np.int64 = np.max(atoms['atomnr'])
+        lst_atomnr: int = list(atoms['atomnr'])[-1]
+        max_resnr: np.int64 = np.max(atoms['resnr'])
+        lst_resnr: int = list(atoms['resnr'])[-1]
+        return np.max(max_atomnr, lst_atomnr), np.max(max_resnr, lst_resnr)
 
 
 if __name__ == '__main__':
