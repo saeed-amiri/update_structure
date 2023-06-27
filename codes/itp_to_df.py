@@ -132,7 +132,7 @@ class Itp:
         bond = BondsInfo(atoms=atom.df, bonds=bonds_info)
         angle = AnglesInfo(atoms=atom.df, angles=angles_info)
         dihedral = DihedralsInfo(atoms=atom.df, dihedrals=dihedrals_info)
-        self.atoms_extra = atom.df
+        self.atoms = atom.df
         self.bonds = bond.df
         self.angles = angle.df
         self.dihedrals = dihedral.df
