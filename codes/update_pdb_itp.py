@@ -15,8 +15,11 @@ the NP's location.
 import sys
 import update_residues
 import write_pdb_file
+import update_itp
 
 
 if __name__ == '__main__':
     up_data = update_residues.UpdateResidues(sys.argv[1])
     write_pdb_file.WritePdb(up_data)
+    update_itp.UpdateItp(fname='APT_COR.itp', hn3=up_data.new_hn3)
+    up_data.new_hn3.to_csv('test_hn3', sep=' ')
