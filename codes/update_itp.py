@@ -65,6 +65,20 @@ class UpdateAtom:
         # Update N, HN1, and HN2 charges in the protonated chains
         atoms = \
             self.__update_chains(atoms, h_n_df, list(hn3['residue_number']))
+        updated_aptes: pd.DataFrame = self.__concat_aptes(prepare_hn3, atoms)
+
+    @staticmethod
+    def __concat_aptes(prepare_hn3: pd.DataFrame,  # Prepared HN3 dataframe
+                       atoms: pd.DataFrame  # Updated chain with charges
+                       ) -> pd.DataFrame:
+        """concate the dataframes and sort them based on the residue
+        indices"""
+        updated_atoms: pd.DataFrame = \
+            pd.concat([atoms, prepare_hn3], axis=0, ignore_index=False)
+
+        updated_atoms = updated_atoms.sort_values(by=['resnr', 'atomnr'],
+                                                  ascending=[True, True])
+        return updated_atoms
 
     @staticmethod
     def __update_chains(atoms: pd.DataFrame,  # APTES atoms
