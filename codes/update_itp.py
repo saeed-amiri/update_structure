@@ -52,6 +52,7 @@ class UpdateBond:
                  atoms: pd.DataFrame  # Updated APTES chains by UpAtom class
                  ) -> None:
         self.bonds_updated = self.update_bonds(bonds_np, hn3, atoms)
+        self.bonds_updated.to_csv('bonds_up', sep=' ')
 
     def update_bonds(self,
                      bonds_np: pd.DataFrame,  # Bonds form the itp file for NP
@@ -72,6 +73,8 @@ class UpdateBond:
                       new_bonds: pd.DataFrame  # New bonds of N-HN3
                       ) -> pd.DataFrame:
         """concate new bonds with old one"""
+        bonds_np = bonds_np.reset_index(drop=True)
+        new_bonds = new_bonds.reset_index(drop=True)
         return pd.concat([bonds_np, new_bonds], axis=0, ignore_index=True)
 
     @staticmethod
@@ -79,12 +82,11 @@ class UpdateBond:
                  n_res_atomnrdict: dict[int, int]  # Residue and N atoms index
                  ) -> pd.DataFrame:
         """make bonds dataframe for N and new HN3"""
-        columns: list[str]  # Columns of the bonds dataframe
-        columns = ['typ', 'ai', 'aj', 'typ', 'cmt', 'name']
-        new_bonds = pd.DataFrame(columns=columns)
-        for i, (key, n_atomnr) in enumerate(n_res_atomnrdict.items()):
-            hn3_atomnr = hn3_res_atomnr[key]
-            new_bonds.loc[i] = [1, n_atomnr, hn3_atomnr, '1', '#', 'N-HN3']
+        new_bonds = pd.DataFrame({'typ': 1,
+                                  'ai': list(n_res_atomnrdict.values()),
+                                  'aj': list(hn3_res_atomnr.values()),
+                                  'cmt': '#',
+                                  'name': 'N-HN3'})
         return new_bonds
 
     @staticmethod
@@ -108,10 +110,10 @@ class UpdateBond:
         """nake a dictionary based on the indices for asked atom"""
         hn3_resnr: list[typing.Any]  # Inices are int, but saved strings
         atomnr: list[typing.Any]  # Atom numbers of HN3
-        hn3_resnr = list(hn3['residue_number'])
+        hn3_resnr = hn3['residue_number'].to_list()
         condition: pd.Series = (atoms['atomname'].isin([atom_name])) & \
                                (atoms['resnr'].isin(hn3_resnr))
-        atomnr = atoms[condition]['atomnr']
+        atomnr = atoms[condition]['atomnr'].to_list()
         return dict(zip(hn3_resnr, atomnr))
 
 
