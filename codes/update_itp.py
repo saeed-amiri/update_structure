@@ -42,18 +42,43 @@ class UpdateAtom:
     """update atom section by adding new hn3 and updating the N, HN1,
     HN2"""
     def __init__(self,
-                 atoms: pd.DataFrame,  # Atoms form the itp file
+                 atoms_np: pd.DataFrame,  # Atoms form the itp file for NP
                  hn3: pd.DataFrame  # New HN3 to add to the atoms
                  ) -> None:
-        self.update_atoms(atoms, hn3)
+        self.update_atoms(atoms_np, hn3)
 
     def update_atoms(self,
-                     atoms: pd.DataFrame,  # Atoms form the itp file
+                     atoms_np: pd.DataFrame,  # Atoms form the itp file for NP
                      hn3: pd.DataFrame  # New HN3 to add to the atoms
                      ) -> None:
         """update the atoms"""
+        # Sanity check of indeces and return the atom index in atoms
         lst_atom: np.int64  # index of the final atoms
-        lst_atom = self.__get_indices(atoms, hn3)
+        lst_atom = self.__get_indices(atoms_np, hn3)
+        # Get only APT atoms
+        atoms: pd.DataFrame = atoms_np[atoms_np['resname'] == 'APT']
+        # Get information for HN3 from the itp file itself
+        self.__get_n_h_proton_info(atoms)
+
+    @staticmethod
+    def __get_n_h_proton_info(atoms: pd.DataFrame,  # Atoms of the itp file
+                              ) -> pd.DataFrame:
+        """get and return info for protonated H-N group from the itp
+        file"""
+        df_tmp: pd.DataFrame  # One protonated APTES
+        df_tmp = atoms[atoms['atomname'] == 'HN3']
+        protonated_apt: list[int]  # Indices of alreay protonated APTES
+        protonated_apt = list(atoms['resnr'])
+        # Just an id!
+        rand_id: int = protonated_apt[0]
+        df_tmp = atoms[atoms['resnr'] == rand_id]
+        df_one: pd.DataFrame = \
+            df_tmp[df_tmp['atomname'].isin(['N', 'HN1', 'HN2', 'HN3'])]
+        if atoms[atoms['atomname'] == 'HN3'].empty:
+            sys.exit(f'{bcolors.FAIL}{UpdateAtom.__module__}: \n'
+                     '\tError! There is no HN3 in the chosen protonated'
+                     f'branch\n{bcolors.ENDC}')
+        return df_one
 
     def __get_indices(self,
                       atoms: pd.DataFrame,  # Atoms of the itp file
