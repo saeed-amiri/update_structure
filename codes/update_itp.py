@@ -62,6 +62,33 @@ class UpdateAtom:
         h_n_df: pd.DataFrame = self.__get_n_h_proton_info(atoms)
         # Make a dataframe in format of itp for new nh3
         prepare_hn3: pd.DataFrame = self.__mk_hn3_itp_df(hn3, h_n_df, lst_atom)
+        # Update N, HN1, and HN2 charges in the protonated chains
+        atoms = \
+            self.__update_chains(atoms, h_n_df, list(hn3['residue_number']))
+
+    @staticmethod
+    def __update_chains(atoms: pd.DataFrame,  # APTES atoms
+                        h_n_df: pd.DataFrame,  # Protonated N-H group info
+                        res_numbers: list[int]  # index of the chains to prtons
+                        ) -> pd.DataFrame:
+        """update the N, HN1, and HN2 in the chains which should be
+        updated"""
+        n_q: float  # Charge of N atom in protonated state
+        h1_q: float  # Charge of HN1 atom in protonated state
+        h2_q: float  # Charge of HN1 atom in protonated state
+        n_q = UpdateAtom.__get_info_dict(h_n_df, 'N')[1]['charge']
+        h1_q = UpdateAtom.__get_info_dict(h_n_df, 'HN1')[1]['charge']
+        h2_q = UpdateAtom.__get_info_dict(h_n_df, 'HN2')[1]['charge']
+        # Create a condition for selecting rows that need to be updated
+        condition = (atoms['atomname'].isin(['N', 'HN1', 'HN2'])) & \
+                    (atoms['resnr'].isin(res_numbers))
+
+        # Update the 'charge' column for the selected rows
+        atoms.loc[condition, 'charge'] = \
+            atoms.loc[condition, 'atomname'].map({'N': n_q,
+                                                  'HN1': h1_q,
+                                                  'HN2': h2_q})
+        return atoms
 
     @staticmethod
     def __get_n_h_proton_info(atoms: pd.DataFrame,  # Atoms of the itp file
