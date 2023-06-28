@@ -36,7 +36,83 @@ class UpdateItp(itp.Itp):
                    hn3: pd.DataFrame  # NH3 atoms
                    ) -> None:
         """get all the data and return final df"""
-        UpdateAtom(self.atoms, hn3)
+        up_atoms = UpdateAtom(self.atoms, hn3)
+        UpdateBond(self.bonds, hn3, up_atoms.atoms_updated)
+
+
+class UpdateBond:
+    """update atoms section by adding new N-HN3 bonds with respective N
+    atoms"""
+
+    bonds_updated: pd.DataFrame   # Updated bonds section with new bonds
+
+    def __init__(self,
+                 bonds_np: pd.DataFrame,  # Bonds form the itp file for NP
+                 hn3: pd.DataFrame,  # New HN3 to add to the atoms
+                 atoms: pd.DataFrame  # Updated APTES chains by UpAtom class
+                 ) -> None:
+        self.bonds_updated = self.update_bonds(bonds_np, hn3, atoms)
+
+    def update_bonds(self,
+                     bonds_np: pd.DataFrame,  # Bonds form the itp file for NP
+                     hn3: pd.DataFrame,  # New HN3 to add to the atoms
+                     atoms: pd.DataFrame  # Updated APTES chains by UpAtom
+                     ) -> pd.DataFrame:
+        """update the bonds section"""
+        hn3_res_atomnr: dict[typing.Any, typing.Any]  # Residue and H atoms ind
+        n_res_atomnr: dict[int, int]  # Residue and N atoms index
+        hn3_res_atomnr, n_res_atomnr = self.__get_n_index(hn3, atoms)
+        new_bonds: pd.DataFrame = self.mk_bonds(hn3_res_atomnr, n_res_atomnr)
+        # Concate the bonds and return them
+        bonds_updated: pd.DataFrame = self.concate_bonds(bonds_np, new_bonds)
+        return bonds_updated
+
+    @staticmethod
+    def concate_bonds(bonds_np: pd.DataFrame,  # Bonds in the itp file
+                      new_bonds: pd.DataFrame  # New bonds of N-HN3
+                      ) -> pd.DataFrame:
+        """concate new bonds with old one"""
+        return pd.concat([bonds_np, new_bonds], axis=0, ignore_index=True)
+
+    @staticmethod
+    def mk_bonds(hn3_res_atomnr: dict[typing.Any, typing.Any],  # HN3 atomnrs
+                 n_res_atomnrdict: dict[int, int]  # Residue and N atoms index
+                 ) -> pd.DataFrame:
+        """make bonds dataframe for N and new HN3"""
+        columns: list[str]  # Columns of the bonds dataframe
+        columns = ['typ', 'ai', 'aj', 'typ', 'cmt', 'name']
+        new_bonds = pd.DataFrame(columns=columns)
+        for i, (key, n_atomnr) in enumerate(n_res_atomnrdict.items()):
+            hn3_atomnr = hn3_res_atomnr[key]
+            new_bonds.loc[i] = [1, n_atomnr, hn3_atomnr, '1', '#', 'N-HN3']
+        return new_bonds
+
+    @staticmethod
+    def __get_n_index(hn3: pd.DataFrame,  # New NH3 dataframe
+                      atoms: pd.DataFrame  # Updated APTES chains by UpAtom
+                      ) -> tuple[dict[typing.Any, typing.Any],
+                                 dict[int, int]]:
+        """return index of the new NH3 atoms"""
+        # Getting hn3 atoms index
+        hn3_res_atomnr: dict[typing.Any, typing.Any]  # reser and HN3 atomnr
+        hn3_res_atomnr = UpdateBond.__get_res_atom_dict(hn3, atoms, 'HN3')
+        n_res_atomnr: dict[int, int]  # resnr and N atomnr
+        n_res_atomnr = UpdateBond.__get_res_atom_dict(hn3, atoms, 'N')
+        return hn3_res_atomnr, n_res_atomnr
+
+    @staticmethod
+    def __get_res_atom_dict(hn3: pd.DataFrame,  # New NH3 dataframe
+                            atoms: pd.DataFrame,  # Updated APTES chains
+                            atom_name: str  # Name of the atom
+                            ) -> dict[typing.Any, typing.Any]:
+        """nake a dictionary based on the indices for asked atom"""
+        hn3_resnr: list[typing.Any]  # Inices are int, but saved strings
+        atomnr: list[typing.Any]  # Atom numbers of HN3
+        hn3_resnr = list(hn3['residue_number'])
+        condition: pd.Series = (atoms['atomname'].isin([atom_name])) & \
+                               (atoms['resnr'].isin(hn3_resnr))
+        atomnr = atoms[condition]['atomnr']
+        return dict(zip(hn3_resnr, atomnr))
 
 
 class UpdateAtom:
