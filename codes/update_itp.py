@@ -42,22 +42,27 @@ class UpdateItp(itp.Itp):
 class UpdateAtom:
     """update atom section by adding new hn3 and updating the N, HN1,
     HN2"""
+
+    atoms_updated: pd.DataFrame  # Updated atoms section of the itp file
+
     def __init__(self,
                  atoms_np: pd.DataFrame,  # Atoms form the itp file for NP
                  hn3: pd.DataFrame  # New HN3 to add to the atoms
                  ) -> None:
-        self.update_atoms(atoms_np, hn3)
+        self.atoms_updated = self.update_atoms(atoms_np, hn3)
 
     def update_atoms(self,
                      atoms_np: pd.DataFrame,  # Atoms form the itp file for NP
                      hn3: pd.DataFrame  # New HN3 to add to the atoms
-                     ) -> None:
+                     ) -> pd.DataFrame:
         """update the atoms"""
         # Sanity check of indeces and return the atom index in atoms
         lst_atom: np.int64  # index of the final atoms
         lst_atom = self.__get_indices(atoms_np, hn3)
         # Get only APT atoms
         atoms: pd.DataFrame = atoms_np[atoms_np['resname'] == 'APT']
+        # Get COR atoms
+        cor_atoms: pd.DataFrame = atoms_np[atoms_np['resname'] == 'COR']
         # Get information for protonated H-N group from the itp file
         h_n_df: pd.DataFrame = self.__get_n_h_proton_info(atoms)
         # Make a dataframe in format of itp for new nh3
@@ -66,6 +71,18 @@ class UpdateAtom:
         atoms = \
             self.__update_chains(atoms, h_n_df, list(hn3['residue_number']))
         updated_aptes: pd.DataFrame = self.__concat_aptes(prepare_hn3, atoms)
+        # get the final atoms section of itp file
+        updates_np: pd.DataFrame = self.mk_np(cor_atoms, updated_aptes)
+        return updates_np
+
+    @staticmethod
+    def mk_np(cor_atoms: pd.DataFrame,  # Atoms belong to sili
+              updated_aptes: pd.DataFrame  # Chains with new hn3 and updated q
+              ) -> pd.DataFrame:
+        """make the final dataframe by appending updated aptes and core
+        atoms of the nanoparticle"""
+        return pd.concat([cor_atoms, updated_aptes],
+                         axis=0, ignore_index=False)
 
     @staticmethod
     def __concat_aptes(prepare_hn3: pd.DataFrame,  # Prepared HN3 dataframe
@@ -83,7 +100,7 @@ class UpdateAtom:
     @staticmethod
     def __update_chains(atoms: pd.DataFrame,  # APTES atoms
                         h_n_df: pd.DataFrame,  # Protonated N-H group info
-                        res_numbers: list[int]  # index of the chains to prtons
+                        res_numbers: list[int]  # Index of the chains to prtons
                         ) -> pd.DataFrame:
         """update the N, HN1, and HN2 in the chains which should be
         updated"""
