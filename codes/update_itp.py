@@ -61,7 +61,7 @@ class UpdateAtom:
         # Get information for protonated H-N group from the itp file
         h_n_df: pd.DataFrame = self.__get_n_h_proton_info(atoms)
         # Make a dataframe in format of itp for new nh3
-        self.__mk_hn3_itp_df(hn3, h_n_df, lst_atom)
+        prepare_hn3: pd.DataFrame = self.__mk_hn3_itp_df(hn3, h_n_df, lst_atom)
 
     @staticmethod
     def __get_n_h_proton_info(atoms: pd.DataFrame,  # Atoms of the itp file
@@ -83,8 +83,8 @@ class UpdateAtom:
                      f'branch\n{bcolors.ENDC}')
         return df_one
 
-    def __mk_hn3_itp_df(self,
-                        hn3: pd.DataFrame,  # New HN3 atoms, in pdb format
+    @staticmethod
+    def __mk_hn3_itp_df(hn3: pd.DataFrame,  # New HN3 atoms, in pdb format
                         h_n_df: pd.DataFrame,  # Info for H-N protonated group
                         lst_atom: np.int64  # Last atom index in hn3
                         ) -> pd.DataFrame:
@@ -92,7 +92,7 @@ class UpdateAtom:
         main atom section"""
         columns: list[str]  # Name of the columns
         info: dict[str, typing.Any]  # Info in the row of the df
-        columns, info = self.__get_info_dict(h_n_df, 'HN3')
+        columns, info = UpdateAtom.__get_info_dict(h_n_df, 'HN3')
         hn3_itp = pd.DataFrame(columns=columns)
         for item, row in hn3.iterrows():
             atom_id = lst_atom + item + 1
