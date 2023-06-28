@@ -52,7 +52,6 @@ class UpdateBond:
                  atoms: pd.DataFrame  # Updated APTES chains by UpAtom class
                  ) -> None:
         self.bonds_updated = self.update_bonds(bonds_np, hn3, atoms)
-        self.bonds_updated.to_csv('bonds_up', sep=' ')
 
     def update_bonds(self,
                      bonds_np: pd.DataFrame,  # Bonds form the itp file for NP
@@ -233,7 +232,7 @@ class UpdateAtom:
             df_tmp[df_tmp['atomname'].isin(['CT', 'N', 'HN1', 'HN2', 'HN3'])]
         if atoms[atoms['atomname'] == 'HN3'].empty:
             sys.exit(f'{bcolors.FAIL}{UpdateAtom.__module__}: \n'
-                     '\tError! There is no HN3 in the chosen protonated'
+                     '\tError! There is no HN3 in the chosen protonated '
                      f'branch\n{bcolors.ENDC}')
         return df_one
 
