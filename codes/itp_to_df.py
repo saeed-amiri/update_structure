@@ -264,26 +264,26 @@ class BondsInfo:
         """call all the methods to make the bonds DataFrame"""
         a_i: list[int]  # index of the 1st atoms in the bonds
         a_j: list[int]  # index of the 2nd atoms in the bonds
+        funct: list[int]  # index of the type of the bonds
         names: list[str]  # name of the bonds
-        a_i, a_j, names = self.get_bonds(bonds)
-        self.df = self.mk_df(a_i, a_j, names, atoms)
+        a_i, a_j, funct, names = self.get_bonds(bonds)
+        self.df = self.mk_df(a_i, a_j, funct, names, atoms)
 
     def get_bonds(self,
                   bonds: list[str]  # lines of bonds section read by Itp class
-                  ) -> pd.DataFrame:  # DataFrame of the bonds
+                  ) -> tuple[list[int], list[int], list[int], list[str]]:
         """return bonds dataframe to make bonds dataframe"""
         columns: list[str]  # Columns of the bonds wild
         columns = ['ai', 'aj', 'funct', 'r', 'k', 'name']
         a_i: list[int] = []  # index of the 1st atoms in the bonds
         a_j: list[int] = []  # index of the 2nd atoms in the bonds
+        funct: list[int] = []  # Type of the function of the bond
         names: list[str] = []  # name of the bonds
         for line in bonds:
             if line.startswith(';'):  # line start with ';' are commets&header
                 l_line = free_char_line(line)
                 if 'Total' not in l_line:  # Not header!
                     if l_line != columns:
-                        print(l_line)
-                        print(columns)
                         sys.exit(f'{bcolors.FAIL}{self.__class__.__name__}:\n'
                                  f'\tError in the [ bonds ] header of the '
                                  f'itp file\n{bcolors.ENDC}')
@@ -294,12 +294,14 @@ class BondsInfo:
                 l_line = free_char_line(line)
                 a_i.append(int(l_line[0]))
                 a_j.append(int(l_line[1]))
+                funct.append(int(l_line[2]))
                 names.append(l_line[3])
-        return a_i, a_j, names
+        return a_i, a_j, funct, names
 
     def mk_df(self,
               a_i: list[int],  # index of the 1st atom in the bonds
               a_j: list[int],  # index of the 2nd atom in the bonds
+              funct: list[int],  # Index of the type of the bond
               names: list[str],  # names of the bonds form bonds section
               atoms: pd.DataFrame  # atoms df from AtomsInfo to cehck the name
               ) -> pd.DataFrame:  # bonds DataFrame
@@ -310,7 +312,7 @@ class BondsInfo:
         df_bonds['aj'] = a_j
         df_bonds['name'] = names
         df_bonds['cmt'] = ['#' for _ in a_i]
-        df_bonds['typ'] = get_type(names)
+        df_bonds['typ'] = funct
         df_bonds = self.check_names(df_bonds, atoms)
         df_bonds.index += 1
         return df_bonds

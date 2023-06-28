@@ -73,7 +73,22 @@ class UpdateAtom:
         updated_aptes: pd.DataFrame = self.__concat_aptes(prepare_hn3, atoms)
         # get the final atoms section of itp file
         updates_np: pd.DataFrame = self.mk_np(cor_atoms, updated_aptes)
+        self.__charge_check(updates_np)
         return updates_np
+
+    @staticmethod
+    def __charge_check(updates_np: pd.DataFrame  # updated Nanoparticle
+                       ) -> None:
+        """sanity check of the charges in the nanoparticle"""
+        # Convert column 'A' to numeric type
+        updates_np['charge'] = pd.to_numeric(updates_np['charge'])
+
+        # Get the sum of column 'charge'
+        charge_sum = updates_np['charge'].sum()
+        if int(charge_sum) != round(charge_sum, 3):
+            sys.exit(f'{bcolors.FAIL}{UpdateAtom.__module__}:\n'
+                     '\tThe total sum of charges is not a complete number\n'
+                     f'\tTotal charge: is `{charge_sum}`\n{bcolors.ENDC}')
 
     @staticmethod
     def mk_np(cor_atoms: pd.DataFrame,  # Atoms belong to sili
@@ -105,18 +120,21 @@ class UpdateAtom:
         """update the N, HN1, and HN2 in the chains which should be
         updated"""
         n_q: float  # Charge of N atom in protonated state
+        ct_q: float  # Charge of CT atom in protonated state
         h1_q: float  # Charge of HN1 atom in protonated state
         h2_q: float  # Charge of HN1 atom in protonated state
         n_q = UpdateAtom.__get_info_dict(h_n_df, 'N')[1]['charge']
+        ct_q = UpdateAtom.__get_info_dict(h_n_df, 'CT')[1]['charge']
         h1_q = UpdateAtom.__get_info_dict(h_n_df, 'HN1')[1]['charge']
         h2_q = UpdateAtom.__get_info_dict(h_n_df, 'HN2')[1]['charge']
         # Create a condition for selecting rows that need to be updated
-        condition = (atoms['atomname'].isin(['N', 'HN1', 'HN2'])) & \
+        condition = (atoms['atomname'].isin(['CT', 'N', 'HN1', 'HN2'])) & \
                     (atoms['resnr'].isin(res_numbers))
 
         # Update the 'charge' column for the selected rows
         atoms.loc[condition, 'charge'] = \
             atoms.loc[condition, 'atomname'].map({'N': n_q,
+                                                  'CT': ct_q,
                                                   'HN1': h1_q,
                                                   'HN2': h2_q})
         return atoms
@@ -134,7 +152,7 @@ class UpdateAtom:
         rand_id: int = protonated_apt[0]
         df_tmp = atoms[atoms['resnr'] == rand_id]
         df_one: pd.DataFrame = \
-            df_tmp[df_tmp['atomname'].isin(['N', 'HN1', 'HN2', 'HN3'])]
+            df_tmp[df_tmp['atomname'].isin(['CT', 'N', 'HN1', 'HN2', 'HN3'])]
         if atoms[atoms['atomname'] == 'HN3'].empty:
             sys.exit(f'{bcolors.FAIL}{UpdateAtom.__module__}: \n'
                      '\tError! There is no HN3 in the chosen protonated'
