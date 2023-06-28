@@ -9,6 +9,7 @@ sections for the extra H in each chain, including angles and dihedrals.
 """
 
 import sys
+import typing
 import numpy as np
 import pandas as pd
 import itp_to_df as itp
@@ -57,8 +58,10 @@ class UpdateAtom:
         lst_atom = self.__get_indices(atoms_np, hn3)
         # Get only APT atoms
         atoms: pd.DataFrame = atoms_np[atoms_np['resname'] == 'APT']
-        # Get information for HN3 from the itp file itself
-        self.__get_n_h_proton_info(atoms)
+        # Get information for protonated H-N group from the itp file
+        h_n_df: pd.DataFrame = self.__get_n_h_proton_info(atoms)
+        # Make a dataframe in format of itp for new nh3
+        self.__mk_hn3_itp_df(hn3, h_n_df, lst_atom)
 
     @staticmethod
     def __get_n_h_proton_info(atoms: pd.DataFrame,  # Atoms of the itp file
@@ -79,6 +82,44 @@ class UpdateAtom:
                      '\tError! There is no HN3 in the chosen protonated'
                      f'branch\n{bcolors.ENDC}')
         return df_one
+
+    def __mk_hn3_itp_df(self,
+                        hn3: pd.DataFrame,  # New HN3 atoms, in pdb format
+                        h_n_df: pd.DataFrame,  # Info for H-N protonated group
+                        lst_atom: np.int64  # Last atom index in hn3
+                        ) -> pd.DataFrame:
+        """make a dataframe in the itp format, for appending to the
+        main atom section"""
+        columns: list[str]  # Name of the columns
+        info: dict[str, typing.Any]  # Info in the row of the df
+        columns, info = self.__get_info_dict(h_n_df, 'HN3')
+        hn3_itp = pd.DataFrame(columns=columns)
+        for item, row in hn3.iterrows():
+            atom_id = lst_atom + item + 1
+            hn3_itp.loc[item] = [atom_id,
+                                 info['atomtype'],
+                                 int(row['residue_number']),
+                                 info['resname'],
+                                 info['atomname'],
+                                 info['chargegrp'],
+                                 info['charge'],
+                                 info['mass'],
+                                 info['element']]
+        return hn3_itp
+
+    @staticmethod
+    def __get_info_dict(df_info: pd.DataFrame,  # The data frame to take info
+                        key: str,  # The name of the atom
+                        ) -> tuple[list[str], dict[str, typing.Any]]:
+        """return dictionay of info in the row of df"""
+        columns: list[str] = ['atomnr', 'atomtype', 'resnr', 'resname',
+                              'atomname', 'chargegrp', 'charge', 'mass',
+                              'element']
+        info: dict[str, typing.Any] = {}
+        for item in columns:
+            info[item] = \
+                df_info.loc[df_info['atomname'] == key, item].values[0]
+        return columns, info
 
     def __get_indices(self,
                       atoms: pd.DataFrame,  # Atoms of the itp file
