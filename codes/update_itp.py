@@ -58,9 +58,45 @@ class UpdateAngle:
                       ) -> None:
         """update angles"""
         # Find the angles which involved N and HN3
-        unique_angels: pd.DataFrame = self.__get_angles(angle_np)
+        unique_angles: pd.DataFrame = self.__get_angles(angle_np)
         # Get the index of the residues with new HN3 atoms
         new_proton_res: list[int] = self.__get_hn3_index(hn3)
+        # Make angles for the new HN3s
+        self.mk_angels(atoms, new_proton_res, unique_angles)
+
+    @staticmethod
+    def mk_angels(atoms: pd.DataFrame,  # Updated APTES chains' atoms
+                  new_proton_res: list[int],  # Index of the protonated APTES
+                  unique_angles: pd.DataFrame  # Type of angle to create
+                  ) -> pd.DataFrame:
+        """make dataframe from new angles"""
+        angles_name_list: list[list[str]]  # Atoms name in each angle
+        angles_atom_name = UpdateAngle.__get_atom_in_angles(unique_angles)
+        print(angles_atom_name)
+        # for res in new_proton_res:
+            # df_res = atoms[atoms['resnr'] == res]
+            # UpdateAngle.__get_angles(df_res, unique_angles)
+
+    @staticmethod
+    def __get_angels(df_res: pd.DataFrame,  # Only one residues
+                     unique_angles: pd.DataFrame  # Name and type of angles
+                     ) -> None:
+        """create angles for each residue"""
+        pass
+
+    @staticmethod
+    def __get_atom_in_angles(unique_angles: pd.DataFrame  # Name & typ of angle
+                             ) -> dict[str, int]:
+        """break down the names of the angles and return name of the
+        atom which is not N or HN3"""
+        # Splitting the 'name' column and combining it with 'typ' column
+        names: list[str]  # Name of the angles
+        names = unique_angles['name'].to_list()
+        types: list[int] = unique_angles['typ'].to_list()
+        atom_names: list[list[str]] = [item.split('-') for item in names]
+        third_atoms: list[str] = [item for l_item in atom_names for item
+                                  in l_item if item not in ['N', 'HN3']]
+        return dict(zip(third_atoms, types))
 
     @staticmethod
     def __get_hn3_index(hn3: pd.DataFrame  # New HN3 atoms
@@ -74,9 +110,9 @@ class UpdateAngle:
         """find the angles which involves N and HN3"""
         condition: pd.Series = angle_np['name'].str.contains('-N-') & \
             angle_np['name'].str.contains('HN3')
-        unique_angels: pd.DataFrame = \
+        unique_angles: pd.DataFrame = \
             angle_np.loc[condition, ['name', 'typ']].drop_duplicates()
-        return unique_angels
+        return unique_angles
 
 
 class UpdateBond:
