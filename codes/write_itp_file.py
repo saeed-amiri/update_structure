@@ -57,8 +57,6 @@ class WriteItp:
         header: list[str] = list(atoms.columns)  # Header of atoms
         f_w.write('[ atoms ]\n')
         f_w.write(f'; {"  ".join(header)}\n')
-        print(header)
-        print(atoms)
         atoms[';'] = [';' for _ in atoms.index]
         for row in atoms.iterrows():
             line: list[str]  # line with length of 85 spaces to fix output
