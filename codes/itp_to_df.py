@@ -353,18 +353,20 @@ class AnglesInfo:
         a_j: list[int]  # index of the 2nd atoms in the angles
         a_k: list[int]  # index of the 3rd atoms in the angles
         names: list[str]  # name of the angles
-        a_i, a_j, a_k, names = self.get_angles(angles)
-        self.df = self.mk_df(a_i, a_j, a_k, names, atoms)
+        a_i, a_j, a_k, funct, names = self.get_angles(angles)
+        self.df = self.mk_df(a_i, a_j, a_k, funct, names, atoms)
 
     def get_angles(self,
                    angles: list[str],  # lines of angles section by Itp class
-                   ) -> pd.DataFrame:  # DataFrame of the angles
+                   ) -> tuple[list[int], list[int], list[int],
+                              list[int], list[str]]:
         """return bonds dataframe to make angles dataframe"""
         columns: list[str]  # Columns of the angles wild
         columns = ['ai', 'aj', 'ak', 'funct', 'theta', 'cth', 'name']
         a_i: list[int] = []  # index of the 1st atoms in the angles
         a_j: list[int] = []  # index of the 2nd atoms in the angles
         a_k: list[int] = []  # index of the 3rd atoms in the angles
+        funct: list[int] = []  # index of the type (function) the angles
         names: list[str] = []  # name of the angles
 
         for line in angles:
@@ -385,13 +387,15 @@ class AnglesInfo:
                 a_i.append(int(l_line[0]))
                 a_j.append(int(l_line[1]))
                 a_k.append(int(l_line[2]))
+                funct.append(int(l_line[3]))
                 names.append(l_line[4])
-        return a_i, a_j, a_k, names
+        return a_i, a_j, a_k, funct, names
 
     def mk_df(self,
               a_i: list[int],  # index of the 1st atom in the angles
               a_j: list[int],  # index of the 2nd atom in the angles
               a_k: list[int],  # index of the 3rd atom in the angles
+              funct: list[int],  # Type (function) of the angles
               names: list[str],  # names of the bonds form angles section
               atoms: pd.DataFrame  # atoms df from AtomsInfo to cehck the name
               ) -> pd.DataFrame:  # angles DataFrame
@@ -404,7 +408,7 @@ class AnglesInfo:
         df_angles['ak'] = a_k
         df_angles['name'] = names
         df_angles['cmt'] = ['#' for _ in a_i]
-        df_angles['typ'] = get_type(names)
+        df_angles['typ'] = funct
         df_angles = self.check_names(df_angles, atoms)
         df_angles.index += 1
         return df_angles
@@ -419,11 +423,11 @@ class AnglesInfo:
         ai_name: list[str]  # name of the 1st atom from the list
         aj_name: list[str]  # name of the 2nd atom from the list
         ak_name: list[str]  # name of the 3rd atom from the list
-        ai_name = [atoms.loc[atoms['atomnr'] == str(item)]['atomtype'][item-1]
+        ai_name = [atoms.loc[atoms['atomnr'] == str(item)]['atomname'][item-1]
                    for item in df_angles['ai']]
-        aj_name = [atoms.loc[atoms['atomnr'] == str(item)]['atomtype'][item-1]
+        aj_name = [atoms.loc[atoms['atomnr'] == str(item)]['atomname'][item-1]
                    for item in df_angles['aj']]
-        ak_name = [atoms.loc[atoms['atomnr'] == str(item)]['atomtype'][item-1]
+        ak_name = [atoms.loc[atoms['atomnr'] == str(item)]['atomname'][item-1]
                    for item in df_angles['ak']]
         names: list[str] = [f'{i}-{j}-{k}' for i, j, k
                             in zip(ai_name, aj_name, ak_name)]
