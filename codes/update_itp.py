@@ -115,7 +115,7 @@ class UpdateDihedral:
                 df_res.loc[df_res['atomname'] == atom, 'atomnr'].values[0]
             dihedral_name = f'{atom}-CT-N-HN3'
             dihedral_res.loc[i] = [funct, fourth_id, ct_index, n_index,
-                                   hn3_index, '#', dihedral_name]
+                                   hn3_index, ';', dihedral_name]
         return dihedral_res
 
     @staticmethod
@@ -191,7 +191,7 @@ class UpdateAngle:
                 df_res.loc[df_res['atomname'] == atom, 'atomnr'].values[0]
             angle_name = f'{atom}-N-HN3'
             angle_res.loc[i] = \
-                [funct, third_id, n_index, hn3_index, '#', angle_name]
+                [funct, third_id, n_index, hn3_index, ';', angle_name]
         return angle_res
 
     @staticmethod
@@ -270,7 +270,7 @@ class UpdateBond:
         new_bonds = pd.DataFrame({'typ': 1,
                                   'ai': list(n_res_atomnrdict.values()),
                                   'aj': list(hn3_res_atomnr.values()),
-                                  'cmt': '#',
+                                  'cmt': ';',
                                   'name': 'N-HN3'})
         return new_bonds
 
