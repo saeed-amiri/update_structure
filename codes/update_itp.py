@@ -58,7 +58,15 @@ class UpdateAngle:
                       ) -> None:
         """update angles"""
         # Find the angles which involved N and HN3
-        self.__get_angles(angle_np)
+        unique_angels: pd.DataFrame = self.__get_angles(angle_np)
+        # Get the index of the residues with new HN3 atoms
+        new_proton_res: list[int] = self.__get_hn3_index(hn3)
+
+    @staticmethod
+    def __get_hn3_index(hn3: pd.DataFrame  # New HN3 atoms
+                        ) -> list[int]:
+        """return list of all the residues"""
+        return hn3['residue_number'].drop_duplicates().tolist()
 
     @staticmethod
     def __get_angles(angle_np: pd.DataFrame  # Angels in the itp file
