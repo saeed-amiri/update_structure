@@ -44,25 +44,30 @@ class UpdateItp(itp.Itp):
 class UpdateAngle:
     """update angles section by adding all the needed angle which
     involve HN3"""
+
+    angles_updated: pd.DataFrame  # Updated angles section with new angles
+
     def __init__(self,
                  angle_np: pd.DataFrame,  # Angles from the itp file for NP
                  hn3: pd.DataFrame,  # New HN3 to add to the atoms
                  atoms: pd.DataFrame  # Updated APTES chains by UpAtom class
                  ) -> None:
-        self.update_angles(angle_np, hn3, atoms)
+        self.angles_updated = self.update_angles(angle_np, hn3, atoms)
 
     def update_angles(self,
                       angle_np: pd.DataFrame,  # Angles from the itp file
                       hn3: pd.DataFrame,  # New HN3 to add to the atoms
                       atoms: pd.DataFrame  # Updated APTES chains by UpAtom
-                      ) -> None:
+                      ) -> pd.DataFrame:
         """update angles"""
         # Find the angles which involved N and HN3
         unique_angles: pd.DataFrame = self.__get_angles(angle_np)
         # Get the index of the residues with new HN3 atoms
         new_proton_res: list[int] = self.__get_hn3_index(hn3)
         # Make angles for the new HN3s
-        self.mk_angels(atoms, new_proton_res, unique_angles)
+        new_angles: pd.DataFrame = \
+            self.mk_angels(atoms, new_proton_res, unique_angles)
+        return pd.concat([angle_np, new_angles], axis=0, ignore_index=True)
 
     @staticmethod
     def mk_angels(atoms: pd.DataFrame,  # Updated APTES chains' atoms
@@ -70,19 +75,33 @@ class UpdateAngle:
                   unique_angles: pd.DataFrame  # Type of angle to create
                   ) -> pd.DataFrame:
         """make dataframe from new angles"""
-        angles_name_list: list[list[str]]  # Atoms name in each angle
-        angles_atom_name = UpdateAngle.__get_atom_in_angles(unique_angles)
-        print(angles_atom_name)
-        # for res in new_proton_res:
-            # df_res = atoms[atoms['resnr'] == res]
-            # UpdateAngle.__get_angles(df_res, unique_angles)
+        third_atom_angle: dict[str, int]  # Third atoms name in each angle
+        third_atom_angle = UpdateAngle.__get_atom_in_angles(unique_angles)
+        res_angles: list[pd.DataFrame] = []  # Angels of each residue
+        for res in new_proton_res:
+            df_res = atoms[atoms['resnr'] == res]
+            res_angles.append(
+                UpdateAngle.__get_angles_res(df_res, third_atom_angle))
+        return pd.concat(res_angles)
 
     @staticmethod
-    def __get_angels(df_res: pd.DataFrame,  # Only one residues
-                     unique_angles: pd.DataFrame  # Name and type of angles
-                     ) -> None:
+    def __get_angles_res(df_res: pd.DataFrame,  # Only one residues
+                         third_atom_angle: dict[str, int]  # Atoms and type
+                         ) -> pd.DataFrame:
         """create angles for each residue"""
-        pass
+        n_index: int = \
+            df_res.loc[df_res['atomname'] == 'N', 'atomnr'].values[0]
+        hn3_index: int = \
+            df_res.loc[df_res['atomname'] == 'HN3', 'atomnr'].values[0]
+        columns: list[str] = ['typ', 'ai', 'aj', 'ak', 'cmt', 'name']
+        angle_res = pd.DataFrame(columns=columns)
+        for i, (atom, funct) in enumerate(third_atom_angle.items()):
+            third_id = \
+                df_res.loc[df_res['atomname'] == atom, 'atomnr'].values[0]
+            angle_name = f'{atom}-N-HN3'
+            angle_res.loc[i] = \
+                [funct, third_id, n_index, hn3_index, '#', angle_name]
+        return angle_res
 
     @staticmethod
     def __get_atom_in_angles(unique_angles: pd.DataFrame  # Name & typ of angle
