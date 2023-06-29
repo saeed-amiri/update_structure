@@ -42,18 +42,6 @@ def free_char_line(line: str  # line of the itp file
     return l_line
 
 
-# A helper function needed by most of the classes to get types for LAMMPS
-def get_type(lst: list[str]  # list to get the number of distenguished ones
-             ) -> list[int]:  # types' index
-    """make type based on the unique items in the lst"""
-    type_set: set[str] = set(lst)  # eleminate the repeated names
-    type_dict: dict[str, int]  # to make a list with type index
-    type_dict = {item: i+1 for i, item in enumerate(type_set)}
-    types: list[int]  # types to return
-    types = [type_dict[item] for item in lst]
-    return types
-
-
 class Itp:
     """read itp file and return a DataFrame of the information
     within the file"""
@@ -453,9 +441,10 @@ class DihedralsInfo:
         a_j: list[int]  # index of the 2nd atoms in the dihedrals
         a_k: list[int]  # index of the 3rd atoms in the dihedrals
         a_h: list[int]  # index of the 4th atoms in the dihedrals
+        funct: list[int]  # index of the type of the dihedrals
         names: list[str]  # name of the dihedrals
-        a_i, a_j, a_k, a_h, names = self.get_dihedrals(dihedrals)
-        self.df = self.mk_df(a_i, a_j, a_k, a_h, names, atoms)
+        a_i, a_j, a_k, a_h, funct, names = self.get_dihedrals(dihedrals)
+        self.df = self.mk_df(a_i, a_j, a_k, a_h, funct, names, atoms)
 
     def get_dihedrals(self,
                       dihedrals: list[str],  # lines of dihedrals section
@@ -468,6 +457,7 @@ class DihedralsInfo:
         a_j: list[int] = []  # index of the 2nd atoms in the dihedrals
         a_k: list[int] = []  # index of the 3rd atoms in the dihedrals
         a_h: list[int] = []  # index of the 4th atoms in the dihedrals
+        funct: list[int] = []  # index of the type of the dihedrals
         names: list[str] = []  # name of the dihedrals
         for line in dihedrals:
             if line.startswith(';'):  # line start with ';' are commets&header
@@ -488,14 +478,16 @@ class DihedralsInfo:
                 a_j.append(int(l_line[1]))
                 a_k.append(int(l_line[2]))
                 a_h.append(int(l_line[3]))
+                funct.append(int(l_line[4]))
                 names.append(l_line[5])
-        return a_i, a_j, a_k, a_h, names
+        return a_i, a_j, a_k, a_h, funct, names
 
     def mk_df(self,
               a_i: list[int],  # index of the 1st atom in the dihedrals
               a_j: list[int],  # index of the 2nd atom in the dihedrals
               a_k: list[int],  # index of the 3rd atom in the dihedrals
               a_h: list[int],  # index of the 4th atom in the dihedrals
+              funct: list[int],  # types of the function
               names: list[str],  # names form dihedrals section
               atoms: pd.DataFrame  # atoms df from AtomsInfo to cehck the name
               ) -> pd.DataFrame:  # dihedrals DataFrame
@@ -509,7 +501,7 @@ class DihedralsInfo:
         df_dihedrals['ah'] = a_h
         df_dihedrals['name'] = names
         df_dihedrals['cmt'] = ['#' for _ in a_i]
-        df_dihedrals['typ'] = get_type(names)
+        df_dihedrals['typ'] = funct
         df_dihedrals = self.check_names(df_dihedrals, atoms)
         df_dihedrals.index += 1
         return df_dihedrals
