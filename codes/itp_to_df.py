@@ -395,7 +395,7 @@ class AnglesInfo:
         df_angles['aj'] = a_j
         df_angles['ak'] = a_k
         df_angles['name'] = names
-        df_angles['cmt'] = ['#' for _ in a_i]
+        df_angles['cmt'] = [';' for _ in a_i]
         df_angles['typ'] = funct
         df_angles = self.check_names(df_angles, atoms)
         df_angles.index += 1
@@ -500,7 +500,7 @@ class DihedralsInfo:
         df_dihedrals['ak'] = a_k
         df_dihedrals['ah'] = a_h
         df_dihedrals['name'] = names
-        df_dihedrals['cmt'] = ['#' for _ in a_i]
+        df_dihedrals['cmt'] = [';' for _ in a_i]
         df_dihedrals['typ'] = funct
         df_dihedrals = self.check_names(df_dihedrals, atoms)
         df_dihedrals.index += 1
