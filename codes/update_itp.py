@@ -25,6 +25,11 @@ class UpdateItp(itp.Itp):
     # dihedrals: pd.DataFrame -> Section of initial itp file
     # molecules: pd.DataFrame -> Section of initial itp file
 
+    atoms_updated: pd.DataFrame  # Updated atoms section
+    bonds_updated: pd.DataFrame  # Updated bonds section
+    angles_updated: pd.DataFrame  # Updated angles section
+    dihedrals_updated: pd.DataFrame  # Updated dihedrals section
+
     def __init__(self,
                  fname: str,  # Name of the itp file
                  hn3: pd.DataFrame  # Information for new NH3 atoms
@@ -37,9 +42,14 @@ class UpdateItp(itp.Itp):
                    ) -> None:
         """get all the data and return final df"""
         up_atoms = UpdateAtom(self.atoms, hn3)
-        UpdateBond(self.bonds, hn3, up_atoms.atoms_updated)
-        UpdateAngle(self.angles, hn3, up_atoms.atoms_updated)
-        UpdateDihedral(self.dihedrals, hn3, up_atoms.atoms_updated)
+        up_bonds = UpdateBond(self.bonds, hn3, up_atoms.atoms_updated)
+        up_angles = UpdateAngle(self.angles, hn3, up_atoms.atoms_updated)
+        up_dihedrals = \
+            UpdateDihedral(self.dihedrals, hn3, up_atoms.atoms_updated)
+        self.atoms_updated = up_atoms.atoms_updated
+        self.bonds_updated = up_bonds.bonds_updated
+        self.angles_updated = up_angles.angles_updated
+        self.dihedrals_updated = up_dihedrals.dihedrals_updated
 
 
 class UpdateDihedral:
@@ -54,7 +64,6 @@ class UpdateDihedral:
                  atoms: pd.DataFrame  # Updated APTES chains by UpAtom class
                  ) -> None:
         self.dihedrals_updated = self.update_dihedrals(dihedral_np, hn3, atoms)
-        print(self.dihedrals_updated)
 
     def update_dihedrals(self,
                          dihedral_np: pd.DataFrame,  # Dihedral from itp file
