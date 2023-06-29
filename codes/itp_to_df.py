@@ -299,7 +299,7 @@ class BondsInfo:
         df_bonds['ai'] = a_i
         df_bonds['aj'] = a_j
         df_bonds['name'] = names
-        df_bonds['cmt'] = ['#' for _ in a_i]
+        df_bonds['cmt'] = [';' for _ in a_i]
         df_bonds['typ'] = funct
         df_bonds = self.check_names(df_bonds, atoms)
         df_bonds.index += 1
