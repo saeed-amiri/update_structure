@@ -38,10 +38,41 @@ class UpdateItp(itp.Itp):
         """get all the data and return final df"""
         up_atoms = UpdateAtom(self.atoms, hn3)
         UpdateBond(self.bonds, hn3, up_atoms.atoms_updated)
+        UpdateAngle(self.angles, hn3, up_atoms.atoms_updated)
+
+
+class UpdateAngle:
+    """update angles section by adding all the needed angle which
+    involve HN3"""
+    def __init__(self,
+                 angle_np: pd.DataFrame,  # Angles from the itp file for NP
+                 hn3: pd.DataFrame,  # New HN3 to add to the atoms
+                 atoms: pd.DataFrame  # Updated APTES chains by UpAtom class
+                 ) -> None:
+        self.update_angles(angle_np, hn3, atoms)
+
+    def update_angles(self,
+                      angle_np: pd.DataFrame,  # Angles from the itp file
+                      hn3: pd.DataFrame,  # New HN3 to add to the atoms
+                      atoms: pd.DataFrame  # Updated APTES chains by UpAtom
+                      ) -> None:
+        """update angles"""
+        # Find the angles which involved N and HN3
+        self.__get_angles(angle_np)
+
+    @staticmethod
+    def __get_angles(angle_np: pd.DataFrame  # Angels in the itp file
+                     ) -> pd.DataFrame:
+        """find the angles which involves N and HN3"""
+        condition: pd.Series = angle_np['name'].str.contains('-N-') & \
+            angle_np['name'].str.contains('HN3')
+        unique_angels: pd.DataFrame = \
+            angle_np.loc[condition, ['name', 'typ']].drop_duplicates()
+        return unique_angels
 
 
 class UpdateBond:
-    """update atoms section by adding new N-HN3 bonds with respective N
+    """update bonds section by adding new N-HN3 bonds with respective N
     atoms"""
 
     bonds_updated: pd.DataFrame   # Updated bonds section with new bonds
