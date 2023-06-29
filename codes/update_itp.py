@@ -41,27 +41,35 @@ class UpdateItp(itp.Itp):
         UpdateAngle(self.angles, hn3, up_atoms.atoms_updated)
         UpdateDihedral(self.dihedrals, hn3, up_atoms.atoms_updated)
 
+
 class UpdateDihedral:
     """update dihedrals and return the updated section contian new HN3
     """
+
+    dihedrals_updated: pd.DataFrame  # Updated section with new HN3
+
     def __init__(self,
                  dihedral_np: pd.DataFrame,  # Dihedral from itp file for NP
                  hn3: pd.DataFrame,  # New HN3 to add to the atoms
                  atoms: pd.DataFrame  # Updated APTES chains by UpAtom class
                  ) -> None:
-        self.update_dihedrals(dihedral_np, hn3, atoms)
+        self.dihedrals_updated = self.update_dihedrals(dihedral_np, hn3, atoms)
+        print(self.dihedrals_updated)
 
     def update_dihedrals(self,
                          dihedral_np: pd.DataFrame,  # Dihedral from itp file
                          hn3: pd.DataFrame,  # New HN3 to add to the atoms
                          atoms: pd.DataFrame  # Updated APTES chains by UpAtom
-                         ) -> None:
+                         ) -> pd.DataFrame:
         """update dihedral section"""
         # Find the dihedrals which contain N and HN3
         unique_dihedrals: pd.DataFrame = self.__get_dihedrals(dihedral_np)
         # Get the index of the new residues with new HN3 atoms
         new_proton_res: list[int] = UpdateAngle.get_hn3_index(hn3)
-        self.mk_dihedrlas(atoms, new_proton_res, unique_dihedrals)
+        new_dihedrals: pd.DataFrame = \
+            self.mk_dihedrlas(atoms, new_proton_res, unique_dihedrals)
+        return pd.concat([dihedral_np, new_dihedrals],
+                         axis=0, ignore_index=True)
 
     @staticmethod
     def mk_dihedrlas(atoms: pd.DataFrame,  # Updated atoms with new HN3
@@ -69,15 +77,41 @@ class UpdateDihedral:
                      unique_dihedrals: pd.DataFrame  # Types of dihedral to mk
                      ) -> pd.DataFrame:
         """make dataframe from new dihedrals"""
-        alien_atoms: dict[str, int]  # Other atoms in dihedrals
-        alien_atoms = \
+        fourth_atoms: dict[str, int]  # Fourth atoms in dihedrals
+        fourth_atoms = \
             UpdateAngle.get_atom_in_angdihd(unique_dihedrals,
                                             ignore_list=['N', 'HN3', 'CT'])
-        print(alien_atoms)
+        res_dihedrals: list[pd.DataFrame] = []  # All the dihedrals
+        for res in new_proton_res:
+            df_res = atoms[atoms['resnr'] == res]
+            res_dihedrals.append(
+                UpdateDihedral.get_dihedral_res(df_res, fourth_atoms))
+        return pd.concat(res_dihedrals)
+
+    @staticmethod
+    def get_dihedral_res(df_res: pd.DataFrame,  # Only one residues
+                         fourth_atoms: dict[str, int]  # 4th atom and type of d
+                         ) -> pd.DataFrame:
+        """creat dihedrals for each residues which got new HN3"""
+        n_index: int = \
+            df_res.loc[df_res['atomname'] == 'N', 'atomnr'].values[0]
+        hn3_index: int = \
+            df_res.loc[df_res['atomname'] == 'HN3', 'atomnr'].values[0]
+        ct_index: int = \
+            df_res.loc[df_res['atomname'] == 'CT', 'atomnr'].values[0]
+        columns: list[str] = ['typ', 'ai', 'aj', 'ak', 'ah', 'cmt', 'name']
+        dihedral_res = pd.DataFrame(columns=columns)
+        for i, (atom, funct) in enumerate(fourth_atoms.items()):
+            fourth_id = \
+                df_res.loc[df_res['atomname'] == atom, 'atomnr'].values[0]
+            dihedral_name = f'{atom}-CT-N-HN3'
+            dihedral_res.loc[i] = [funct, fourth_id, ct_index, n_index,
+                                   hn3_index, '#', dihedral_name]
+        return dihedral_res
 
     @staticmethod
     def __get_dihedrals(dihedral_np: pd.DataFrame  # All from itp file
-                      ) -> pd.DataFrame:
+                        ) -> pd.DataFrame:
         """get unique dataframe of all of those which involve N and HN3"""
 
         condition: pd.Series = dihedral_np['name'].str.contains('N-') & \
@@ -122,7 +156,9 @@ class UpdateAngle:
                   ) -> pd.DataFrame:
         """make dataframe from new angles"""
         third_atom_angle: dict[str, int]  # Third atoms name in each angle
-        third_atom_angle = UpdateAngle.get_atom_in_angdihd(unique_angles)
+        third_atom_angle = \
+            UpdateAngle.get_atom_in_angdihd(unique_angles,
+                                            ignore_list=['N', 'HN3'])
         res_angles: list[pd.DataFrame] = []  # Angels of each residue
         for res in new_proton_res:
             df_res = atoms[atoms['resnr'] == res]
@@ -151,7 +187,7 @@ class UpdateAngle:
 
     @staticmethod
     def get_atom_in_angdihd(unique_angles: pd.DataFrame,  # Name & typ of angle
-                            ignore_list: list[str] = ['N', 'HN3']
+                            ignore_list: list[str]  # Atoms to ignore
                             ) -> dict[str, int]:
         """break down the names of the angles and return name of the
         atom which is not N or HN3, it can be used by dihedral class"""
