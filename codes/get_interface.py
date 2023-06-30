@@ -36,7 +36,28 @@ class GetSurface:
         aptes_com: np.ndarray  # Center of mass of NP
         aptes_r: np.float64  # Radius of NP
         aptes_com, aptes_r = self.__get_np_radius_com(residues_atoms['APT'])
-        print(type(aptes_r))
+        self.get_water_surface(residues_atoms['SOL'], aptes_com, aptes_r)
+
+    def get_water_surface(self,
+                         waters: pd.DataFrame,  # all the water moles
+                         aptes_com: np.ndarray,  # Center of mass of NP
+                         aptes_r: np.float64  # Radius of NP
+                         ) -> None:
+        """find the water surface"""
+        z_lim: np.float64  # Treshhold for water molecules
+        x_lim: np.ndarray  # Area around NP in x axis
+        y_lim: np.ndarray  # Area around NP in y axis
+        z_lim = aptes_com[2] + aptes_r
+        # Get water under the oil phase
+        water_sec: pd.DataFrame = self.__water_under_oil(waters, z_lim)
+    
+    @staticmethod
+    def __water_under_oil(waters: pd.DataFrame,  # All water residues
+                          z_lim: np.float64  # Highest point of NP 
+                          ) -> pd.DataFrame:
+        """return waters in the water sections and drop ones above oil"""
+        return waters[waters['z'] < z_lim]
+
 
     def __get_np_radius_com(self,
                             aptes: pd.DataFrame  # All the APTES atoms
