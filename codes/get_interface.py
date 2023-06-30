@@ -17,12 +17,13 @@ most outward particles.
 
 import numpy as np
 import pandas as pd
+import write_pdb_file as wrpdb
 
 
 class GetSurface:
     """find water surface of the system"""
 
-    info_msg: str = '-message:\n'  # Message to pass for logging and writing in consoul
+    info_msg: str = '-message:\n'  # Message to pass for logging and writing
 
     def __init__(self,
                  residues_atoms: dict[str, pd.DataFrame]  # All atoms in ress
@@ -39,25 +40,47 @@ class GetSurface:
         self.get_water_surface(residues_atoms['SOL'], aptes_com, aptes_r)
 
     def get_water_surface(self,
-                         waters: pd.DataFrame,  # all the water moles
-                         aptes_com: np.ndarray,  # Center of mass of NP
-                         aptes_r: np.float64  # Radius of NP
-                         ) -> None:
+                          waters: pd.DataFrame,  # all the water moles
+                          aptes_com: np.ndarray,  # Center of mass of NP
+                          aptes_r: np.float64  # Radius of NP
+                          ) -> None:
         """find the water surface"""
         z_lim: np.float64  # Treshhold for water molecules
-        x_lim: np.ndarray  # Area around NP in x axis
-        y_lim: np.ndarray  # Area around NP in y axis
         z_lim = aptes_com[2] + aptes_r
         # Get water under the oil phase
         water_sec: pd.DataFrame = self.__water_under_oil(waters, z_lim)
-    
+        self.__get_water_no_np(water_sec, aptes_com, aptes_r)
+
+    @staticmethod
+    def __get_water_no_np(waters: pd.DataFrame,  # All waters under oil section
+                          aptes_com: np.ndarray,  # Center of mass of NP
+                          aptes_r: np.float64  # Radius of NP
+                          ) -> pd.DataFrame:
+        """drop water under the NP, the rest are those needed for getting
+        the surface"""
+        waters_oxy: pd.DataFrame  # Oxygens of water residues
+        waters_oxy = waters[waters['atom_name'] == 'OH2']
+        x_values = waters_oxy['x'].values
+        y_values = waters_oxy['y'].values
+
+        # Calculate the squared Euclidean distance between each point&origin
+        distances: np.ndarray = np.sqrt((x_values - aptes_com[0]) ** 2 +
+                                        (y_values - aptes_com[1]) ** 2)
+
+        # Create a boolean mask indicating the rows to keep
+        mask: np.ndarray = distances > aptes_r
+
+        # Filter the dataframe using the mask
+        df_filtered: pd.DataFrame = waters_oxy[mask]
+        wrpdb.WriteResiduePdb(df_filtered, 'o_waters.pdb')
+        return df_filtered
+
     @staticmethod
     def __water_under_oil(waters: pd.DataFrame,  # All water residues
-                          z_lim: np.float64  # Highest point of NP 
+                          z_lim: np.float64  # Highest point of NP
                           ) -> pd.DataFrame:
         """return waters in the water sections and drop ones above oil"""
         return waters[waters['z'] < z_lim]
-
 
     def __get_np_radius_com(self,
                             aptes: pd.DataFrame  # All the APTES atoms
