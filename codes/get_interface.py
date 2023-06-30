@@ -22,7 +22,7 @@ import pandas as pd
 class GetSurface:
     """find water surface of the system"""
 
-    info_msg: str = ''  # Message to pass for logging and writing in consoul
+    info_msg: str = '-message:\n'  # Message to pass for logging and writing in consoul
 
     def __init__(self,
                  residues_atoms: dict[str, pd.DataFrame]  # All atoms in ress
@@ -47,7 +47,10 @@ class GetSurface:
         aptes_com: np.ndarray = np.average(aptes[['x', 'y', 'z']], axis=0)
         max_z: np.float64 = np.max(aptes['z'])
         min_z: np.float64 = np.min(aptes['z'])
-        return aptes_com, np.round(max_z-min_z, 3)
+        aptes_r: np.float64 = np.round(max_z-min_z, 3)
+        self.info_msg += f'\tThe center of mass of NP is: {aptes_com}\n'
+        self.info_msg += f'\tThe radius of NP is: {aptes_r}\n'
+        return aptes_com, aptes_r
 
 
 if __name__ == '__main__':
