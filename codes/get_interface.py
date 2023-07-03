@@ -51,7 +51,21 @@ class GetSurface:
         z_lim = aptes_com[2] + aptes_r
         # Get water under the oil phase
         water_sec: pd.DataFrame = self.__water_under_oil(waters, z_lim)
-        self.__get_water_no_np(water_sec, aptes_com, aptes_r)
+        # Cuboidal box of water's oxysgens with a cylindrical void from NP
+        cuboid_with_hole: pd.DataFrame = \
+            self.__get_water_no_np(water_sec, aptes_com, aptes_r)
+        self.__get_surface_topology(cuboid_with_hole)
+
+    def __get_surface_topology(self,
+                               cuboid_with_hole: pd.DataFrame  # water's O
+                               ) -> None:
+        """get water surface topology from oxygens in the surface"""
+        x_data: np.ndarray = np.array(cuboid_with_hole['x'])
+        y_data: np.ndarray = np.array(cuboid_with_hole['y'])
+        x_grid: np.ndarray  # Data on the grid
+        y_grid: np.ndarray  # Data on the grid
+        grid_size: np.float64  # Size of the grid
+        x_grid, y_grid, grid_size = self.__get_grid_xy(x_data, y_data)
 
     def __get_water_no_np(self,
                           waters: pd.DataFrame,  # All waters under oil section
@@ -74,7 +88,7 @@ class GetSurface:
 
         # Filter the dataframe using the mask
         df_filtered: pd.DataFrame = waters_oxy[mask]
-        if self.write_debug: 
+        if self.write_debug:
             wrpdb.WriteResiduePdb(df_filtered, 'o_waters.pdb')
         return df_filtered
 
@@ -91,7 +105,7 @@ class GetSurface:
         """find the radius of the NP, just find max and min of points in z-axis
         and their difference will be the radius * 2 ."""
         # Calculate the center of mass
-        if self.write_debug: 
+        if self.write_debug:
             wrpdb.WriteResiduePdb(aptes, 'APTES.pdb')
         aptes_com: np.ndarray = np.average(aptes[['x', 'y', 'z']], axis=0)
         max_z: np.float64 = np.max(aptes['z'])
@@ -100,6 +114,23 @@ class GetSurface:
         self.info_msg += f'\tThe center of mass of NP is: {aptes_com}\n'
         self.info_msg += f'\tThe radius of NP is: {aptes_r}\n'
         return aptes_com, aptes_r
+
+    @staticmethod
+    def __get_grid_xy(x_data: np.ndarray,  # x component of the coms
+                      y_data: np.ndarray,  # y component of the coms
+                      ) -> tuple[np.ndarray, np.ndarray, np.float64]:
+        """return the mesh grid for the xy of sol"""
+        x_min: np.float64 = np.min(x_data)
+        y_min: np.float64 = np.min(y_data)
+        x_max: np.float64 = np.max(x_data)
+        y_max: np.float64 = np.max(y_data)
+        mesh_size: np.float64 = (x_max-x_min)/100.
+        x_mesh: np.ndarray  # Mesh grid in x and y
+        y_mesh: np.ndarray  # Mesh grid in x and y
+        x_mesh, y_mesh = np.meshgrid(
+            np.arange(x_min, x_max + mesh_size, mesh_size),
+            np.arange(y_min, y_max + mesh_size, mesh_size))
+        return x_mesh, y_mesh, mesh_size
 
 
 if __name__ == '__main__':
