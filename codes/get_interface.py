@@ -27,6 +27,7 @@ class GetSurface:
     # Set in "get_water_surface" method:
     interface_z: np.float64  # Average place of the water suraface at interface
     interface_std: np.float64  # standard diviasion of the water suraface
+    contact_angle: np.float64  # Final contact angle
 
     def __init__(self,
                  residues_atoms: dict[str, pd.DataFrame],  # All atoms in ress
@@ -64,15 +65,32 @@ class GetSurface:
             self.__get_surface_topology(cuboid_with_hole, z_lo)
         self.interface_z, self.interface_std = \
             self.__analyse_surface(water_surface)
+        self.contact_angle = self.__get_contact_angle(aptes_com, aptes_r)
 
-    @staticmethod
-    def __analyse_surface(water_surface: pd.DataFrame  # Water at surface df
+    def __get_contact_angle(self,
+                            aptes_com: np.ndarray,  # Center of mass of NP
+                            aptes_r: np.float64  # Radius of NP
+                            ) -> np.float64:
+        """calculate the contact angle of the nanoparticle, I use the
+        Fig 5b of Mass paper (Joeri Smith, 2022), based on the mean
+        of the interface"""
+        h_depth: float  # Depth of NP in water
+        h_depth = aptes_r + (aptes_com[2] - self.interface_z)
+        contact_angle: np.float64 = np.arccos((h_depth/aptes_r) - 1)
+        self.info_msg += f'\tThe contact angle is: {contact_angle} [rad]'
+        self.info_msg += f':, {np.rad2deg(contact_angle)} [deg]\n'
+        return contact_angle
+
+    def __analyse_surface(self,
+                          water_surface: pd.DataFrame  # Water at surface df
                           ) -> tuple[np.float64, np.float64]:
         """analys surface and calculate the thickness of the surface,
         mean, higher, and lower bond
         """
         z_mean: np.float64 = np.mean(water_surface['z'])
         std_d: np.float64 = np.std(water_surface['z'])
+        self.info_msg += f'\nThe mean place of water`s surface is: {z_mean}\n'
+        self.info_msg += f'\nThe standard diviation of surface is: {std_d}\n'
         return z_mean, std_d
 
     def __get_surface_topology(self,
