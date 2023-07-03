@@ -24,6 +24,9 @@ class GetSurface:
     """find water surface of the system"""
 
     info_msg: str = '-message:\n'  # Message to pass for logging and writing
+    # Set in "get_water_surface" method:
+    interface_z: np.float64  # Average place of the water suraface at interface
+    interface_std: np.float64  # standard diviasion of the water suraface
 
     def __init__(self,
                  residues_atoms: dict[str, pd.DataFrame],  # All atoms in ress
@@ -46,7 +49,8 @@ class GetSurface:
                           aptes_com: np.ndarray,  # Center of mass of NP
                           aptes_r: np.float64  # Radius of NP
                           ) -> None:
-        """find the water surface"""
+        """find the water surface, and return mean place of the surface
+        and its standard deviation"""
         z_hi: np.float64  # Treshhold for water molecules in in oil phase
         z_lo: np.float64  # Treshhold for water molecules in in water phase
         z_hi = aptes_com[2] + aptes_r
@@ -58,6 +62,18 @@ class GetSurface:
             self.__get_water_no_np(water_sec, aptes_com, aptes_r)
         water_surface: pd.DataFrame = \
             self.__get_surface_topology(cuboid_with_hole, z_lo)
+        self.interface_z, self.interface_std = \
+            self.__analyse_surface(water_surface)
+
+    @staticmethod
+    def __analyse_surface(water_surface: pd.DataFrame  # Water at surface df
+                          ) -> tuple[np.float64, np.float64]:
+        """analys surface and calculate the thickness of the surface,
+        mean, higher, and lower bond
+        """
+        z_mean: np.float64 = np.mean(water_surface['z'])
+        std_d: np.float64 = np.std(water_surface['z'])
+        return z_mean, std_d
 
     def __get_surface_topology(self,
                                cuboid_with_hole: pd.DataFrame,  # water's O
