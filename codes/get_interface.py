@@ -47,25 +47,53 @@ class GetSurface:
                           aptes_r: np.float64  # Radius of NP
                           ) -> None:
         """find the water surface"""
-        z_lim: np.float64  # Treshhold for water molecules
-        z_lim = aptes_com[2] + aptes_r
+        z_hi: np.float64  # Treshhold for water molecules in in oil phase
+        z_lo: np.float64  # Treshhold for water molecules in in water phase
+        z_hi = aptes_com[2] + aptes_r
+        z_lo = aptes_com[2] - aptes_r
         # Get water under the oil phase
-        water_sec: pd.DataFrame = self.__water_under_oil(waters, z_lim)
+        water_sec: pd.DataFrame = self.__water_under_oil(waters, z_hi)
         # Cuboidal box of water's oxysgens with a cylindrical void from NP
         cuboid_with_hole: pd.DataFrame = \
             self.__get_water_no_np(water_sec, aptes_com, aptes_r)
-        self.__get_surface_topology(cuboid_with_hole)
+        water_surface: pd.DataFrame = \
+            self.__get_surface_topology(cuboid_with_hole, z_lo)
 
     def __get_surface_topology(self,
-                               cuboid_with_hole: pd.DataFrame  # water's O
-                               ) -> None:
-        """get water surface topology from oxygens in the surface"""
+                               cuboid_with_hole: pd.DataFrame,  # water's O
+                               z_lo: np.float64  # Treshhold for water res
+                               ) -> pd.DataFrame:
+        """get water surface topology from oxygens in the surface
+        Using the grid meshes in the x and y directions, the water_com
+        in each grid with the highest z value is returned.
+        """
+        x_mesh: np.ndarray  # Mesh grid in x and y
+        y_mesh: np.ndarray  # Mesh grid in x and y
         x_data: np.ndarray = np.array(cuboid_with_hole['x'])
         y_data: np.ndarray = np.array(cuboid_with_hole['y'])
-        x_grid: np.ndarray  # Data on the grid
-        y_grid: np.ndarray  # Data on the grid
-        grid_size: np.float64  # Size of the grid
-        x_grid, y_grid, grid_size = self.__get_grid_xy(x_data, y_data)
+        z_data: np.ndarray = np.array(cuboid_with_hole['z'])
+        mesh_size: np.float64  # Size of the grid
+        x_mesh, y_mesh, mesh_size = self.__get_grid_xy(x_data, y_data)
+        max_z_index: list[int] = []  # Index of the max value at each grid
+        for i in range(x_mesh.shape[0]):
+            for j in range(x_mesh.shape[1]):
+                # Define the boundaries of the current mesh element
+                x_min_mesh, x_max_mesh = x_mesh[i, j], x_mesh[i, j] + mesh_size
+                y_min_mesh, y_max_mesh = y_mesh[i, j], y_mesh[i, j] + mesh_size
+
+                # Select atoms within the current mesh element based on X and Y
+                ind_in_mesh = np.where((x_data >= x_min_mesh) &
+                                       (x_data < x_max_mesh) &
+                                       (y_data >= y_min_mesh) &
+                                       (y_data < y_max_mesh) &
+                                       (z_data > z_lo))
+                if len(ind_in_mesh[0]) > 0:
+                    max_z = np.argmax(z_data[ind_in_mesh])
+                    max_z_index.append(ind_in_mesh[0][max_z])
+        water_surface: pd.DataFrame = cuboid_with_hole.iloc[max_z_index]
+        if self.write_debug:
+            wrpdb.WriteResiduePdb(water_surface, 'water_surface.pdb')
+        return water_surface
 
     def __get_water_no_np(self,
                           waters: pd.DataFrame,  # All waters under oil section
