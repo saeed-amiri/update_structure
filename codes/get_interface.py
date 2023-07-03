@@ -25,7 +25,7 @@ from colors_text import TextColor as bcolors
 class GetSurface:
     """find water surface of the system"""
 
-    info_msg: str = '-message:\n'  # Message to pass for logging and writing
+    info_msg: str = 'Message:\n'  # Message to pass for logging and writing
     # Set in "get_water_surface" method:
     interface_z: np.float64  # Average place of the water suraface at interface
     interface_std: np.float64  # standard diviasion of the water suraface
