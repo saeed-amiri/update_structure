@@ -156,6 +156,8 @@ class GetSurface:
         df_filtered: pd.DataFrame = waters_oxy[mask]
         if self.write_debug:
             wrpdb.WriteResiduePdb(df_filtered, 'o_waters.pdb')
+        self.info_msg += '\tOnly oxygen atoms [OH2] are selected for the' + \
+            'looking for the surface.\n'
         return df_filtered
 
     @staticmethod
