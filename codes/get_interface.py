@@ -17,6 +17,7 @@ most outward particles.
 
 import numpy as np
 import pandas as pd
+import logger
 import write_pdb_file as wrpdb
 from colors_text import TextColor as bcolors
 
@@ -32,11 +33,12 @@ class GetSurface:
 
     def __init__(self,
                  residues_atoms: dict[str, pd.DataFrame],  # All atoms in ress
+                 log: logger.logging.Logger,  # To log info in it
                  write_debug: bool = False,  # If wanted to write the pdb file
                  ) -> None:
         self.write_debug: bool = write_debug
         self.get_interface(residues_atoms)
-        self.__write_msg()
+        self.__write_msg(log)
 
     def get_interface(self,
                       residues_atoms: dict[str, pd.DataFrame]  # All atoms
@@ -196,10 +198,13 @@ class GetSurface:
             np.arange(y_min, y_max + mesh_size, mesh_size))
         return x_mesh, y_mesh, mesh_size
 
-    def __write_msg(self) -> None:
+    def __write_msg(self,
+                    log: logger.logging.Logger,  # To log info in it
+                    ) -> None:
         """write and log messages"""
         print(f'{bcolors.OKCYAN}{self.__module__}:\n'
               f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)
 
 
 if __name__ == '__main__':
