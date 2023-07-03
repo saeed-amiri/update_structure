@@ -26,8 +26,10 @@ class GetSurface:
     info_msg: str = '-message:\n'  # Message to pass for logging and writing
 
     def __init__(self,
-                 residues_atoms: dict[str, pd.DataFrame]  # All atoms in ress
+                 residues_atoms: dict[str, pd.DataFrame],  # All atoms in ress
+                 write_debug: bool = False,  # If wanted to write the pdb file
                  ) -> None:
+        self.write_debug: bool = write_debug
         self.get_interface(residues_atoms)
 
     def get_interface(self,
@@ -51,8 +53,8 @@ class GetSurface:
         water_sec: pd.DataFrame = self.__water_under_oil(waters, z_lim)
         self.__get_water_no_np(water_sec, aptes_com, aptes_r)
 
-    @staticmethod
-    def __get_water_no_np(waters: pd.DataFrame,  # All waters under oil section
+    def __get_water_no_np(self,
+                          waters: pd.DataFrame,  # All waters under oil section
                           aptes_com: np.ndarray,  # Center of mass of NP
                           aptes_r: np.float64  # Radius of NP
                           ) -> pd.DataFrame:
@@ -72,7 +74,8 @@ class GetSurface:
 
         # Filter the dataframe using the mask
         df_filtered: pd.DataFrame = waters_oxy[mask]
-        wrpdb.WriteResiduePdb(df_filtered, 'o_waters.pdb')
+        if self.write_debug: 
+            wrpdb.WriteResiduePdb(df_filtered, 'o_waters.pdb')
         return df_filtered
 
     @staticmethod
@@ -86,12 +89,14 @@ class GetSurface:
                             aptes: pd.DataFrame  # All the APTES atoms
                             ) -> tuple[np.ndarray, np.float64]:
         """find the radius of the NP, just find max and min of points in z-axis
-        and their difference will be the radius."""
+        and their difference will be the radius * 2 ."""
         # Calculate the center of mass
+        if self.write_debug: 
+            wrpdb.WriteResiduePdb(aptes, 'APTES.pdb')
         aptes_com: np.ndarray = np.average(aptes[['x', 'y', 'z']], axis=0)
         max_z: np.float64 = np.max(aptes['z'])
         min_z: np.float64 = np.min(aptes['z'])
-        aptes_r: np.float64 = np.round(max_z-min_z, 3)
+        aptes_r: np.float64 = np.round(max_z-min_z, 3) / 2 * 1.1
         self.info_msg += f'\tThe center of mass of NP is: {aptes_com}\n'
         self.info_msg += f'\tThe radius of NP is: {aptes_r}\n'
         return aptes_com, aptes_r
