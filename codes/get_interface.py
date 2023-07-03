@@ -18,6 +18,7 @@ most outward particles.
 import numpy as np
 import pandas as pd
 import write_pdb_file as wrpdb
+from colors_text import TextColor as bcolors
 
 
 class GetSurface:
@@ -35,6 +36,7 @@ class GetSurface:
                  ) -> None:
         self.write_debug: bool = write_debug
         self.get_interface(residues_atoms)
+        self.__write_msg()
 
     def get_interface(self,
                       residues_atoms: dict[str, pd.DataFrame]  # All atoms
@@ -78,7 +80,7 @@ class GetSurface:
         h_depth = aptes_r + (aptes_com[2] - self.interface_z)
         contact_angle: np.float64 = np.arccos((h_depth/aptes_r) - 1)
         self.info_msg += f'\tThe contact angle is: {contact_angle} [rad]'
-        self.info_msg += f':, {np.rad2deg(contact_angle)} [deg]\n'
+        self.info_msg += f', {np.rad2deg(contact_angle)} [deg]\n'
         return contact_angle
 
     def __analyse_surface(self,
@@ -89,8 +91,8 @@ class GetSurface:
         """
         z_mean: np.float64 = np.mean(water_surface['z'])
         std_d: np.float64 = np.std(water_surface['z'])
-        self.info_msg += f'\nThe mean place of water`s surface is: {z_mean}\n'
-        self.info_msg += f'\nThe standard diviation of surface is: {std_d}\n'
+        self.info_msg += f'\tThe mean place of water`s surface is: {z_mean}\n'
+        self.info_msg += f'\tThe standard diviation of surface is: {std_d}\n'
         return z_mean, std_d
 
     def __get_surface_topology(self,
@@ -193,6 +195,11 @@ class GetSurface:
             np.arange(x_min, x_max + mesh_size, mesh_size),
             np.arange(y_min, y_max + mesh_size, mesh_size))
         return x_mesh, y_mesh, mesh_size
+
+    def __write_msg(self) -> None:
+        """write and log messages"""
+        print(f'{bcolors.OKCYAN}{self.__module__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
 
 
 if __name__ == '__main__':
