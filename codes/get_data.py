@@ -32,7 +32,7 @@ class ProcessData:
                  log: logger.logging.Logger
                  ) -> None:
         self.param = param.ReadParam(log=log).param
-        self.atoms = pdbf.Pdb(fname).atoms
+        self.atoms = pdbf.Pdb(fname, log).atoms
         self.residues_atoms = self.__get_atoms()
         # All the unprtonated aptes to be protonated:
         self.unproton_aptes, self.unprot_aptes_ind = self.process_data(log)
