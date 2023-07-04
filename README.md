@@ -18,24 +18,27 @@ Inputs:
     -update_param:
         this file contains information about interface and nanoparticle
         and has a structure as follows:
-            # All the distance values are in angstroms and angles in degree
+            All the distance values are in angestrom and angles in degree
             ############### CONSTANT VALUES ##############
-            # The contact angle of the nanoparticle (NP)
-            ANGLE=90
-            # Estimated radius of the NP before functionalization with APTES
-            RADIUS=25
+            The contact angle of the nanoparticle (NP)
+            @ANGLE=90
+            Estimate radius of the NP before functionalization with APTES
+            @RADIUS=25
             ############### INTERACTIVE VALUES ###########
-            # Intereface location -> calculated by analyzing-script
-            INTERFACE=12
-            # interface thickness
-            INTERFACE_WIDTH=10
+            intereface location -> caculated by analysing script
+            If PDB then read it from the PDB file, otherwise from the fixed value set in here
+            @PDB=True
+            If no PDB the interface is got from here: (They should set anyway)
+            @INTERFACE=12.81
+            interface thickness
+            @INTERFACE_WIDTH=10.47
             How to select atoms, under intereface: INTERFACE
             under upper bound of the interface: UPPERBOUND
             under lower bound of the interface: LOWERBOUND
             within the interface: WHITIN
-            @LINE=INTERFACE
-            the center of mass of the interface
-            @INTERFACE_ZLOC=100
+            @LINE=UPPERBOUND
+            the center of mass of the nanoparticle
+            @NP_ZLOC=100
             ############### Computation parameters ###########
             Number of points to make to try to put H of new protonation there
             @NUMSAMPLE=100
