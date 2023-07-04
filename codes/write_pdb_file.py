@@ -76,12 +76,12 @@ class WritePdb:
     needed"""
 
     def __init__(self,
-                 residues_atoms: residues.UpdateResidues  # All and updates res
+                 residues_atoms  # residues.UpdateResidues  # All and updates
                  ) -> None:
         self.write_pdb(residues_atoms)
 
     @staticmethod
-    def write_pdb(residues_atoms: residues.UpdateResidues  # Updates res
+    def write_pdb(residues_atoms  # residues.UpdateResidues  # Updates res
                   ) -> None:
         """write all the residues into file, and also the main data"""
         for res, v_df in residues_atoms.updated_residues.items():
