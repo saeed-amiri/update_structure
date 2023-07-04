@@ -39,6 +39,7 @@ class GetSurface:
         self.write_debug: bool = write_debug
         self.get_interface(residues_atoms)
         self.__write_msg(log)
+        self.info_msg = ''  # Empety the msg
 
     def get_interface(self,
                       residues_atoms: dict[str, pd.DataFrame]  # All atoms
@@ -205,7 +206,7 @@ class GetSurface:
                     log: logger.logging.Logger,  # To log info in it
                     ) -> None:
         """write and log messages"""
-        print(f'{bcolors.OKCYAN}{self.__module__}:\n'
+        print(f'{bcolors.OKCYAN}{GetSurface.__module__}:\n'
               f'\t{self.info_msg}{bcolors.ENDC}')
         log.info(self.info_msg)
 

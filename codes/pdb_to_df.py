@@ -9,6 +9,8 @@
 import sys
 import typing
 import pandas as pd
+import logger
+from colors_text import TextColor as bcolors
 
 
 class Pdb:
@@ -74,11 +76,16 @@ class Pdb:
     Format (A6,I5,1X,A4,A1,A3,1X,A1,I4,A1,3X,3F8.3,2F6.2,10X,A2,A2)
     """
 
+    info_msg: str = 'Message:\n'  # Message to pass for logging and writing
+
     def __init__(self,
-                 fname: str  # PDB file name
+                 fname: str,  # PDB file name
+                 log: logger.logging.Logger
                  ) -> None:
-        print(f"Reading '{fname}' ...")
+        self.info_msg += f"\tReading '{fname}' ...\n"
         self.get_data(fname)
+        self.__write_msg(log)
+        self.info_msg = ''  # Empety the msg
 
     def get_data(self,
                  fname: str  # PDB file name
@@ -204,6 +211,14 @@ class Pdb:
         del df_reduced
         del residue_dict
         return df_i
+
+    def __write_msg(self,
+                    log: logger.logging.Logger
+                    ) -> None:
+        """write and log messages"""
+        print(f'{bcolors.OKCYAN}{self.__module__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)
 
 
 if __name__ == '__main__':

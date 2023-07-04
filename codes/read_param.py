@@ -37,6 +37,7 @@ class ReadParam:
         self.param: dict[str, typing.Any] = {}
         self.get_param(log)
         self.__write_msg(log)
+        self.info_msg = ''  # Empety the msg
 
     def get_param(self,
                   log: logger.logging.Logger
@@ -84,7 +85,7 @@ class ReadParam:
                     log: logger.logging.Logger
                     ) -> None:
         """write and log messages"""
-        print(f'{bcolors.OKCYAN}{self.__module__}:\n'
+        print(f'{bcolors.OKCYAN}{ReadParam.__module__}:\n'
               f'\t{self.info_msg}{bcolors.ENDC}')
         log.info(self.info_msg)
 

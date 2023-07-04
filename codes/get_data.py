@@ -38,6 +38,7 @@ class ProcessData:
         self.unproton_aptes, self.unprot_aptes_ind = self.process_data(log)
         self.np_diameter = self.__get_np_size()
         self.__write_msg(log)
+        self.info_msg = ''  # Empety the msg
 
     def process_data(self,
                      log: logger.logging.Logger
@@ -149,11 +150,11 @@ class ProcessData:
             z_range = (0, interface_z + aptes_com)
         elif self.param['LINE'] == 'LOWERBOUND':
             self.info_msg += \
-                '\tChecks APTES under interface - standard division\n'
+                '\tChecks APTES under interface - standard diviation\n'
             z_range = (0, interface_z - interface_w/2 + aptes_com)
         elif self.param['LINE'] == 'UPPERBOUND':
             self.info_msg += \
-                '\tChecks APTES under interface + standard division\n'
+                '\tChecks APTES under interface + standard diviation\n'
             z_range = (0, interface_z + interface_w/2 + aptes_com)
         else:
             sys.exit(f'{self.__module__}:\n'
@@ -240,7 +241,7 @@ class ProcessData:
                     log: logger.logging.Logger
                     ) -> None:
         """write and log messages"""
-        print(f'{bcolors.OKCYAN}{self.__module__}:\n'
+        print(f'{bcolors.OKCYAN}{ProcessData.__module__}:\n'
               f'\t{self.info_msg}{bcolors.ENDC}')
         log.info(self.info_msg)
 

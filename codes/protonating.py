@@ -20,6 +20,8 @@ from colors_text import TextColor as bcolors
 
 class FindHPosition(get_data.ProcessData):
     """Find an area in which the new H could set"""
+
+    info_msg: str = 'Message:\n'  # Message to pass for logging and writing
     h_porotonations: dict[int, np.ndarray] = {}  # All H atoms & index of APT
 
     def __init__(self,
@@ -28,6 +30,9 @@ class FindHPosition(get_data.ProcessData):
                  ) -> None:
         super().__init__(fname, log)
         self.h_porotonations = self.get_area()
+        self.info_msg += '\tFinding poistions for new HN3 atoms\n'
+        self.__write_msg(log)
+        self.info_msg = ''  # Empety the msg
 
     def get_area(self) -> dict[int, np.ndarray]:
         """find an area around the N, a cone with angle equal to the
@@ -225,6 +230,14 @@ class FindHPosition(get_data.ProcessData):
             vec = np.array([float(row['x']), float(row['y']), float(row['z'])])
             vec_dict[row['atom_name']] = vec
         return vec_dict
+
+    def __write_msg(self,
+                    log: logger.logging.Logger,  # To log info in it
+                    ) -> None:
+        """write and log messages"""
+        print(f'{bcolors.OKCYAN}{FindHPosition.__module__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)
 
 
 if __name__ == '__main__':
