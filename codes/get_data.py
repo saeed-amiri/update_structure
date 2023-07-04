@@ -6,10 +6,12 @@ pdb_todf.py."""
 
 import sys
 import multiprocessing as multip
+import typing
 import numpy as np
 import pandas as pd
 import pdb_to_df as pdbf
 import read_param as param
+import get_interface as pdb_surf
 import logger
 
 
@@ -26,19 +28,25 @@ class ProcessData:
     def __init__(self,
                  fname: str  # Name of the pdb file
                  ) -> None:
-        self.param = param.ReadParam(
-            log=logger.setup_logger('read_param.log')).param
+        log = logger.setup_logger('read_param.log')
+        self.param = param.ReadParam(log=log).param
         self.atoms = pdbf.Pdb(fname).atoms
         self.residues_atoms = self.__get_atoms()
         # All the unprtonated aptes to be protonated:
-        self.unproton_aptes, self.unprot_aptes_ind = self.process_data()
+        self.unproton_aptes, self.unprot_aptes_ind = self.process_data(log)
         self.np_diameter = self.__get_np_size()
 
-    def process_data(self) -> tuple[np.ndarray, list[int]]:
+    def process_data(self,
+                     log: logger.logging.Logger
+                     ) -> tuple[np.ndarray, list[int]]:
         """check and finds the unprotonated aptes group which has N at
         interface"""
+        # Get the water surface
+        water_surface = pdb_surf.GetSurface(self.residues_atoms,
+                                            log,
+                                            write_debug=False)
         zrange: tuple[float, float]  # Lower and upper bound of interface
-        zrange = self.__get_interface_range()
+        zrange = self.__get_interface_range(water_surface)
         sol_phase_aptes: list[int]  # Indices of all the APTES at sol phase
         sol_phase_aptes = self.__get_aptes_indices(zrange)
         unprot_aptes_ind: list[int]  # Index of the APTES to be protonated
@@ -100,25 +108,41 @@ class ProcessData:
         del df_apt
         return filtered_df['residue_number'].values
 
-    def __get_interface_range(self) -> tuple[float, float]:
-        """find all the aptes at interface"""
+    def __get_interface_range(self,
+                              water_surface: typing.Any  # pdb_surf.GetSurface
+                              ) -> tuple[float, float]:
+        """find all the aptes at interface."""
         z_range: tuple[float, float]
+        if self.param['PDB'] == 'False':
+            # Interface is set with reference to the NP COM
+            interface_z = self.param['INTERFACE']
+            interface_w = self.param['INTERFACE_WIDTH']
+            aptes_com = self.param['NP_ZLOC']
+        elif self.param['PDB'] == 'True':
+            # Interface is calculated directly
+            interface_z = water_surface.interface_z
+            interface_w = water_surface.interface_std * 2
+            aptes_com = 0
+        z_range = self.__interface_range(interface_z,
+                                         interface_w,
+                                         aptes_com)
+        return z_range
+
+    def __interface_range(self,
+                          interface_z: float,  # Location of interface
+                          interface_w: float,  # Width of interface
+                          aptes_com: float,  # COM of center of mass
+                          ) -> tuple[float, float]:
+        """set the interface range"""
         if self.param['LINE'] == 'WITHIN':
-            z_range = \
-                (self.param['INTERFACE']-self.param['INTERFACE_WIDTH']/2 +
-                 self.param['INTERFACE_ZLOC'],
-                 self.param['INTERFACE']+self.param['INTERFACE_WIDTH']/2 +
-                 self.param['INTERFACE_ZLOC'])
+            z_range = (interface_z-interface_w/2 + aptes_com,
+                       interface_z+interface_w/2 + aptes_com)
         elif self.param['LINE'] == 'INTERFACE':
-            z_range = (0, self.param['INTERFACE']+self.param['INTERFACE_ZLOC'])
+            z_range = (0, interface_z + aptes_com)
         elif self.param['LINE'] == 'LOWERBOUND':
-            z_range = (0, self.param['INTERFACE'] -
-                       self.param['INTERFACE_WIDTH']/2 +
-                       self.param['INTERFACE_ZLOC'])
+            z_range = (0, interface_z - interface_w/2 + aptes_com)
         elif self.param['LINE'] == 'UPPERBOUND':
-            z_range = (0, self.param['INTERFACE'] +
-                       self.param['INTERFACE_WIDTH']/2 +
-                       self.param['INTERFACE_ZLOC'])
+            z_range = (0, interface_z + interface_w/2 + aptes_com)
         else:
             sys.exit(f'{self.__module__}:\n'
                      '\tError! INTERFACE selection failed')
