@@ -14,6 +14,7 @@ import pandas as pd
 import numpy as np
 from scipy.spatial import KDTree
 import get_data
+import logger
 from colors_text import TextColor as bcolors
 
 
@@ -22,9 +23,10 @@ class FindHPosition(get_data.ProcessData):
     h_porotonations: dict[int, np.ndarray] = {}  # All H atoms & index of APT
 
     def __init__(self,
-                 fname: str  # Name of the pdb file
+                 fname: str,  # Name of the pdb file
+                 log: logger.logging.Logger
                  ) -> None:
-        super().__init__(fname)
+        super().__init__(fname, log)
         self.h_porotonations = self.get_area()
 
     def get_area(self) -> dict[int, np.ndarray]:
@@ -226,4 +228,4 @@ class FindHPosition(get_data.ProcessData):
 
 
 if __name__ == '__main__':
-    FindHPosition(sys.argv[1])
+    FindHPosition(sys.argv[1], log=logger.setup_logger('update.log'))

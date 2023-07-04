@@ -11,6 +11,7 @@ from scipy.spatial import cKDTree, KDTree
 import numpy as np
 import pandas as pd
 import protonating as proton
+import logger
 from colors_text import TextColor as bcolors
 
 
@@ -23,7 +24,8 @@ class IonizationSol(proton.FindHPosition):
     def __init__(self,
                  fname: str  # Name of the pdb file
                  ) -> None:
-        super().__init__(fname)
+        log = logger.setup_logger('update.log')
+        super().__init__(fname, log)
         self.ion_poses = self.mk_ionization()
 
     def mk_ionization(self) -> np.ndarray:

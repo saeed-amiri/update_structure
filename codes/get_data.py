@@ -26,9 +26,9 @@ class ProcessData:
     np_diameter: np.float64  # Diameter of NP, based on APTES positions
 
     def __init__(self,
-                 fname: str  # Name of the pdb file
+                 fname: str,  # Name of the pdb file
+                 log: logger.logging.Logger
                  ) -> None:
-        log = logger.setup_logger('read_param.log')
         self.param = param.ReadParam(log=log).param
         self.atoms = pdbf.Pdb(fname).atoms
         self.residues_atoms = self.__get_atoms()
@@ -226,4 +226,4 @@ class ProcessData:
 
 
 if __name__ == '__main__':
-    data = ProcessData(sys.argv[1])
+    data = ProcessData(sys.argv[1], log=logger.setup_logger('update.log'))
