@@ -17,6 +17,7 @@ This file must include:
 
 import sys
 import typing
+import json
 import my_tools
 import logger
 from colors_text import TextColor as bcolors
@@ -24,6 +25,7 @@ from colors_text import TextColor as bcolors
 
 class ReadParam:
     """read param file here"""
+    info_msg: str = 'Message:\n'  # Message to pass for logging and writing
     fname: str = 'update_param'
     essential_key: list[str] = [
         "ANGLE", "RADIUS", "PDB", "INTERFACE", "INTERFACE_WIDTH", "NUMSAMPLE",
@@ -34,6 +36,7 @@ class ReadParam:
                  ) -> None:
         self.param: dict[str, typing.Any] = {}
         self.get_param(log)
+        self.__write_msg(log)
 
     def get_param(self,
                   log: logger.logging.Logger
@@ -55,6 +58,8 @@ class ReadParam:
                     self.param[key] = vlaue
                 if not line:
                     break
+        self.info_msg += f'\tThe parameters read from {self.fname}:\n'
+        self.info_msg += json.dumps(self.param, indent=4)
 
     @staticmethod
     def __process_line(line: str  # Line that read from the file
@@ -74,6 +79,14 @@ class ReadParam:
             sys.exit(f'{bcolors.FAIL}{self.__module__}:\n'
                      f'\tNot all the information provided in `{self.fname}`'
                      f'{bcolors.ENDC}')
+
+    def __write_msg(self,
+                    log: logger.logging.Logger
+                    ) -> None:
+        """write and log messages"""
+        print(f'{bcolors.OKCYAN}{self.__module__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)
 
 
 if __name__ == '__main__':
