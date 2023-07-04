@@ -21,7 +21,7 @@ from colors_text import TextColor as bcolors
 class FindHPosition(get_data.ProcessData):
     """Find an area in which the new H could set"""
 
-    info_msg: str = 'Message:\n'  # Message to pass for logging and writing
+    info_msg: str  # Message to pass for logging and writing
     h_porotonations: dict[int, np.ndarray] = {}  # All H atoms & index of APT
 
     def __init__(self,
@@ -30,6 +30,7 @@ class FindHPosition(get_data.ProcessData):
                  ) -> None:
         super().__init__(fname, log)
         self.h_porotonations = self.get_area()
+        self.info_msg = 'Message:\n'
         self.info_msg += '\tFinding poistions for new HN3 atoms\n'
         self.__write_msg(log)
         self.info_msg = ''  # Empety the msg
