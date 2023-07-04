@@ -13,11 +13,13 @@ import pdb_to_df as pdbf
 import read_param as param
 import get_interface as pdb_surf
 import logger
+from colors_text import TextColor as bcolors
 
 
 class ProcessData:
     """process dataframe of the structure and plit them"""
 
+    info_msg: str = 'Message:\n'  # Message to pass for logging and writing
     atoms: pd.DataFrame  # All atoms dataframe
     param: dict[str, float]  # All the parameters from input file
     residues_atoms: dict[str, pd.DataFrame]  # Atoms info for each residue
@@ -35,6 +37,7 @@ class ProcessData:
         # All the unprtonated aptes to be protonated:
         self.unproton_aptes, self.unprot_aptes_ind = self.process_data(log)
         self.np_diameter = self.__get_np_size()
+        self.__write_msg(log)
 
     def process_data(self,
                      log: logger.logging.Logger
@@ -114,12 +117,14 @@ class ProcessData:
         """find all the aptes at interface."""
         z_range: tuple[float, float]
         if self.param['PDB'] == 'False':
+            self.info_msg += '\tInterface data is read from update_param\n'
             # Interface is set with reference to the NP COM
             interface_z = self.param['INTERFACE']
             interface_w = self.param['INTERFACE_WIDTH']
             aptes_com = self.param['NP_ZLOC']
         elif self.param['PDB'] == 'True':
             # Interface is calculated directly
+            self.info_msg += '\tInterface data is selcected from pdb file\n'
             interface_z = water_surface.interface_z
             interface_w = water_surface.interface_std * 2
             aptes_com = 0
@@ -135,13 +140,20 @@ class ProcessData:
                           ) -> tuple[float, float]:
         """set the interface range"""
         if self.param['LINE'] == 'WITHIN':
+            self.info_msg += \
+                '\tOnly checks APTES in the width of interface\n'
             z_range = (interface_z-interface_w/2 + aptes_com,
                        interface_z+interface_w/2 + aptes_com)
         elif self.param['LINE'] == 'INTERFACE':
+            self.info_msg += '\tChecks APTES under interface (average value)\n'
             z_range = (0, interface_z + aptes_com)
         elif self.param['LINE'] == 'LOWERBOUND':
+            self.info_msg += \
+                '\tChecks APTES under interface - standard division\n'
             z_range = (0, interface_z - interface_w/2 + aptes_com)
         elif self.param['LINE'] == 'UPPERBOUND':
+            self.info_msg += \
+                '\tChecks APTES under interface + standard division\n'
             z_range = (0, interface_z + interface_w/2 + aptes_com)
         else:
             sys.exit(f'{self.__module__}:\n'
@@ -223,6 +235,14 @@ class ProcessData:
         residues: list[str]   # Name of the residues
         residues = list(set(self.atoms['residue_name']))
         return residues
+
+    def __write_msg(self,
+                    log: logger.logging.Logger
+                    ) -> None:
+        """write and log messages"""
+        print(f'{bcolors.OKCYAN}{self.__module__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)
 
 
 if __name__ == '__main__':
