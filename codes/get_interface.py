@@ -47,6 +47,7 @@ class GetSurface:
         """get the water surface"""
         aptes_com: np.ndarray  # Center of mass of NP
         aptes_r: np.float64  # Radius of NP
+        self.info_msg += '\tUnit for GRO file is [nm] and for PDB is [A]\n'
         aptes_com, aptes_r = self.__get_np_radius_com(residues_atoms['APT'])
         self.get_water_surface(residues_atoms['SOL'], aptes_com, aptes_r)
 
