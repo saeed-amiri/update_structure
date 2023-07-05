@@ -55,6 +55,8 @@ class ProcessData:
         sol_phase_aptes = self.__get_aptes_indices(zrange)
         unprot_aptes_ind: list[int]  # Index of the APTES to be protonated
         unprot_aptes_ind = self.__get_unprto_chain(sol_phase_aptes)
+        self.info_msg += '\tNumber of chains to be protonated: '
+        self.info_msg += f'{len(unprot_aptes_ind)}\n'
         return self.get_aptes_unproto(unprot_aptes_ind), unprot_aptes_ind
 
     def get_aptes_unproto(self,
@@ -127,7 +129,7 @@ class ProcessData:
             # Interface is calculated directly
             self.info_msg += '\tInterface data is selcected from pdb file\n'
             interface_z = water_surface.interface_z
-            interface_w = water_surface.interface_std * 2
+            interface_w = water_surface.interface_std * 4
             aptes_com = 0
         z_range = self.__interface_range(interface_z,
                                          interface_w,
