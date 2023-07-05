@@ -39,10 +39,15 @@ class FindHPosition(get_data.ProcessData):
         """find an area around the N, a cone with angle equal to the
         angle HN1-N-HN2"""
         results: list[dict[int, np.ndarray]]  # All the H locations wtih index
-        num_processes: int = multip.cpu_count() // 2
-        chunk_size: int = len(self.unprot_aptes_ind) // num_processes
-        chunks = [self.unprot_aptes_ind[i:i+chunk_size] for i in
-                  range(0, len(self.unprot_aptes_ind), chunk_size)]
+        try:
+            num_processes: int = multip.cpu_count() // 2
+            chunk_size: int = len(self.unprot_aptes_ind) // num_processes
+            chunks = [self.unprot_aptes_ind[i:i+chunk_size] for i in
+                      range(0, len(self.unprot_aptes_ind), chunk_size)]
+        except ValueError:
+            num_processes: int = 1
+            chunk_size: int = len(self.unprot_aptes_ind) // num_processes
+            chunks = self.unprot_aptes_ind
         with multip.Pool(processes=num_processes) as pool:
             results = \
                 pool.starmap(self.process_ind, [(chunk,) for chunk in chunks])
