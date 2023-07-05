@@ -118,10 +118,10 @@ class ReadGro:
         v_y = float(line[52:60])
         v_z = float(line[60:68])
         processed_line: dict[str, typing.Any] = {
-                                                 'resnr': resnr,
-                                                 'resname': resname,
-                                                 'atomname': atomname,
-                                                 'atomnr': atomnr,
+                                                 'residue_number': resnr,
+                                                 'residue_name': resname,
+                                                 'atom_name': atomname,
+                                                 'atom_id': atomnr,
                                                  'x': a_x,
                                                  'y': a_y,
                                                  'z': a_z,
