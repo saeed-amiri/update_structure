@@ -33,7 +33,7 @@ class FindHPosition(get_data.ProcessData):
         self.info_msg = 'Message:\n'
         self.info_msg += '\tFinding poistions for new HN3 atoms\n'
         self.__write_msg(log)
-        self.info_msg = ''  # Empety the msg
+        self.info_msg = ''  # clean the msg
 
     def get_area(self) -> dict[int, np.ndarray]:
         """find an area around the N, a cone with angle equal to the
@@ -45,8 +45,8 @@ class FindHPosition(get_data.ProcessData):
             chunks = [self.unprot_aptes_ind[i:i+chunk_size] for i in
                       range(0, len(self.unprot_aptes_ind), chunk_size)]
         except ValueError:
-            num_processes: int = 1
-            chunk_size: int = len(self.unprot_aptes_ind) // num_processes
+            num_processes = 1
+            chunk_size = len(self.unprot_aptes_ind) // num_processes
             chunks = self.unprot_aptes_ind
         with multip.Pool(processes=num_processes) as pool:
             results = \
@@ -75,12 +75,50 @@ class FindHPosition(get_data.ProcessData):
                 self.unproton_aptes['residue_number'] == ind]
             df_nh = df_i[df_i['atom_name'].isin(['N', 'HN1', 'HN2'])]
             v_nh1, v_nh2 = self.__get_vectors(df_nh)
+            if 'vx' in df_nh.columns:
+                self.__get_velocity(df_nh)
             v_mean, _ = self.__get_hbond_len_angle(v_nh1, v_nh2)
             atoms_around_n = self.__get_atoms_around_n(df_nh, v_mean)
             possible_loc = self.__get_possible_pos(v_nh1, v_nh2, v_mean, df_nh)
             h_loc = self.__find_h_place(atoms_around_n, possible_loc, v_mean)
             all_h_locs[ind] = h_loc
         return all_h_locs
+
+    def __get_velocity(self,
+                       df_nh: pd.DataFrame  # Contains only N and NHs
+                       ) -> np.ndarray:
+        """get the velocity for the new HN3"""
+        vec: dict[str, np.ndarray] = {}
+        vec = self.__get_velocityxyz(df_nh)
+        momentom: np.ndarray = self.__get_momentom(vec)
+
+    @staticmethod
+    def __get_momentom(vec: dict[str, np.ndarray]) -> np.ndarray:
+        """get momentom of the amino group"""
+        m_h: float = 1.008  # Mass of atoms
+        m_n: float = 14.007  # Mass of atoms
+        total_mass: float = 2 * m_h + m_n
+
+        # Calculate the center of mass velocity of the initial three atoms
+        com_velocity = [(m_h * vec['HN1'][i] +
+                         m_h * vec['HN2'][i] +
+                         m_n * vec['N'][i]) / total_mass for i in range(3)]
+
+        # Calculate the momentum of the initial three atoms
+        momentum_initial = [total_mass * v for v in com_velocity]
+        return np.array(momentum_initial)
+
+    @staticmethod
+    def __get_velocityxyz(df_nh: pd.DataFrame  # Contains only N and NHs
+                          ) -> dict[str, np.ndarray]:
+        """return velocity (xyz) of the atoms"""
+        vec_dict: dict[str, np.ndarray] = {}
+        for _, row in df_nh.iterrows():
+            vec = np.array([float(row['vx']),
+                            float(row['vy']),
+                            float(row['vz'])])
+            vec_dict[row['atom_name']] = vec
+        return vec_dict
 
     def __find_h_place(self,
                        atoms_around_n: pd.DataFrame,  # Atoms in radius of N
