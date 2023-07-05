@@ -295,7 +295,7 @@ class BondsInfo:
               ) -> pd.DataFrame:  # bonds DataFrame
         """make DataFrame and check if they are same as atoms name"""
         df_bonds: pd.DataFrame  # to save the bonds_df
-        df_bonds = pd.DataFrame(columns=['typ', 'ai', 'aj', 'cmt', 'name'])
+        df_bonds = pd.DataFrame(columns=['ai', 'aj', 'typ', 'cmt', 'name'])
         df_bonds['ai'] = a_i
         df_bonds['aj'] = a_j
         df_bonds['name'] = names
@@ -390,7 +390,7 @@ class AnglesInfo:
         """make DataFrame and check if they are same as atoms name"""
         df_angles: pd.DataFrame  # to save the angles_df
         df_angles = \
-            pd.DataFrame(columns=['typ', 'ai', 'aj', 'ak', 'cmt', 'name'])
+            pd.DataFrame(columns=['ai', 'aj', 'ak', 'typ', 'cmt', 'name'])
         df_angles['ai'] = a_i
         df_angles['aj'] = a_j
         df_angles['ak'] = a_k
@@ -494,7 +494,7 @@ class DihedralsInfo:
         """make DataFrame and check if they are same as atoms name"""
         df_dihedrals: pd.DataFrame  # to save the dihedrals_df
         df_dihedrals = pd.DataFrame(
-            columns=['typ', 'ai', 'aj', 'ak', 'ah', 'cmt', 'name'])
+            columns=['ai', 'aj', 'ak', 'ah', 'typ', 'cmt', 'name'])
         df_dihedrals['ai'] = a_i
         df_dihedrals['aj'] = a_j
         df_dihedrals['ak'] = a_k
