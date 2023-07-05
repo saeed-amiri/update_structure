@@ -32,3 +32,29 @@ that specifies the box size or periodic boundary conditions of the
 simulation box."""
 
 
+import sys
+import pandas as pd
+import logger
+from colors_text import TextColor as bcolors
+
+
+class ReadGro:
+    """reading GRO file based on the doc"""
+
+    info_msg: str = 'Message:\n'  # Message to pass for logging and writing
+
+    def __init__(self,
+                 fname: str,  # Name of the input file
+                 log: logger.logging.Logger
+                 ) -> None:
+        self.read_gro(fname, log)
+
+    def read_gro(self,
+                 fname: str,  # gro file name
+                 log: logger.logging.Logger
+                 ) -> None:
+        """read gro file lien by line"""
+
+
+if __name__ == '__main__':
+    ReadGro(sys.argv[1], log=logger.setup_logger('read_gro.log'))
