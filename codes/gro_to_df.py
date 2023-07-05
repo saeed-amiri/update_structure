@@ -42,11 +42,22 @@ Note that this is the format for writing, as in the above example
 fields may be written without spaces, and therefore can not be read
 with the same format statement in C.
 GROMACS manual
-based on the C format length of the data line is 69.
+based on the C or fortran format length of the data line is 68. but
+python read it as 69!!!
+Columns 1-5: Atom serial number.
+Columns 6-10: Atom name or type.
+Columns 11-15: Residue name.
+Columns 16-20: Residue number.
+Columns 21-28: Atom coordinates along the x-axis (in nanometers).
+Columns 29-36: Atom coordinates along the y-axis (in nanometers).
+Columns 37-44: Atom coordinates along the z-axis (in nanometers).
+Columns 45-48: Atom velocity (optional; not always present in GRO files).
+Note: The coordinates and velocities are typically given in nanometers
 """
 
 
 import sys
+import typing
 import pandas as pd
 import logger
 from colors_text import TextColor as bcolors
@@ -74,19 +85,50 @@ class ReadGro:
                  ) -> None:
         """read gro file lien by line"""
         counter: int = 0  # To count number of lines
+        processed_line: dict[str, typing.Any]
         with open(fname, 'r', encoding='utf8') as f_r:
             while True:
                 line = f_r.readline()
                 if len(line) != self.line_len:
                     self.__process_header_tail(line.strip(), counter)
+                else:
+                    processed_line = self.__process_line(line.rstrip())
                 counter += 1
                 if not line.strip():
                     break
-    
+
+    @staticmethod
+    def __process_line(line: str  # Data line
+                       ) -> dict[str, typing.Any]:
+        """process lines of information"""
+        resnr = int(line[0:5])
+        resname = line[5:10].strip()
+        atomname = line[10:15].strip()
+        atomnr = int(line[15:20])
+        a_x = float(line[20:28])
+        a_y = float(line[28:36])
+        a_z = float(line[36:44])
+        v_x = float(line[44:52])
+        v_y = float(line[52:60])
+        v_z = float(line[60:68])
+        processed_line: dict[str, typing.Any] = {
+                                                 'resnr': resnr,
+                                                 'resname': resname,
+                                                 'atomname': atomname,
+                                                 'atomnr': atomnr,
+                                                 'a_x': a_x,
+                                                 'a_y': a_y,
+                                                 'a_z': a_z,
+                                                 'v_x': v_x,
+                                                 'v_y': v_y,
+                                                 'v_z': v_z
+                                                }
+        return processed_line
+
     def __process_header_tail(self,
                               line: str,  # Line in header or tail
-                              counter: int  # Line number  
-                             ) -> None:
+                              counter: int  # Line number
+                              ) -> None:
         """Get the header, number of atoms, and box size"""
         if counter == 0:
             self.title = line
@@ -94,7 +136,6 @@ class ReadGro:
             self.number_atoms = int(line)
         elif counter == self.number_atoms + 2:
             self.pbc_box = line
-
 
 
 if __name__ == '__main__':
