@@ -28,8 +28,8 @@ class ReadParam:
     info_msg: str = 'Message:\n'  # Message to pass for logging and writing
     fname: str = 'update_param'
     essential_key: list[str] = [
-        "ANGLE", "RADIUS", "PDB", "INTERFACE", "INTERFACE_WIDTH", "NUMSAMPLE",
-        "ION_DISTANCE", "ION_ATTEPTS", "NP_ZLOC", "LINE"]
+        "ANGLE", "RADIUS", "READ", "FILE", "INTERFACE", "INTERFACE_WIDTH",
+        "NUMSAMPLE", "ION_DISTANCE", "ION_ATTEPTS", "NP_ZLOC", "LINE"]
 
     def __init__(self,
                  log: logger.logging.Logger
