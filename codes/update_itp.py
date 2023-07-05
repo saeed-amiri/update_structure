@@ -371,7 +371,7 @@ class UpdateAtom:
         updated_atoms: pd.DataFrame = \
             pd.concat([atoms, prepare_hn3], axis=0, ignore_index=False)
 
-        updated_atoms = updated_atoms.sort_values(by=['resnr', 'atomnr'],
+        updated_atoms = updated_atoms.sort_values(by=['atomnr', 'resnr'],
                                                   ascending=[True, True])
         return updated_atoms
 
