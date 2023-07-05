@@ -78,13 +78,12 @@ class ReadGro:
                  fname: str,  # Name of the input file
                  log: logger.logging.Logger
                  ) -> None:
-        self.gro_data = self.read_gro(fname, log)
+        self.gro_data = self.read_gro(fname)
         self.write_msg(log)
         self.info_msg = ''  # Empety the msg
 
     def read_gro(self,
-                 fname: str,  # gro file name
-                 log: logger.logging.Logger
+                 fname: str  # gro file name
                  ) -> pd.DataFrame:
         """read gro file lien by line"""
         counter: int = 0  # To count number of lines
