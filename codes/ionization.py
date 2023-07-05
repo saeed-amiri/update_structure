@@ -67,7 +67,10 @@ class IonizationSol(proton.FindHPosition):
                       ion_poses: list[np.ndarray]  # Possible position for ions
                       ) -> np.ndarray:
         """check for probable ovrlapping of positions"""
-        atoms: np.ndarray = np.vstack(ion_poses)
+        try:
+            atoms: np.ndarray = np.vstack(ion_poses)
+        except ValueError:
+            atoms = ion_poses
 
         # Build a KDTree from the atom coordinates
         tree = KDTree(atoms)
