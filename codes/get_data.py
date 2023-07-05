@@ -61,7 +61,6 @@ class ProcessData:
         water_surface = pdb_surf.GetSurface(self.residues_atoms,
                                             log,
                                             write_debug=False)
-        print(water_surface.__dict__)
         zrange: tuple[float, float]  # Lower and upper bound of interface
         zrange = self.__get_interface_range(water_surface)
         sol_phase_aptes: list[int]  # Indices of all the APTES at sol phase
