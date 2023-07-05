@@ -10,6 +10,7 @@ import typing
 import numpy as np
 import pandas as pd
 import pdb_to_df as pdbf
+import gro_to_df as grof
 import read_param as param
 import get_interface as pdb_surf
 import logger
@@ -32,13 +33,24 @@ class ProcessData:
                  log: logger.logging.Logger
                  ) -> None:
         self.param = param.ReadParam(log=log).param
-        self.atoms = pdbf.Pdb(fname, log).atoms
+        self.atoms = self.__get_data(fname, log)
         self.residues_atoms = self.__get_atoms()
         # All the unprtonated aptes to be protonated:
         self.unproton_aptes, self.unprot_aptes_ind = self.process_data(log)
         self.np_diameter = self.__get_np_size()
         self.__write_msg(log)
         self.info_msg = ''  # Empety the msg
+
+    def __get_data(self,
+                   fname: str,  # Name of the pdb file
+                   log: logger.logging.Logger
+                   ) -> typing.Any:
+        """select which datafile to work with"""
+        if self.param['FILE'] == 'PDB':
+            atoms = pdbf.Pdb(fname, log).atoms
+        elif self.param['FILE'] == 'GRO':
+            atoms = grof.ReadGro(fname, log).gro_data
+        return atoms
 
     def process_data(self,
                      log: logger.logging.Logger
@@ -128,7 +140,8 @@ class ProcessData:
         elif self.param['READ'] == 'True':
             # Interface is calculated directly
             if self.param['FILE'] == 'PDB':
-                self.info_msg += '\tInterface data is selcected from pdb file\n'
+                self.info_msg += \
+                    '\tInterface data is selcected from pdb file\n'
                 interface_z = water_surface.interface_z
                 interface_w = water_surface.interface_std * 4
                 aptes_com = 0
