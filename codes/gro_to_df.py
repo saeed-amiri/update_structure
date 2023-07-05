@@ -79,6 +79,8 @@ class ReadGro:
                  log: logger.logging.Logger
                  ) -> None:
         self.gro_data = self.read_gro(fname, log)
+        self.write_msg(log)
+        self.info_msg = ''  # Empety the msg
 
     def read_gro(self,
                  fname: str,  # gro file name
@@ -97,9 +99,9 @@ class ReadGro:
                 counter += 1
                 if not line.strip():
                     break
-        ReadGro.info_msg += f'\tSystem title is {self.title}'
-        ReadGro.info_msg += f'\tNumber of atoms is {self.number_atoms}'
-        ReadGro.info_msg += f'\tBox boundary is {self.number_atoms}'
+        ReadGro.info_msg += f'\tSystem title is {self.title}\n'
+        ReadGro.info_msg += f'\tNumber of atoms is {self.number_atoms}\n'
+        ReadGro.info_msg += f'\tBox boundary is {self.pbc_box}\n'
         return pd.DataFrame(processed_line)
 
     @staticmethod
@@ -142,6 +144,13 @@ class ReadGro:
         elif counter == self.number_atoms + 2:
             self.pbc_box = line
 
+    def write_msg(self,
+                    log: logger.logging.Logger
+                    ) -> None:
+        """write and log messages"""
+        print(f'{bcolors.OKCYAN}{ReadGro.__module__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)
 
 if __name__ == '__main__':
     ReadGro(sys.argv[1], log=logger.setup_logger('read_gro.log'))
