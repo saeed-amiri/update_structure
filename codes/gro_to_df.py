@@ -68,6 +68,7 @@ class ReadGro:
 
     info_msg: str = 'Message:\n'  # Message to pass for logging and writing
     line_len: int = 69  # Length of the lines in the data file
+    gro_data: pd.DataFrame  # All the informations in the file
     # The follwings will set in __process_header_tail method:
     title: str  # Name of the system
     number_atoms: int  # Total number of atoms in the system
@@ -77,25 +78,29 @@ class ReadGro:
                  fname: str,  # Name of the input file
                  log: logger.logging.Logger
                  ) -> None:
-        self.read_gro(fname, log)
+        self.gro_data = self.read_gro(fname, log)
 
     def read_gro(self,
                  fname: str,  # gro file name
                  log: logger.logging.Logger
-                 ) -> None:
+                 ) -> pd.DataFrame:
         """read gro file lien by line"""
         counter: int = 0  # To count number of lines
-        processed_line: dict[str, typing.Any]
+        processed_line: list[dict[str, typing.Any]] = []  # All proccesed lines
         with open(fname, 'r', encoding='utf8') as f_r:
             while True:
                 line = f_r.readline()
                 if len(line) != self.line_len:
                     self.__process_header_tail(line.strip(), counter)
                 else:
-                    processed_line = self.__process_line(line.rstrip())
+                    processed_line.append(self.__process_line(line.rstrip()))
                 counter += 1
                 if not line.strip():
                     break
+        ReadGro.info_msg += f'\tSystem title is {self.title}'
+        ReadGro.info_msg += f'\tNumber of atoms is {self.number_atoms}'
+        ReadGro.info_msg += f'\tBox boundary is {self.number_atoms}'
+        return pd.DataFrame(processed_line)
 
     @staticmethod
     def __process_line(line: str  # Data line
@@ -116,12 +121,12 @@ class ReadGro:
                                                  'resname': resname,
                                                  'atomname': atomname,
                                                  'atomnr': atomnr,
-                                                 'a_x': a_x,
-                                                 'a_y': a_y,
-                                                 'a_z': a_z,
-                                                 'v_x': v_x,
-                                                 'v_y': v_y,
-                                                 'v_z': v_z
+                                                 'x': a_x,
+                                                 'y': a_y,
+                                                 'z': a_z,
+                                                 'vx': v_x,
+                                                 'vy': v_y,
+                                                 'vz': v_z
                                                 }
         return processed_line
 
