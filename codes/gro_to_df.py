@@ -1,35 +1,49 @@
 """reading GRO files:
-The GRO file format is a plain-text file format commonly used in
-molecular dynamics simulations, including those performed with GROMACS.
-It represents the coordinates and other information of atoms in a
-system at a specific time step. Here is the general format of a GRO
-file:
+Lines contain the following information (top to bottom):
 
-The first two lines of the file contain header information:
+        title string (free format string, optional time in ps after
+        't=')
+        number of atoms (free format integer)
+        one line for each atom (fixed format, see below)
+        box vectors (free format, space separated reals), values:
+        v1(x) v2(y) v3(z) v1(y) v1(z) v2(x) v2(z) v3(x) v3(y),
+        the last 6 values may be omitted (they will be set to zero).
+        GROMACS only supports boxes with v1(y)=v1(z)=v2(z)=0.
 
-    Line 1: Title line, usually a brief description of the system or
-    simulation.
-    Line 2: Number of atoms in the system.
+This format is fixed, ie. all columns are in a fixed position.
+Optionally (for now only yet with trjconv) you can write gro files
+with any number of decimal places, the format will then be n+5
+positions with n decimal places (n+1 for velocities) in stead of 8
+with 3 (with 4 for velocities). Upon reading, the precision will be
+inferred from the distance between the decimal points (which will be
+n+5). Columns contain the following information (from left to right):
 
-Following the header, each atom in the system is represented by one or
-more lines in the file. The format for each atom line is as follows:
+        residue number (5 positions, integer)
+        residue name (5 characters)
+        atom name (5 characters)
+        atom number (5 positions, integer)
+        position (in nm, x y z in 3 columns, each 8 positions with 3
+        decimal places)
+        velocity (in nm/ps (or km/s), x y z in 3 columns, each 8
+        positions with 4 decimal places)
 
-    Columns 1-5: Atom serial number.
-    Columns 6-10: Atom name or type.
-    Columns 11-15: Residue name.
-    Columns 16-20: Residue number.
-    Columns 21-28: Atom coordinates along the x-axis (in nanometers).
-    Columns 29-36: Atom coordinates along the y-axis (in nanometers).
-    Columns 37-44: Atom coordinates along the z-axis (in nanometers).
-    Columns 45-48: Atom velocity (optional; not always present in GRO
-    files).
-    Note: The coordinates and velocities are typically given in
-    nanometers.
+Note that separate molecules or ions (e.g. water or Cl-) are regarded
+as residues. If you want to write such a file in your own program
+without using the GROMACS libraries you can use the following formats:
 
-The atom lines are repeated for each atom in the system, usually in
-consecutive order. At the end of the file, there is an additional line
-that specifies the box size or periodic boundary conditions of the
-simulation box."""
+C format
+    "%5d%-5s%5s%5d%8.3f%8.3f%8.3f%8.4f%8.4f%8.4f"
+Fortran format
+    (i5,2a5,i5,3f8.3,3f8.4)
+Pascal format
+    This is left as an exercise for the user
+
+Note that this is the format for writing, as in the above example
+fields may be written without spaces, and therefore can not be read
+with the same format statement in C.
+GROMACS manual
+based on the C format length of the data line is 69.
+"""
 
 
 import sys
@@ -42,6 +56,7 @@ class ReadGro:
     """reading GRO file based on the doc"""
 
     info_msg: str = 'Message:\n'  # Message to pass for logging and writing
+    line_len: int = 69  # Length of the lines in the data file
 
     def __init__(self,
                  fname: str,  # Name of the input file
@@ -54,6 +69,14 @@ class ReadGro:
                  log: logger.logging.Logger
                  ) -> None:
         """read gro file lien by line"""
+        counter: int = 0  # To count number of lines
+        with open(fname, 'r', encoding='utf8') as f_r:
+            while True:
+                line = f_r.readline()
+                if len(line) != self.line_len:
+                    print(line)
+                if not line:
+                    break
 
 
 if __name__ == '__main__':
