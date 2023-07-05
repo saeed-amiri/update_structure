@@ -57,6 +57,10 @@ class ReadGro:
 
     info_msg: str = 'Message:\n'  # Message to pass for logging and writing
     line_len: int = 69  # Length of the lines in the data file
+    # The follwings will set in __process_header_tail method:
+    title: str  # Name of the system
+    number_atoms: int  # Total number of atoms in the system
+    pbc_box: str  # Size of the box (its 3 floats but save as a string)
 
     def __init__(self,
                  fname: str,  # Name of the input file
@@ -74,9 +78,23 @@ class ReadGro:
             while True:
                 line = f_r.readline()
                 if len(line) != self.line_len:
-                    print(line)
-                if not line:
+                    self.__process_header_tail(line.strip(), counter)
+                counter += 1
+                if not line.strip():
                     break
+    
+    def __process_header_tail(self,
+                              line: str,  # Line in header or tail
+                              counter: int  # Line number  
+                             ) -> None:
+        """Get the header, number of atoms, and box size"""
+        if counter == 0:
+            self.title = line
+        elif counter == 1:
+            self.number_atoms = int(line)
+        elif counter == self.number_atoms + 2:
+            self.pbc_box = line
+
 
 
 if __name__ == '__main__':
