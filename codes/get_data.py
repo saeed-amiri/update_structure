@@ -119,18 +119,19 @@ class ProcessData:
                               ) -> tuple[float, float]:
         """find all the aptes at interface."""
         z_range: tuple[float, float]
-        if self.param['PDB'] == 'False':
+        if self.param['READ'] == 'False':
             self.info_msg += '\tInterface data is read from update_param\n'
             # Interface is set with reference to the NP COM
             interface_z = self.param['INTERFACE']
             interface_w = self.param['INTERFACE_WIDTH']
             aptes_com = self.param['NP_ZLOC']
-        elif self.param['PDB'] == 'True':
+        elif self.param['READ'] == 'True':
             # Interface is calculated directly
-            self.info_msg += '\tInterface data is selcected from pdb file\n'
-            interface_z = water_surface.interface_z
-            interface_w = water_surface.interface_std * 4
-            aptes_com = 0
+            if self.param['FILE'] == 'PDB':
+                self.info_msg += '\tInterface data is selcected from pdb file\n'
+                interface_z = water_surface.interface_z
+                interface_w = water_surface.interface_std * 4
+                aptes_com = 0
         z_range = self.__interface_range(interface_z,
                                          interface_w,
                                          aptes_com)
