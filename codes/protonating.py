@@ -23,42 +23,41 @@ class FindHPosition(get_data.ProcessData):
 
     info_msg: str  # Message to pass for logging and writing
     h_porotonations: dict[int, np.ndarray] = {}  # All H atoms & index of APT
+    h_velocities: dict[int, np.ndarray] = {}  # All H atoms & index of APT
 
     def __init__(self,
                  fname: str,  # Name of the pdb file
                  log: logger.logging.Logger
                  ) -> None:
         super().__init__(fname, log)
-        self.h_porotonations = self.get_area()
+        self.h_porotonations, self.h_vlocitiees = self.get_area()
         self.info_msg = 'Message:\n'
         self.info_msg += '\tFinding poistions for new HN3 atoms\n'
         self.__write_msg(log)
         self.info_msg = ''  # clean the msg
 
-    def get_area(self) -> dict[int, np.ndarray]:
+    def get_area(self) -> tuple[dict[int, np.ndarray], dict[int, np.ndarray]]:
         """find an area around the N, a cone with angle equal to the
-        angle HN1-N-HN2"""
-        results: list[dict[int, np.ndarray]]  # All the H locations wtih index
-        try:
-            num_processes: int = multip.cpu_count() // 2
-            chunk_size: int = len(self.unprot_aptes_ind) // num_processes
-            chunks = [self.unprot_aptes_ind[i:i+chunk_size] for i in
-                      range(0, len(self.unprot_aptes_ind), chunk_size)]
-        except ValueError:
-            num_processes = 1
-            chunk_size = len(self.unprot_aptes_ind) // num_processes
-            chunks = self.unprot_aptes_ind
+        angle HN1-N-HN2; and find a velocity for the new H atom"""
+        # All the H locations wtih index
+        results: list[tuple[dict[int, np.ndarray], dict[int, np.ndarray]]]
+        num_processes: int = multip.cpu_count() // 2
+        chunk_size: int = len(self.unprot_aptes_ind) // num_processes
+        chunks = [self.unprot_aptes_ind[i:i+chunk_size] for i in
+                    range(0, len(self.unprot_aptes_ind), chunk_size)]
         with multip.Pool(processes=num_processes) as pool:
             results = \
                 pool.starmap(self.process_ind, [(chunk,) for chunk in chunks])
-        h_porotonations: dict[int, np.ndarray] = {}  # All the dicts
+        h_porotonations: dict[int, np.ndarray] = {}  # All the dicts of locs
+        h_velocities: dict[int, np.ndarray] = {}  # All the dicts of velocities
         for item in results:
-            h_porotonations.update(item)
-        return h_porotonations
+            h_porotonations.update(item[0])
+            h_velocities.update(item[1])
+        return h_porotonations, h_velocities
 
     def process_ind(self,
                     chunk: list[int]  # Chunk of the indices for loop over
-                    ) -> dict[int, np.ndarray]:
+                    ) -> tuple[dict[int, np.ndarray], dict[int, np.ndarray]]:
         """doing the calculations"""
         df_i: pd.DataFrame  # Local df for each residue index
         df_nh: pd.DataFrame  # Local df for each residue index
@@ -70,43 +69,36 @@ class FindHPosition(get_data.ProcessData):
         possible_loc: list[np.ndarray]  # Possible locations for putting H
         h_loc: np.ndarray  # Possible location for H
         all_h_locs: dict[int, np.ndarray] = {}  # To save all the locations
+        all_h_vels: dict[int, np.ndarray] = {}  # To save all the velocities
         for ind in chunk:
             df_i = self.unproton_aptes[
                 self.unproton_aptes['residue_number'] == ind]
             df_nh = df_i[df_i['atom_name'].isin(['N', 'HN1', 'HN2'])]
             v_nh1, v_nh2 = self.__get_vectors(df_nh)
             if 'vx' in df_nh.columns:
-                self.__get_velocity(df_nh)
+                all_h_vels[ind] = self.__get_velocity(df_nh)
             v_mean, _ = self.__get_hbond_len_angle(v_nh1, v_nh2)
             atoms_around_n = self.__get_atoms_around_n(df_nh, v_mean)
             possible_loc = self.__get_possible_pos(v_nh1, v_nh2, v_mean, df_nh)
             h_loc = self.__find_h_place(atoms_around_n, possible_loc, v_mean)
             all_h_locs[ind] = h_loc
-        return all_h_locs
+        return (all_h_locs, all_h_vels)
 
     def __get_velocity(self,
                        df_nh: pd.DataFrame  # Contains only N and NHs
                        ) -> np.ndarray:
         """get the velocity for the new HN3"""
         vec: dict[str, np.ndarray] = {}
-        vec = self.__get_velocityxyz(df_nh)
-        momentom: np.ndarray = self.__get_momentom(vec)
-
-    @staticmethod
-    def __get_momentom(vec: dict[str, np.ndarray]) -> np.ndarray:
-        """get momentom of the amino group"""
         m_h: float = 1.008  # Mass of atoms
         m_n: float = 14.007  # Mass of atoms
         total_mass: float = 2 * m_h + m_n
 
         # Calculate the center of mass velocity of the initial three atoms
+        vec = self.__get_velocityxyz(df_nh)
         com_velocity = [(m_h * vec['HN1'][i] +
                          m_h * vec['HN2'][i] +
                          m_n * vec['N'][i]) / total_mass for i in range(3)]
-
-        # Calculate the momentum of the initial three atoms
-        momentum_initial = [total_mass * v for v in com_velocity]
-        return np.array(momentum_initial)
+        return np.array(com_velocity)
 
     @staticmethod
     def __get_velocityxyz(df_nh: pd.DataFrame  # Contains only N and NHs
