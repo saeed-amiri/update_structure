@@ -11,7 +11,7 @@ import pandas as pd
 import ionization
 
 
-class UpdateAptesPdbDf:
+class UpdateAptesDf:
     """Updates APTES dataframe, by adding the hydrogens. Based on the
     positions, we have to make H atoms to be added to the pdb file"""
 
@@ -157,8 +157,6 @@ class UpdateResidues:
         self.updated_atoms = self.get_atoms(data.atoms, new_hn3, new_ions)
         self.new_ions = new_ions
         self.new_hn3 = new_hn3
-        self.h_velocities = data.h_velocities
-        self.ion_velos = data.ion_velos
 
     @staticmethod
     def get_atoms(atoms: pd.DataFrame,  # Initial system
@@ -181,7 +179,7 @@ class UpdateResidues:
     def get_aptes(data: ionization.IonizationSol  # All the data
                   ) -> tuple[pd.DataFrame, pd.DataFrame]:
         """get updated aptes dataframe"""
-        updated_aptes = UpdateAptesPdbDf(data.atoms,
+        updated_aptes = UpdateAptesDf(data.atoms,
                                       data.residues_atoms['APT'],
                                       data.h_porotonations)
         return updated_aptes.update_aptes, updated_aptes.new_nh3
