@@ -30,7 +30,7 @@ class UpdateAptesDf:
                  ) -> None:
         self.update_aptes, self.new_nh3 = \
             self.update_aptes_df(df_aptes, h_positions, h_velocities)
-    
+
     def update_aptes_df(self,
                         df_aptes: pd.DataFrame,  # Aptes chains
                         h_positions: dict[int, np.ndarray],  # H positions
@@ -39,8 +39,18 @@ class UpdateAptesDf:
         """update the aptes dataframe by adding new HN3 atoms"""
         nh3_atoms: pd.DataFrame = \
             self.prepare_hydrogens(h_positions, h_velocities)
-        sys.exit()
-        return self.__append_hydrogens(df_aptes, nh3_atoms), nh3_atoms
+        all_aptes: pd.DataFrame = self.__append_hydrogens(df_aptes, nh3_atoms)
+        updated_aptes: pd.DataFrame = self.__update_aptes_atom_id(all_aptes)
+        return updated_aptes, nh3_atoms
+
+    @staticmethod
+    def __update_aptes_atom_id(df_aptes: pd.DataFrame  # APTES from file
+                               ) -> pd.DataFrame:
+        """reindex atoms and residues ids from 1"""
+        df_c: pd.DataFrame = df_aptes.copy()
+        atom_ind: list[int] = [i+1 for i in range(len(df_c))]
+        df_c['atom_id'] = atom_ind
+        return df_c
 
     @staticmethod
     def __append_hydrogens(df_aptes: pd.DataFrame,  # Aptes chains
@@ -65,7 +75,6 @@ class UpdateAptesDf:
             hn3_atoms.loc[i] = \
                 [key, 'APT', 'HN3', atom_id, pos[0],
                  pos[1], pos[2], velo[0], velo[1], velo[2]]
-        hn3_atoms.to_csv('hn3_test.gro', sep=' ')
         return hn3_atoms
 
 
@@ -99,7 +108,7 @@ class UpdateResidues:
                  ) -> None:
         data = ionization.IonizationSol(fname)
         self.get_residues(data)
-    
+
     def get_residues(self,
                      data: ionization.IonizationSol  # All the data
                      ) -> None:
@@ -108,10 +117,9 @@ class UpdateResidues:
         self.updated_residues['SOL'] = self.get_sol(data)
         self.updated_residues['D10'] = self.get_oil(data)
         self.updated_residues['COR'] = self.get_cor(data)
-        # self.updated_residues['APT'], new_hn3 = 
+        # self.updated_residues['APT'], new_hn3 =
         self.get_aptes(data)
 
-    
     @staticmethod
     def get_atoms(atoms: pd.DataFrame,  # Initial system
                   new_hn3: pd.DataFrame,  # New NH3 atoms
@@ -146,6 +154,7 @@ class UpdateResidues:
                 ) -> pd.DataFrame:
         """return core atoms of NP residues"""
         return data.residues_atoms['COR']
+
 
 if __name__ == '__main__':
     UpdateResidues(sys.argv[1])
