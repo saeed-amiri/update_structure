@@ -12,7 +12,6 @@ import sys
 import numpy as np
 import pandas as pd
 import ionization
-import logger
 
 
 class UpdateAptesDf:
@@ -89,7 +88,6 @@ class UpdateSolDf:
                  atoms: pd.DataFrame  # All SOL atoms
                  ) -> None:
         self.update_waters = self.update_water_df(atoms)
-        self.update_waters.to_csv('water_test.gro', sep=' ')
 
     @staticmethod
     def update_water_df(atoms: pd.DataFrame  # All SOL atoms
@@ -108,15 +106,15 @@ class UpdateCorDf:
                  atoms: pd.DataFrame  # All COR atoms
                  ) -> None:
         self.update_cor = self.update_cor_df(atoms)
-        self.update_cor.to_csv('cor_test.gro', sep=' ')
 
     @staticmethod
     def update_cor_df(atoms: pd.DataFrame  # All COR atoms
                       ) -> pd.DataFrame:
         """update core (COR) atoms if needed to be updated"""
         atom_ids: list[int] = [i+1 for i in range(len(atoms.index))]
-        atoms['atom_id'] = atom_ids
-        return atoms
+        df_c: pd.DataFrame = atoms.copy()
+        df_c['atom_id'] = atom_ids
+        return df_c
 
 
 class UpdateOdaDf:
@@ -130,13 +128,37 @@ class UpdateOdaDf:
                  protonation_nr: int  # Number of protonation
                  ) -> None:
         self.update_oda = self.update_oda_df(atoms, protonation_nr)
-        self.update_oda.to_csv('oda_test.gro', sep=' ')
 
     @staticmethod
     def update_oda_df(atoms: pd.DataFrame,  # All ODA atoms
                       protonation_nr: int  # Number of protonation
                       ) -> pd.DataFrame:
         """update ODA atoms if needed to be updated"""
+        df_c: pd.DataFrame = atoms.copy()
+        updated_res: list[int] = atoms['residue_number'] + protonation_nr
+        atoms_id: list[int] = [i+1 for i in range(len(atoms.index))]
+        df_c['residue_number'] = updated_res
+        df_c['atom_id'] = atoms_id
+        return df_c
+
+
+class UpdateOilDf:
+    """preparing D10 residue for updating.The residue index should be
+    changed"""
+
+    update_oil: pd.DataFrame  # Updated D10 df
+
+    def __init__(self,
+                 atoms: pd.DataFrame,  # All oil atoms
+                 protonation_nr: int  # Number of protonation
+                 ) -> None:
+        self.update_oil = self.update_oil_df(atoms, protonation_nr)
+
+    @staticmethod
+    def update_oil_df(atoms: pd.DataFrame,  # All oil atoms
+                      protonation_nr: int  # Number of protonation
+                      ) -> pd.DataFrame:
+        """update oil atoms if needed to be updated"""
         df_c: pd.DataFrame = atoms.copy()
         updated_res: list[int] = atoms['residue_number'] + protonation_nr
         atoms_id: list[int] = [i+1 for i in range(len(atoms.index))]
@@ -154,15 +176,14 @@ class UpdateIonDf:
     def __init__(self,
                  atoms: pd.DataFrame,  # All ION atoms
                  ion_poses: list[np.ndarray],  # Position for the new ions
-                 ion_velos: pd.DataFrame  # Velocities for the new ions
+                 ion_velos: list[np.ndarray]  # Velocities for the new ions
                  ) -> None:
         self.update_ion = self.update_ion_df(atoms, ion_poses, ion_velos)
-        self.update_ion.to_csv('ion_test.gro', sep=' ')
 
     def update_ion_df(self,
                       atoms: pd.DataFrame,  # All ION atoms
                       ion_poses: list[np.ndarray],  # Position for the new ions
-                      ion_velos: pd.DataFrame  # Velocities for the new ions
+                      ion_velos: list[np.ndarray]  # Velocities for the new ion
                       ) -> pd.DataFrame:
         """update ions atoms if needed to be updated"""
         final_res: int = atoms['residue_number'].iloc[-1]
@@ -170,12 +191,11 @@ class UpdateIonDf:
         new_ions: pd.DataFrame = \
             self.prepare_ions(ion_poses, ion_velos, final_res, final_atom)
         updated_ions: pd.DataFrame = self.__append_ions(atoms, new_ions)
-        updated_ions.to_csv('ions_test.gro', sep=' ')
-        return atoms
+        return updated_ions
 
     @staticmethod
-    def prepare_ions(ion_poses: dict[int, np.ndarray],  # Ions positions
-                     ion_velos: dict[int, np.ndarray],  # Ions velocities
+    def prepare_ions(ion_poses: list[np.ndarray],  # Ions positions
+                     ion_velos: list[np.ndarray],  # Ions velocities
                      final_res: int,  # Last residue in the CLA df
                      final_atom: int  # Last atom in the CLA df
                      ) -> pd.DataFrame:
@@ -237,10 +257,9 @@ class UpdateResidues:
         self.updated_residues['SOL'] = self.get_sol(data)
         self.updated_residues['D10'] = self.get_oil(data)
         self.updated_residues['COR'] = self.get_cor(data)
-        # self.updated_residues['APT'], new_hn3 =
-        self.get_aptes(data)
-        self.get_ions(data)
-        self.get_oda(data)
+        self.updated_residues['APT'], self.new_hn3 = self.get_aptes(data)
+        self.updated_residues['CLA'] = self.get_ions(data)
+        self.updated_residues['ODN'] = self.get_oda(data)
 
     @staticmethod
     def get_atoms(atoms: pd.DataFrame,  # Initial system
@@ -257,7 +276,7 @@ class UpdateResidues:
         updated_aptes = UpdateAptesDf(data.residues_atoms['APT'],
                                       data.h_porotonations,
                                       data.h_velocities)
-        # return updated_aptes.update_aptes, updated_aptes.new_nh3
+        return updated_aptes.update_aptes, updated_aptes.new_nh3
 
     @staticmethod
     def get_sol(data: ionization.IonizationSol  # All the data
@@ -269,13 +288,16 @@ class UpdateResidues:
     def get_oil(data: ionization.IonizationSol  # All the data
                 ) -> pd.DataFrame:
         """return oil residues"""
-        return data.residues_atoms['D10']
+        updated_oils = UpdateOilDf(data.residues_atoms['D10'],
+                                   int(len(data.ion_poses)))
+        return updated_oils.update_oil
 
     @staticmethod
     def get_cor(data: ionization.IonizationSol  # All the data
                 ) -> pd.DataFrame:
         """return core atoms of NP residues"""
-        return data.residues_atoms['COR']
+        updated_oils = UpdateCorDf(data.residues_atoms['COR'])
+        return updated_oils.update_cor
 
     @staticmethod
     def get_ions(data: ionization.IonizationSol  # All the data
@@ -284,7 +306,7 @@ class UpdateResidues:
         updated_ions = UpdateIonDf(data.residues_atoms['CLA'],
                                    data.ion_poses,
                                    data.ion_velos)
-        # return updated_ions.update_ions, updated_ions.new_ions
+        return updated_ions.update_ion
 
     @staticmethod
     def get_oda(data: ionization.IonizationSol  # All the data
@@ -292,7 +314,7 @@ class UpdateResidues:
         """get updated ions data frame"""
         updated_oda = UpdateOdaDf(data.residues_atoms['ODN'],
                                   int(len(data.ion_poses)))
-        # return updated_ions.update_ions, updated_ions.new_ions
+        return updated_oda.update_oda
 
 
 if __name__ == '__main__':
