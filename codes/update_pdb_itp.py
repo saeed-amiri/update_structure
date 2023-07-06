@@ -13,14 +13,14 @@ the NP's location.
 
 
 import sys
-import update_residues
+import update_residues_pdb
 import write_pdb_file
 import update_itp
 import write_itp_file
 
 
 if __name__ == '__main__':
-    up_data = update_residues.UpdateResidues(sys.argv[1])
+    up_data = update_residues_pdb.UpdateResidues(sys.argv[1])
     write_pdb_file.WritePdb(up_data)
     itp = update_itp.UpdateItp(fname='APT_COR.itp', hn3=up_data.new_hn3)
     write_itp_file.WriteItp(itp, fname='APT_COR_updated.itp')
