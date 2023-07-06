@@ -119,6 +119,60 @@ class UpdateCorDf:
         return atoms
 
 
+class UpdateIonDf:
+    """preparing ION residue for updating. The new counterions should
+    be added to the initial ones"""
+
+    update_ion: pd.DataFrame  # Updated ION df
+
+    def __init__(self,
+                 atoms: pd.DataFrame,  # All ION atoms
+                 ion_poses: list[np.ndarray],  # Position for the new ions
+                 ion_velos: pd.DataFrame  # Velocities for the new ions
+                 ) -> None:
+        self.update_ion = self.update_ion_df(atoms, ion_poses, ion_velos)
+        self.update_ion.to_csv('ion_test.gro', sep=' ')
+
+    def update_ion_df(self,
+                      atoms: pd.DataFrame,  # All ION atoms
+                      ion_poses: list[np.ndarray],  # Position for the new ions
+                      ion_velos: pd.DataFrame  # Velocities for the new ions
+                      ) -> pd.DataFrame:
+        """update ions atoms if needed to be updated"""
+        final_res: int = atoms['residue_number'].iloc[-1]
+        final_atom: int = atoms['atom_id'].iloc[-1]
+        new_ions: pd.DataFrame = \
+            self.prepare_ions(ion_poses, ion_velos, final_res, final_atom)
+        updated_ions: pd.DataFrame = self.__append_ions(atoms, new_ions)
+        updated_ions.to_csv('ions_test.gro', sep=' ')
+        return atoms
+
+    @staticmethod
+    def prepare_ions(ion_poses: dict[int, np.ndarray],  # Ions positions
+                     ion_velos: dict[int, np.ndarray],  # Ions velocities
+                     final_res: int,  # Last residue in the CLA df
+                     final_atom: int  # Last atom in the CLA df
+                     ) -> pd.DataFrame:
+        """prepare the IONS based on the structure of the main df"""
+        cols: list[str] = \
+            ['residue_number', 'residue_name', 'atom_name', 'atom_id',
+             'x', 'y', 'z', 'vx', 'vy', 'vz']
+        new_ions: pd.DataFrame = pd.DataFrame(columns=cols)
+        for i, (pos, vel) in enumerate(zip(ion_poses, ion_velos)):
+            res_id: int = final_res + i + 1
+            atom_id: int = final_atom + i + 1
+            new_ions.loc[i] = [res_id, 'CLA', 'CLA', atom_id, pos[0],
+                               pos[1], pos[2], vel[0], vel[1], vel[2]]
+        return new_ions
+
+    @staticmethod
+    def __append_ions(ions: pd.DataFrame,  # initial ions
+                      new_ions: pd.DataFrame  # New ions atoms to append
+                      ) -> pd.DataFrame:
+        """append new ions atoms to the main df"""
+        return pd.concat([ions, new_ions], ignore_index=False)
+
+
 # Helper function to update index in pdb fasion
 def get_pdb_index(ind: int,  # Index which should be updated
                   final_atom: int,  # Last index of atom in the system
@@ -159,6 +213,7 @@ class UpdateResidues:
         self.updated_residues['COR'] = self.get_cor(data)
         # self.updated_residues['APT'], new_hn3 =
         self.get_aptes(data)
+        self.get_ions(data)
 
     @staticmethod
     def get_atoms(atoms: pd.DataFrame,  # Initial system
@@ -194,6 +249,15 @@ class UpdateResidues:
                 ) -> pd.DataFrame:
         """return core atoms of NP residues"""
         return data.residues_atoms['COR']
+
+    @staticmethod
+    def get_ions(data: ionization.IonizationSol  # All the data
+                 ) -> tuple[pd.DataFrame, pd.DataFrame]:
+        """get updated ions data frame"""
+        updated_ions = UpdateIonDf(data.residues_atoms['CLA'],
+                                   data.ion_poses,
+                                   data.ion_velos)
+        # return updated_ions.update_ions, updated_ions.new_ions
 
 
 if __name__ == '__main__':
