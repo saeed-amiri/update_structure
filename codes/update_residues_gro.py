@@ -21,7 +21,8 @@ class UpdateAptesDf:
     positions, we have to make H atoms to be added to the gro file.
     """
 
-    info_msg: str = 'Message:\n'  # Message to pass for logging and writing
+    update_aptes: pd.DataFrame  # Updated APTES df
+    new_nh3: pd.DataFrame  # All the new HN3 atoms
 
     def __init__(self,
                  df_aptes: pd.DataFrame,  # All the APTES informations
@@ -78,6 +79,24 @@ class UpdateAptesDf:
         return hn3_atoms
 
 
+class UpdateSolDf:
+    """preparing water (SOL) residue for updating. Nothing needs to be
+    change"""
+
+    update_waters: pd.DataFrame  # Updated APTES df
+
+    def __init__(self,
+                 atoms: pd.DataFrame  # All SOL atoms
+                 ) -> None:
+        self.update_waters = self.update_water_df(atoms)
+
+    @staticmethod
+    def update_water_df(atoms: pd.DataFrame  # All water atoms
+                        ) -> pd.DataFrame:
+        """update water atoms if needed to be updated"""
+        return atoms
+
+
 # Helper function to update index in pdb fasion
 def get_pdb_index(ind: int,  # Index which should be updated
                   final_atom: int,  # Last index of atom in the system
@@ -112,7 +131,6 @@ class UpdateResidues:
     def get_residues(self,
                      data: ionization.IonizationSol  # All the data
                      ) -> None:
-        """get all the residues"""
         """get all the residues"""
         self.updated_residues['SOL'] = self.get_sol(data)
         self.updated_residues['D10'] = self.get_oil(data)
