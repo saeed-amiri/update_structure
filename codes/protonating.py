@@ -30,7 +30,7 @@ class FindHPosition(get_data.ProcessData):
                  log: logger.logging.Logger
                  ) -> None:
         super().__init__(fname, log)
-        self.h_porotonations, self.h_vlocitiees = self.get_area()
+        self.h_porotonations, self.h_velocities = self.get_area()
         self.info_msg = 'Message:\n'
         self.info_msg += '\tFinding poistions for new HN3 atoms\n'
         self.__write_msg(log)
