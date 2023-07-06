@@ -20,15 +20,16 @@ class IonizationSol(proton.FindHPosition):
     number of deprotonation of the APTES"""
 
     ion_poses: np.ndarray  # Positoin for ions
+    ion_velos: np.ndarray  # Velocity for ions
 
     def __init__(self,
                  fname: str  # Name of the pdb file
                  ) -> None:
         log = logger.setup_logger('update.log')
         super().__init__(fname, log)
-        self.ion_poses = self.mk_ionization()
+        self.ion_poses, self.ion_velos = self.mk_ionization()
 
-    def mk_ionization(self) -> np.ndarray:
+    def mk_ionization(self) -> tuple[np.ndarray, np.ndarray]:
         """get the numbers of ions and their locations in the water
         phase"""
         x_dims: np.ndarray  # Dimensions of the sol box in x
@@ -38,7 +39,9 @@ class IonizationSol(proton.FindHPosition):
         y_chunks: list[tuple[np.float64, np.float64]]
         z_chunks: list[tuple[np.float64, np.float64]]
         ion_poses_list: list[np.ndarray]  # Possible position for ions
+        ion_velos_list: list[np.ndarray]  # Possible velocity for ions
         ion_poses: np.ndarray  # Main poistions for the ions
+        ion_velos: np.ndarray  # Main velocities for the ions
 
         # Find the all the atoms in the water (sol) phase
         sol_atoms: pd.DataFrame = self.__get_sol_phase_atoms()
@@ -51,17 +54,18 @@ class IonizationSol(proton.FindHPosition):
             self.__get_chunk_interval(x_dims, y_dims, z_dims)
 
         # Find possible poistions for all the ions
-        ion_poses_list = \
+        ion_poses_list, ion_velos_list = \
             self.__get_chunk_atoms(sol_atoms, x_chunks, y_chunks, z_chunks)
 
         # Sanity check of the ions_positions
         ion_poses = self.__check_poses(ion_poses_list)
-
         # Get the ions poistion based on the protonation
-        ion_poses = \
-            self.__random_pos_selction(ion_poses, len(self.unprot_aptes_ind))
+        ion_poses, ion_velos = \
+            self.__random_ion_selction(ion_poses,
+                                       ion_velos_list,
+                                       len(self.unprot_aptes_ind))
 
-        return ion_poses
+        return ion_poses, ion_velos
 
     def __check_poses(self,
                       ion_poses: list[np.ndarray]  # Possible position for ions
@@ -84,19 +88,24 @@ class IonizationSol(proton.FindHPosition):
                 self.__drop_near_ions(atoms, self.param['ION_DISTANCE'], tree)
         return atoms
 
-    def __random_pos_selction(self,
-                              atoms: np.ndarray,  # All the positions for ions
+    def __random_ion_selction(self,
+                              poses: np.ndarray,  # All the positions for ions
+                              velos: np.ndarray,  # All the velocities for ions
                               n_portons: int  # Number of protonations
-                              ) -> np.ndarray:
-        """select random positions for the ions"""
-        if len(atoms) < n_portons:
+                              ) -> tuple[list[np.ndarray], list[np.ndarray]]:
+        """select random positions with respected velocities for the ions"""
+        if len(poses) < n_portons:
             sys.exit(f'{bcolors.FAIL}{self.__module__}:\n'
-                     f'\t Number of ions positoins: `{len(atoms)}` is smaller'
+                     f'\t Number of ions positoins: `{len(poses)}` is smaller'
                      f' than protonation: `{n_portons}`')
         else:
-            np.random.shuffle(atoms)  # Shuffle the rows randomly
-            atoms = atoms[:n_portons]  # Select the first n rows
-        return atoms
+            # Get the indices of the randomly selected items
+            selected_indices = np.random.choice(range(len(poses)), n_portons)
+
+            # Retrieve the corresponding items from list1 and list2
+            selected_poses = [poses[i] for i in selected_indices]
+            selected_velos = [velos[i] for i in selected_indices]
+        return selected_poses, selected_velos
 
     @staticmethod
     def __drop_near_ions(atoms: np.ndarray,  # All the ion poistions
@@ -117,7 +126,7 @@ class IonizationSol(proton.FindHPosition):
                           x_chunks: list[tuple[np.float64, np.float64]],  # rng
                           y_chunks: list[tuple[np.float64, np.float64]],  # rng
                           z_chunks: list[tuple[np.float64, np.float64]],  # rng
-                          ) -> list[np.ndarray]:
+                          ) -> tuple[list[np.ndarray], list[np.ndarray]]:
         """get atoms within each chunk box, and return a list of all
         possible positions for ions. it could be more than the number
         of number of the new protonation."""
@@ -131,16 +140,20 @@ class IonizationSol(proton.FindHPosition):
                   for z_i in z_chunks]
 
         with multip.Pool() as pool:
-            ion_poses: list[np.ndarray] = \
+            ion_info: list[tuple[np.ndarray, np.ndarray]] = \
                 pool.starmap(self._process_chunk_box, chunks)
-        return ion_poses
+        ion_poses: list[np.ndarray] = [item[0] for item in ion_info]
+        ion_velos: list[np.ndarray] = [item[1] for item in ion_info]
+        print(type(ion_poses))
+        print(type(ion_velos))
+        return ion_poses, ion_velos
 
     def _process_chunk_box(self,
                            sol_atoms: pd.DataFrame,  # All Sol phase atoms
                            x_i: np.ndarray,  # interval for the box
                            y_i: np.ndarray,  # interval for the box
                            z_i: np.ndarray  # interval for the box
-                           ) -> pd.DataFrame:
+                           ) -> tuple[np.ndarray, np.ndarray]:
         """process the chunk box, getting atoms in each box, and find
         positions for all the needed ions"""
         df_i = sol_atoms[(sol_atoms['x'] >= x_i[0]) &
@@ -151,11 +164,23 @@ class IonizationSol(proton.FindHPosition):
                          (sol_atoms['z'] < z_i[1])
                          ]
         coordinates: np.ndarray = df_i[['x', 'y', 'z']].values
+        try:
+            velocities: np.ndarray = df_i[['vx', 'vy', 'vz']].values
+        except ValueError:
+            velocities = np.zeros(coordinates.shape)
+        ion_vel: np.ndarray = self.find_ion_velocity(velocities)
         box_dims = (x_i, y_i, z_i)
         ion_pos: np.ndarray = \
             self.find_position_with_min_distance(coordinates,
                                                  box_dims)
-        return ion_pos
+        return (ion_pos, ion_vel)
+
+    @staticmethod
+    def find_ion_velocity(velocities: np.ndarray  # Velocities of atom in df
+                          ) -> np.ndarray:
+        """find average velocity of the df section and return their
+        mean as a velocity of the ion"""
+        return np.mean(velocities, axis=0)
 
     def find_position_with_min_distance(self,
                                         atoms: np.ndarray,  # Coords of atoms
