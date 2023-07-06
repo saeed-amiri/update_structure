@@ -19,8 +19,8 @@ class IonizationSol(proton.FindHPosition):
     """ionizing the water phase of the box. The number is equal to the
     number of deprotonation of the APTES"""
 
-    ion_poses: np.ndarray  # Positoin for ions
-    ion_velos: np.ndarray  # Velocity for ions
+    ion_poses: list[np.ndarray]  # Positoin for ions
+    ion_velos: list[np.ndarray]  # Velocity for ions
 
     def __init__(self,
                  fname: str  # Name of the pdb file
@@ -29,7 +29,7 @@ class IonizationSol(proton.FindHPosition):
         super().__init__(fname, log)
         self.ion_poses, self.ion_velos = self.mk_ionization()
 
-    def mk_ionization(self) -> tuple[np.ndarray, np.ndarray]:
+    def mk_ionization(self) -> tuple[list[np.ndarray], list[np.ndarray]]:
         """get the numbers of ions and their locations in the water
         phase"""
         x_dims: np.ndarray  # Dimensions of the sol box in x
@@ -40,8 +40,8 @@ class IonizationSol(proton.FindHPosition):
         z_chunks: list[tuple[np.float64, np.float64]]
         ion_poses_list: list[np.ndarray]  # Possible position for ions
         ion_velos_list: list[np.ndarray]  # Possible velocity for ions
-        ion_poses: np.ndarray  # Main poistions for the ions
-        ion_velos: np.ndarray  # Main velocities for the ions
+        ion_poses: list[np.ndarray]  # Main poistions for the ions
+        ion_velos: list[np.ndarray]  # Main velocities for the ions
 
         # Find the all the atoms in the water (sol) phase
         sol_atoms: pd.DataFrame = self.__get_sol_phase_atoms()
@@ -58,11 +58,11 @@ class IonizationSol(proton.FindHPosition):
             self.__get_chunk_atoms(sol_atoms, x_chunks, y_chunks, z_chunks)
 
         # Sanity check of the ions_positions
-        ion_poses = self.__check_poses(ion_poses_list)
+        ion_poses_tmp: np.ndarray = self.__check_poses(ion_poses_list)
         # Get the ions poistion based on the protonation
         ion_poses, ion_velos = \
-            self.__random_ion_selction(ion_poses,
-                                       ion_velos_list,
+            self.__random_ion_selction(ion_poses_tmp,
+                                       np.array(ion_velos_list),
                                        len(self.unprot_aptes_ind))
 
         return ion_poses, ion_velos
@@ -71,10 +71,7 @@ class IonizationSol(proton.FindHPosition):
                       ion_poses: list[np.ndarray]  # Possible position for ions
                       ) -> np.ndarray:
         """check for probable ovrlapping of positions"""
-        try:
-            atoms: np.ndarray = np.vstack(ion_poses)
-        except ValueError:
-            atoms = ion_poses
+        atoms: np.ndarray = np.vstack(ion_poses)
 
         # Build a KDTree from the atom coordinates
         tree = KDTree(atoms)
@@ -144,8 +141,6 @@ class IonizationSol(proton.FindHPosition):
                 pool.starmap(self._process_chunk_box, chunks)
         ion_poses: list[np.ndarray] = [item[0] for item in ion_info]
         ion_velos: list[np.ndarray] = [item[1] for item in ion_info]
-        print(type(ion_poses))
-        print(type(ion_velos))
         return ion_poses, ion_velos
 
     def _process_chunk_box(self,
