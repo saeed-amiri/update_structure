@@ -114,7 +114,7 @@ class UpdateCorDf:
     def update_cor_df(atoms: pd.DataFrame  # All COR atoms
                       ) -> pd.DataFrame:
         """update core (COR) atoms if needed to be updated"""
-        atom_ids: list[int] = [i+1 for i in atoms.index]
+        atom_ids: list[int] = [i+1 for i in range(len(atoms.index))]
         atoms['atom_id'] = atom_ids
         return atoms
 
@@ -139,9 +139,9 @@ class UpdateOdaDf:
         """update ODA atoms if needed to be updated"""
         df_c: pd.DataFrame = atoms.copy()
         updated_res: list[int] = atoms['residue_number'] + protonation_nr
-        atoms_id: list[int] = [i+1 for i in atoms.index]
+        atoms_id: list[int] = [i+1 for i in range(len(atoms.index))]
         df_c['residue_number'] = updated_res
-        df_c['atoms_id'] = atoms_id
+        df_c['atom_id'] = atoms_id
         return df_c
 
 
