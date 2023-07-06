@@ -92,7 +92,7 @@ class UpdateSolDf:
         self.update_waters.to_csv('water_test.gro', sep=' ')
 
     @staticmethod
-    def update_water_df(atoms: pd.DataFrame  # All water atoms
+    def update_water_df(atoms: pd.DataFrame  # All SOL atoms
                         ) -> pd.DataFrame:
         """update water atoms if needed to be updated"""
         return atoms
@@ -102,18 +102,20 @@ class UpdateCorDf:
     """preparing COR residue for updating. Nothing needs to be
     change"""
 
-    update_cor: pd.DataFrame  # Updated APTES df
+    update_cor: pd.DataFrame  # Updated COR df
 
     def __init__(self,
-                 atoms: pd.DataFrame  # All SOL atoms
+                 atoms: pd.DataFrame  # All COR  atoms
                  ) -> None:
         self.update_cor = self.update_cor_df(atoms)
         self.update_cor.to_csv('cor_test.gro', sep=' ')
 
     @staticmethod
-    def update_cor_df(atoms: pd.DataFrame  # All water atoms
+    def update_cor_df(atoms: pd.DataFrame  # All COR atoms
                       ) -> pd.DataFrame:
         """update core (COR) atoms if needed to be updated"""
+        atom_ids: list[int] = [i+1 for i in atoms.index]
+        atoms['atom_id'] = atom_ids
         return atoms
 
 
