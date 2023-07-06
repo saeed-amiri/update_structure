@@ -2,7 +2,7 @@
 
 import sys
 import pandas as pd
-import update_residues as residues
+import update_residues_pdb as residues
 from colors_text import TextColor as bcolors
 
 
