@@ -15,7 +15,7 @@ def write_gromacs_gro(gro_data: update_residues_gro.UpdateResidues,
         for _, row in df_i.iterrows():
             line = f'{row["residue_number"]:>5}' \
                    f'{row["residue_name"]:<5}' \
-                   f'{row["atom_name"]:<5}' \
+                   f'{row["atom_name"]:>5}' \
                    f'{row["atom_id"]:>5}' \
                    f'{row["x"]:8.3f}' \
                    f'{row["y"]:8.3f}' \
@@ -24,4 +24,4 @@ def write_gromacs_gro(gro_data: update_residues_gro.UpdateResidues,
                    f'{row["vy"]:8.4f}' \
                    f'{row["vz"]:8.4f}\n'
             gro_file.write(line)
-        gro_file.write(f'{gro_data.pbc_box}')
+        gro_file.write(f'{gro_data.pbc_box}\n')
