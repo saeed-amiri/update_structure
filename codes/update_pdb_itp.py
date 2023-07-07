@@ -14,13 +14,22 @@ the NP's location.
 
 import sys
 import update_residues_pdb
+import update_residues_gro
 import write_pdb_file
 import update_itp
 import write_itp_file
+import write_gro_file
 
 
+STYLE: str = 'GRO'
 if __name__ == '__main__':
-    up_data = update_residues_pdb.UpdateResidues(sys.argv[1])
-    write_pdb_file.WritePdb(up_data)
-    itp = update_itp.UpdateItp(fname='APT_COR.itp', hn3=up_data.new_hn3)
+    if STYLE == 'GRO':
+        gro_data = update_residues_gro.UpdateResidues(sys.argv[1])
+        write_gro_file.write_gromacs_gro(gro_data, 'updated_system.gro')
+        new_hn3 = gro_data.new_hn3
+    else:
+        up_data = update_residues_pdb.UpdateResidues(sys.argv[1])
+        write_pdb_file.WritePdb(up_data)
+        new_hn3 = up_data.new_hn3
+    itp = update_itp.UpdateItp(fname='APT_COR.itp', hn3=new_hn3)
     write_itp_file.WriteItp(itp, fname='APT_COR_updated.itp')
