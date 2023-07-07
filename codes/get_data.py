@@ -27,6 +27,8 @@ class ProcessData:
     unproton_aptes: pd.DataFrame  # APTES which should be protonated
     unprot_aptes_ind: list[int]  # Index of APTES which should be protonated
     np_diameter: np.float64  # Diameter of NP, based on APTES positions
+    title: str  # Name of the system; if the file is gro
+    pbc_box: str  # PBC of the system; if the file is gro
 
     def __init__(self,
                  fname: str,  # Name of the pdb file
@@ -49,7 +51,10 @@ class ProcessData:
         if self.param['FILE'] == 'PDB':
             atoms = pdbf.Pdb(fname, log).atoms
         elif self.param['FILE'] == 'GRO':
-            atoms = grof.ReadGro(fname, log).gro_data
+            gro = grof.ReadGro(fname, log)
+            atoms = gro.gro_data
+            self.title = gro.title
+            self.pbc_box = gro.pbc_box
         return atoms
 
     def process_data(self,
