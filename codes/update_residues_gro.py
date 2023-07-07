@@ -219,20 +219,6 @@ class UpdateIonDf:
         return pd.concat([ions, new_ions], ignore_index=False)
 
 
-# Helper function to update index in pdb fasion
-def get_pdb_index(ind: int,  # Index which should be updated
-                  final_atom: int,  # Last index of atom in the system
-                  pdb_max: int = 99999  # If not atom change it
-                  ) -> int:
-    """updata index (for atoms or residues). In pdb file, atom index
-    cannot be bigger then 99999 and residues 9999. Afterwards,
-    it started from zero"""
-    new_ind: int = final_atom + ind
-    if new_ind > pdb_max:
-        new_ind -= pdb_max
-    return new_ind
-
-
 class UpdateResidues:
     """get all the dataframes as an object"""
 
@@ -252,6 +238,18 @@ class UpdateResidues:
         data = ionization.IonizationSol(fname)
         self.get_residues(data)
         combine_residues = self.concate_residues()
+        self.__set_atom_id(combine_residues)
+
+    @staticmethod
+    def __set_atom_id(combine_residues: pd.DataFrame  # All the rsidues
+                      ) -> pd.DataFrame:
+        """set the atom_id for the all the atoms"""
+        df_c: pd.DataFrame = combine_residues.copy()
+        # Specify the limit for the atom IDs
+        atom_id: list[int] = mk_atom_id_cycle(len(combine_residues))
+        # Calculate the number of cycles
+        df_c['atom_id'] = atom_id
+        df_c.to_csv('combine_residues', sep=' ')
 
     def concate_residues(self) -> pd.DataFrame:
         """concate all the residues in one dataframe, The order is
@@ -261,7 +259,6 @@ class UpdateResidues:
         combine_residues: pd.DataFrame = \
             pd.concat([self.updated_residues[col] for col in cols_order],
                       axis=0, ignore_index=True)
-        combine_residues.to_csv('combine_residues', sep=' ')
         return combine_residues
 
     def get_residues(self,
@@ -329,6 +326,30 @@ class UpdateResidues:
         updated_oda = UpdateOdaDf(data.residues_atoms['ODN'],
                                   int(len(data.ion_poses)))
         return updated_oda.update_oda
+
+
+# Helper function to update index in gro fasion
+def mk_atom_id_cycle(list_len: int,  # Size of the list,
+                     id_limit=99999  # Limit of the cycle
+                     ) -> list[int]:
+    """list of integers in a cycle for the atom_id.
+    The atom id in the gro file seems like this:
+    The first cycle starts from 1 to 99999, the other cycles start from 0.
+    """
+    counter: int = 0   # The first atom id
+    atoms_id: list[int] = []  # List of the atom id
+    while counter < list_len:
+        if counter == 0:
+            cycle_i = 1
+            cycle_f = id_limit
+        else:
+            cycle_i = 0
+            cycle_f = id_limit + 1
+        slice_i = [item + cycle_i for item in range(cycle_f)]
+        counter += len(slice_i)
+        atoms_id.extend(slice_i)
+        del slice_i
+    return atoms_id[:list_len]
 
 
 if __name__ == '__main__':
