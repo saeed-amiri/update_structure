@@ -243,12 +243,26 @@ class UpdateResidues:
     # To return new atoms seperatly
     new_hn3: pd.DataFrame
     new_ions: pd.DataFrame
+    # Final datafrme
+    combine_residues: pd.DataFrame
 
     def __init__(self,
                  fname: str  # Name of the input file (pdb)
                  ) -> None:
         data = ionization.IonizationSol(fname)
         self.get_residues(data)
+        combine_residues = self.concate_residues()
+
+    def concate_residues(self) -> pd.DataFrame:
+        """concate all the residues in one dataframe, The order is
+        very important. it should follow the order in the main file"""
+        cols_order: list[str] = ['SOL', 'CLA', 'ODN', 'D10', 'COR', 'APT']
+        # Concatenate DataFrames in the desired order
+        combine_residues: pd.DataFrame = \
+            pd.concat([self.updated_residues[col] for col in cols_order],
+                      axis=0, ignore_index=True)
+        combine_residues.to_csv('combine_residues', sep=' ')
+        return combine_residues
 
     def get_residues(self,
                      data: ionization.IonizationSol  # All the data
