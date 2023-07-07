@@ -231,14 +231,19 @@ class UpdateResidues:
     new_ions: pd.DataFrame
     # Final datafrme
     combine_residues: pd.DataFrame
+    # Title and pbc of the system to write in the final file
+    title: str
+    pbc_box: str
 
     def __init__(self,
                  fname: str  # Name of the input file (pdb)
                  ) -> None:
         data = ionization.IonizationSol(fname)
+        self.title = data.title
+        self.pbc_box = data.pbc_box
         self.get_residues(data)
         combine_residues = self.concate_residues()
-        self.__set_atom_id(combine_residues)
+        self.combine_residues = self.__set_atom_id(combine_residues)
 
     @staticmethod
     def __set_atom_id(combine_residues: pd.DataFrame  # All the rsidues
@@ -250,6 +255,7 @@ class UpdateResidues:
         # Calculate the number of cycles
         df_c['atom_id'] = atom_id
         df_c.to_csv('combine_residues', sep=' ')
+        return df_c
 
     def concate_residues(self) -> pd.DataFrame:
         """concate all the residues in one dataframe, The order is
