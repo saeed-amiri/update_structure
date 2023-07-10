@@ -6,7 +6,7 @@ protonation."""
 
 
 import sys
-import typing
+import operator
 import multiprocessing as multip
 from scipy.spatial import cKDTree, KDTree
 import numpy as np
@@ -63,9 +63,10 @@ class IonizationSol(proton.FindHPosition):
         ion_poses_tmp: np.ndarray = self.__check_poses(ion_poses_list)
         # Get the ions poistion based on the protonation
         ion_poses, ion_velos = \
-            self.__random_ion_selction(ion_poses_tmp,
-                                       np.array(ion_velos_list),
-                                       len(self.unprot_aptes_ind))
+            self.__best_ion_selction(ion_poses_tmp,
+                                     np.array(ion_velos_list),
+                                     d_ions,
+                                     len(self.unprot_aptes_ind))
         return ion_poses, ion_velos
 
     def __check_poses(self,
@@ -86,23 +87,30 @@ class IonizationSol(proton.FindHPosition):
                 self.__drop_near_ions(atoms, self.param['ION_DISTANCE'], tree)
         return atoms
 
-    def __random_ion_selction(self,
-                              poses: np.ndarray,  # All the positions for ions
-                              velos: np.ndarray,  # All the velocities for ions
-                              n_portons: int  # Number of protonations
-                              ) -> tuple[list[np.ndarray], list[np.ndarray]]:
+    def __best_ion_selction(self,
+                            poses: np.ndarray,  # All the positions for ions
+                            velos: np.ndarray,  # All the velocities for ions
+                            d_ions: list[float],  # Distnce of ions
+                            n_portons: int  # Number of protonations
+                            ) -> tuple[list[np.ndarray], list[np.ndarray]]:
         """select random positions with respected velocities for the ions"""
         if len(poses) < n_portons:
             sys.exit(f'{bcolors.FAIL}{self.__module__}:\n'
                      f'\t Number of ions positoins: `{len(poses)}` is smaller'
                      f' than protonation: `{n_portons}`')
         else:
-            # Get the indices of the randomly selected items
-            selected_indices = np.random.choice(range(len(poses)), n_portons)
+            # Combine the two lists using zip
+            combined = list(zip(d_ions, poses, velos))
 
-            # Retrieve the corresponding items from list1 and list2
-            selected_poses = [poses[i] for i in selected_indices]
-            selected_velos = [velos[i] for i in selected_indices]
+            # Sort the combined list based on the values in descending order
+            combined_sorted = sorted(combined,
+                                     key=operator.itemgetter(0),
+                                     reverse=True)
+
+            # Select the m maximum values and their corresponding arrays
+            selected_d = [item[0] for item in combined_sorted[:n_portons]]
+            selected_poses = [item[1] for item in combined_sorted[:n_portons]]
+            selected_velos = [item[2] for item in combined_sorted[:n_portons]]
         return selected_poses, selected_velos
 
     @staticmethod
@@ -140,11 +148,11 @@ class IonizationSol(proton.FindHPosition):
                   for z_i in z_chunks]
 
         with multip.Pool() as pool:
-            ion_info: list[tuple[np.ndarray, np.ndarray]] = \
+            ion_info: list[tuple[np.ndarray, np.ndarray, float]] = \
                 pool.starmap(self._process_chunk_box, chunks)
         ion_poses: list[np.ndarray] = [item[0] for item in ion_info]
         ion_velos: list[np.ndarray] = [item[1] for item in ion_info]
-        d_ions: list[np.ndarray] = [item[2] for item in ion_info]
+        d_ions: list[float] = [item[2] for item in ion_info]
         return ion_poses, ion_velos, d_ions
 
     def _process_chunk_box(self,
