@@ -120,7 +120,6 @@ class IonizationSol(proton.FindHPosition):
                              f'{d_ions}\n'
             self.info_msg += '\tThe selected spots have nighbours distance: ' \
                              f'{selected_d}\n'
-            print(self.info_msg)
         return selected_poses, selected_velos
 
     @staticmethod
