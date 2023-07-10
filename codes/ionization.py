@@ -20,6 +20,7 @@ class IonizationSol(proton.FindHPosition):
     """ionizing the water phase of the box. The number is equal to the
     number of deprotonation of the APTES"""
 
+    info_msg: str  # Message to pass for logging and writing
     ion_poses: list[np.ndarray]  # Positoin for ions
     ion_velos: list[np.ndarray]  # Velocity for ions
 
@@ -28,6 +29,10 @@ class IonizationSol(proton.FindHPosition):
                  ) -> None:
         log = logger.setup_logger('update.log')
         super().__init__(fname, log)
+        self.info_msg = 'Message:\n'
+        self.info_msg += '\tFinding poistions for new ions\n'
+        self.__write_msg(log)
+        self.info_msg = ''  # clean the msg
         self.ion_poses, self.ion_velos = self.mk_ionization()
 
     def mk_ionization(self) -> tuple[list[np.ndarray], list[np.ndarray]]:
@@ -111,6 +116,11 @@ class IonizationSol(proton.FindHPosition):
             selected_d = [item[0] for item in combined_sorted[:n_portons]]
             selected_poses = [item[1] for item in combined_sorted[:n_portons]]
             selected_velos = [item[2] for item in combined_sorted[:n_portons]]
+            self.info_msg += '\tThe found spots have nighbours distance: ' \
+                             f'{d_ions}\n'
+            self.info_msg += '\tThe selected spots have nighbours distance: ' \
+                             f'{selected_d}\n'
+            print(self.info_msg)
         return selected_poses, selected_velos
 
     @staticmethod
@@ -291,6 +301,14 @@ class IonizationSol(proton.FindHPosition):
         """get all the atom below interface, in the water section"""
         tresh_hold = float(self.param['INTERFACE']-self.np_diameter)
         return self.atoms[self.atoms['z'] < tresh_hold]
+
+    def __write_msg(self,
+                    log: logger.logging.Logger,  # To log info in it
+                    ) -> None:
+        """write and log messages"""
+        print(f'{bcolors.OKCYAN}{IonizationSol.__module__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)
 
 
 if __name__ == '__main__':
