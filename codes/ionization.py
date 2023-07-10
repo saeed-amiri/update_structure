@@ -6,6 +6,7 @@ protonation."""
 
 
 import sys
+import typing
 import multiprocessing as multip
 from scipy.spatial import cKDTree, KDTree
 import numpy as np
@@ -194,28 +195,25 @@ class IonizationSol(proton.FindHPosition):
         # Build a kd-tree from the atom coordinates
         tree = cKDTree(atoms)
 
-        for _ in range(num_attempts):
-            # Generate random positions within the specified ranges
-            # for each dimension, Don't want to be at the edge of the box
-            position = \
-                np.random.uniform(low=[min_x, min_y, min_z],
-                                  high=[max_x, max_y, max_z-1])
+        while d_ion > 0:
+            for _ in range(num_attempts):
+                # Generate random positions within the specified ranges
+                # for each dimension, Don't want to be at the edge of the box
+                position = \
+                    np.random.uniform(low=[min_x, min_y, min_z],
+                                      high=[max_x, max_y, max_z-1])
 
-            # Query the kd-tree for the nearest neighbors within distance d
-            _, distances = tree.query(position,
-                                      k=1,
-                                      distance_upper_bound=d_ion)
+                # Query the kd-tree for the nearest neighbors within distance d
+                distances, _ = tree.query(position,
+                                          k=1,
+                                          distance_upper_bound=d_ion)
 
-            # If any distance is less than d, continue to the next attempt
-            if np.any(distances < d_ion):
-                continue
-
-            # If all distances are greater than or equal to d,return
-            # the position
-            return position
-
-        # If no suitable position is found after all attempts, return None
-        return np.array([-1, -1, -1])
+                # If any distance is less than d, continue to the next attempt
+                if np.all(distances >= d_ion):
+                    return position
+            d_ion -= 0.01
+        raise ValueError("Unable to find a suitable position within \
+                          the specified constraints")
 
     def __get_chunk_interval(self,
                              x_dims: np.ndarray,  # Dimensions of sol box in x
@@ -278,7 +276,7 @@ class IonizationSol(proton.FindHPosition):
 
     def __get_sol_phase_atoms(self) -> pd.DataFrame:
         """get all the atom below interface, in the water section"""
-        tresh_hold = float(self.param['INTERFACE']+100-self.np_diameter)
+        tresh_hold = float(self.param['INTERFACE']-self.np_diameter)
         return self.atoms[self.atoms['z'] < tresh_hold]
 
 
