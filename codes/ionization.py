@@ -119,7 +119,8 @@ class IonizationSol(proton.FindHPosition):
             selected_velos = [item[2] for item in combined_sorted[:n_portons]]
             self.info_msg += '\tThe found spots have nighbours distance: \n'
             self.info_msg += json.dumps([f'{i:.2f}' for i in d_ions], indent=8)
-            self.info_msg += '\n\tThe selected spots have nighbours distance:\n'
+            self.info_msg += \
+                '\n\tThe selected spots have nighbours distance:\n'
             self.info_msg += \
                 json.dumps([f'{i:.2f}' for i in selected_d], indent=8)
         return selected_poses, selected_velos
