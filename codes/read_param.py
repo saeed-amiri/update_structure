@@ -29,7 +29,8 @@ class ReadParam:
     fname: str = 'update_param'
     essential_key: list[str] = [
         "ANGLE", "RADIUS", "READ", "FILE", "INTERFACE", "INTERFACE_WIDTH",
-        "NUMSAMPLE", "ION_DISTANCE", "ION_ATTEPTS", "NP_ZLOC", "LINE"]
+        "NUMSAMPLE", "ION_DISTANCE", "ION_ATTEPTS", "NP_ZLOC", "LINE",
+        "BETTER_POS"]
 
     def __init__(self,
                  log: logger.logging.Logger
