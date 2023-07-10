@@ -26,9 +26,10 @@ Inputs:
             @RADIUS=25
             ############### INTERACTIVE VALUES ###########
             intereface location -> caculated by analysing script
-            If PDB then read it from the PDB file, otherwise from the fixed value set in here
-            @PDB=True
-            If no PDB the interface is got from here: (They should set anyway)
+            If READ then read it from the READ file, otherwise from the fixed value set in here
+            @READ=True
+            @FILE=GRO
+            If no READ the interface is got from here: (They should set anyway)
             @INTERFACE=12.81
             interface thickness
             @INTERFACE_WIDTH=10.47
@@ -43,9 +44,10 @@ Inputs:
             Number of points to make to try to put H of new protonation there
             @NUMSAMPLE=100
             Distance to put between ION and other atoms
-            @ION_DISTANCE=1
+            IMPORTANT!! THE UNIT OF THE INPUT FILE IS USED HERE, A or nm
+            @ION_DISTANCE=0.6
             Number of times try to find a place for an ion
-            @ION_ATTEPTS=100
+            @ION_ATTEPTS=1000
     -itp files:
         It needs itp file for the following:
             -protonated APTES,
