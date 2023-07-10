@@ -145,9 +145,9 @@ class ProcessData:
         elif self.param['READ'] == 'True':
             # Interface is calculated directly
             self.info_msg += \
-                '\tInterface data is selcected from pdb file\n'
+                '\tInterface data is selcected from the input file\n'
             interface_z = water_surface.interface_z
-            interface_w = water_surface.interface_std * 4
+            interface_w = water_surface.interface_std * 2
             aptes_com = 0
         z_range = self.__interface_range(interface_z,
                                          interface_w,
