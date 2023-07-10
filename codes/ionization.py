@@ -210,8 +210,6 @@ class IonizationSol(proton.FindHPosition):
                                                         np.ndarray],  # Boxdims
                                         ) -> tuple[np.ndarray, float]:
         """find the best place for ions in each box"""
-        d_ion = self.param['ION_DISTANCE']  # Distance of Ions and others
-        num_attempts = int(self.param['ION_ATTEPTS'])  # Number to try to find
 
         min_x, max_x = box_dims[0]
         min_y, max_y = box_dims[1]
@@ -220,23 +218,35 @@ class IonizationSol(proton.FindHPosition):
         # Build a kd-tree from the atom coordinates
         tree = cKDTree(atoms)
 
-        while d_ion > 0:
-            for _ in range(num_attempts):
-                # Generate random positions within the specified ranges
-                # for each dimension, Don't want to be at the edge of the box
-                position = \
-                    np.random.uniform(low=[min_x, min_y, min_z],
-                                      high=[max_x, max_y, max_z-1])
+        positions: list[np.ndarray] = []  # Keep postions
+        d_ions: list[float] = []  # Keep track of d_ions
 
-                # Query the kd-tree for the nearest neighbors within distance d
-                distances, _ = tree.query(position,
-                                          k=1,
-                                          distance_upper_bound=d_ion)
+        while len(positions) < 100:  # Generate 100 points
+            d_ion = self.param['ION_DISTANCE']  # Distance of Ions and others
+            found_poistion: bool = False
+            while d_ion > 0 and not found_poistion:
+                for _ in range(int(self.param['ION_ATTEPTS'])):
+                    # Generate random positions within the specified ranges
+                    # for each dimension, Don't want to be at the edge of box
+                    position = \
+                        np.random.uniform(low=[min_x, min_y, min_z],
+                                          high=[max_x, max_y, max_z-1])
 
-                # If any distance is less than d, continue to the next attempt
-                if np.all(distances >= d_ion):
-                    return position, d_ion
-            d_ion -= 0.01
+                    # Query the kd-tree for the nearest neighbors within d
+                    distances, _ = tree.query(position,
+                                              k=1,
+                                              distance_upper_bound=d_ion)
+
+                    # If any distance is less than d, continue to the next try
+                    if np.all(distances >= d_ion):
+                        positions.append(position)
+                        d_ions.append(d_ion)
+                        found_poistion = True
+                        break
+                d_ion -= 0.01
+
+        if positions:
+            return positions[np.argmax(d_ions)], d_ions[np.argmax(d_ions)]
         raise ValueError("Unable to find a suitable position within \
                           the specified constraints")
 
