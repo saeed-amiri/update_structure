@@ -221,7 +221,7 @@ class IonizationSol(proton.FindHPosition):
         positions: list[np.ndarray] = []  # Keep postions
         d_ions: list[float] = []  # Keep track of d_ions
 
-        while len(positions) < 100:  # Generate 100 points
+        while len(positions) < int(self.param['BETTER_POS']):
             d_ion = self.param['ION_DISTANCE']  # Distance of Ions and others
             found_poistion: bool = False
             while d_ion > 0 and not found_poistion:
