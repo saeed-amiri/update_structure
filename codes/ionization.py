@@ -43,6 +43,7 @@ class IonizationSol(proton.FindHPosition):
         ion_velos_list: list[np.ndarray]  # Possible velocity for ions
         ion_poses: list[np.ndarray]  # Main poistions for the ions
         ion_velos: list[np.ndarray]  # Main velocities for the ions
+        d_ions: list[float]  # Distance of the new ions with their nighbours
 
         # Find the all the atoms in the water (sol) phase
         sol_atoms: pd.DataFrame = self.__get_sol_phase_atoms()
@@ -55,7 +56,7 @@ class IonizationSol(proton.FindHPosition):
             self.__get_chunk_interval(x_dims, y_dims, z_dims)
 
         # Find possible poistions for all the ions
-        ion_poses_list, ion_velos_list = \
+        ion_poses_list, ion_velos_list, d_ions = \
             self.__get_chunk_atoms(sol_atoms, x_chunks, y_chunks, z_chunks)
 
         # Sanity check of the ions_positions
@@ -65,7 +66,6 @@ class IonizationSol(proton.FindHPosition):
             self.__random_ion_selction(ion_poses_tmp,
                                        np.array(ion_velos_list),
                                        len(self.unprot_aptes_ind))
-
         return ion_poses, ion_velos
 
     def __check_poses(self,
@@ -124,7 +124,9 @@ class IonizationSol(proton.FindHPosition):
                           x_chunks: list[tuple[np.float64, np.float64]],  # rng
                           y_chunks: list[tuple[np.float64, np.float64]],  # rng
                           z_chunks: list[tuple[np.float64, np.float64]],  # rng
-                          ) -> tuple[list[np.ndarray], list[np.ndarray]]:
+                          ) -> tuple[list[np.ndarray],
+                                     list[np.ndarray],
+                                     list[float]]:
         """get atoms within each chunk box, and return a list of all
         possible positions for ions. it could be more than the number
         of number of the new protonation."""
@@ -142,14 +144,15 @@ class IonizationSol(proton.FindHPosition):
                 pool.starmap(self._process_chunk_box, chunks)
         ion_poses: list[np.ndarray] = [item[0] for item in ion_info]
         ion_velos: list[np.ndarray] = [item[1] for item in ion_info]
-        return ion_poses, ion_velos
+        d_ions: list[np.ndarray] = [item[2] for item in ion_info]
+        return ion_poses, ion_velos, d_ions
 
     def _process_chunk_box(self,
                            sol_atoms: pd.DataFrame,  # All Sol phase atoms
                            x_i: np.ndarray,  # interval for the box
                            y_i: np.ndarray,  # interval for the box
                            z_i: np.ndarray  # interval for the box
-                           ) -> tuple[np.ndarray, np.ndarray]:
+                           ) -> tuple[np.ndarray, np.ndarray, float]:
         """process the chunk box, getting atoms in each box, and find
         positions for all the needed ions"""
         df_i = sol_atoms[(sol_atoms['x'] >= x_i[0]) &
@@ -166,10 +169,12 @@ class IonizationSol(proton.FindHPosition):
             velocities = np.zeros(coordinates.shape)
         ion_vel: np.ndarray = self.find_ion_velocity(velocities)
         box_dims = (x_i, y_i, z_i)
-        ion_pos: np.ndarray = \
+        ion_pos: np.ndarray  # Ion positions
+        d_ion: float  # Minimum distance between ion the box
+        ion_pos, d_ion = \
             self.find_position_with_min_distance(coordinates,
                                                  box_dims)
-        return (ion_pos, ion_vel)
+        return (ion_pos, ion_vel, d_ion)
 
     @staticmethod
     def find_ion_velocity(velocities: np.ndarray  # Velocities of atom in df
@@ -183,7 +188,7 @@ class IonizationSol(proton.FindHPosition):
                                         box_dims: tuple[np.ndarray,
                                                         np.ndarray,
                                                         np.ndarray],  # Boxdims
-                                        ) -> np.ndarray:
+                                        ) -> tuple[np.ndarray, float]:
         """find the best place for ions in each box"""
         d_ion = self.param['ION_DISTANCE']  # Distance of Ions and others
         num_attempts = int(self.param['ION_ATTEPTS'])  # Number to try to find
@@ -210,7 +215,7 @@ class IonizationSol(proton.FindHPosition):
 
                 # If any distance is less than d, continue to the next attempt
                 if np.all(distances >= d_ion):
-                    return position
+                    return position, d_ion
             d_ion -= 0.01
         raise ValueError("Unable to find a suitable position within \
                           the specified constraints")
