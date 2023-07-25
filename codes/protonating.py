@@ -157,9 +157,9 @@ class FindHPosition(get_data.ProcessData):
 
         # Initialize the list of vectors
         vectors: list[np.ndarray] = []
-        n_pos = [float(df_nh[df_nh['atom_name'] == 'N']['x']),
-                 float(df_nh[df_nh['atom_name'] == 'N']['y']),
-                 float(df_nh[df_nh['atom_name'] == 'N']['z'])]
+        n_pos = [float(df_nh[df_nh['atom_name'] == 'N']['x'].iloc[0]),
+                 float(df_nh[df_nh['atom_name'] == 'N']['y'].iloc[0]),
+                 float(df_nh[df_nh['atom_name'] == 'N']['z'].iloc[0])]
 
         # Generate the vectors
         for i in range(num_samples):
@@ -220,9 +220,9 @@ class FindHPosition(get_data.ProcessData):
         # Build the KD-tree
         tree = KDTree(coordinates)
         # Getting the position of the N atom
-        n_pos = [float(df_nh[df_nh['atom_name'] == 'N']['x']),
-                 float(df_nh[df_nh['atom_name'] == 'N']['y']),
-                 float(df_nh[df_nh['atom_name'] == 'N']['z'])]
+        n_pos = [float(df_nh[df_nh['atom_name'] == 'N']['x'].iloc[0]),
+                 float(df_nh[df_nh['atom_name'] == 'N']['y'].iloc[0]),
+                 float(df_nh[df_nh['atom_name'] == 'N']['z'].iloc[0])]
 
         radius: float = float(v_mean) + 2
         # Find the indices of points within the radius
