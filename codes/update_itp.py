@@ -13,7 +13,6 @@ import typing
 import numpy as np
 import pandas as pd
 import itp_to_df as itp
-import write_itp_file
 from colors_text import TextColor as bcolors
 
 
@@ -545,6 +544,7 @@ class StandAlone:
 
 
 if __name__ == '__main__':
+    import write_itp_file
     write_itp_file.WriteItp(UpdateItp(fname=sys.argv[1],
                             hn3=StandAlone().new_nh3),
                             fname='APT_COR_updated.itp')
