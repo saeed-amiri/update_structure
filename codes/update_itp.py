@@ -13,6 +13,7 @@ import typing
 import numpy as np
 import pandas as pd
 import itp_to_df as itp
+import write_itp_file
 from colors_text import TextColor as bcolors
 
 
@@ -501,11 +502,17 @@ class StandAlone:
         """
         prepare new NH3 positions and velocities for testing the script
         """
-        ind_range = range(1436, 1446)
+        start, end = 1611, 1621
+
+        ind_range = self.generate_list(start, end)
         poistion = \
             {key: self.generate_random_np_array(100) for key in ind_range}
         velocity = {key: self.generate_random_np_array(1) for key in ind_range}
         return self.prepare_hydrogens(poistion, velocity)
+
+    @staticmethod
+    def generate_list(start, end):
+        return list(range(start, end + 1))
 
     @staticmethod
     def generate_random_np_array(lim: int  # The limit of the return values
@@ -538,5 +545,7 @@ class StandAlone:
 
 
 if __name__ == '__main__':
-    DATA = StandAlone()
-    UpdateItp(fname=sys.argv[1], hn3=DATA.new_nh3)
+    write_itp_file.WriteItp(UpdateItp(fname=sys.argv[1],
+                            hn3=StandAlone().new_nh3),
+                            fname='APT_COR_updated.itp')
+    
