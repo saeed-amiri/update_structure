@@ -483,5 +483,60 @@ class UpdateAtom:
         return np.max(np.array([max_atomnr, lst_atomnr]))
 
 
+class StandAlone:
+    """
+    Prepare random positions and velocities for some NH3, so I can test
+    the script wihtout running whole scripts.
+    Input:
+        None
+    Output:
+    """
+
+    new_nh3: pd.DataFrame  # All the new HN3 atoms
+
+    def __init__(self) -> None:
+        self.new_nh3 = self.mk_data_standalone()
+
+    def mk_data_standalone(self):
+        """
+        prepare new NH3 positions and velocities for testing the script
+        """
+        ind_range = range(1436, 1446)
+        poistion = \
+            {key: self.generate_random_np_array(100) for key in ind_range}
+        velocity = {key: self.generate_random_np_array(1) for key in ind_range}
+        return self.prepare_hydrogens(poistion, velocity)
+
+    @staticmethod
+    def generate_random_np_array(lim: int  # The limit of the return values
+                                 ) -> np.ndarray:
+        """
+        Generate Random array
+        """
+        return np.array([np.random.uniform(0, lim),
+                         np.random.uniform(0, lim),
+                         np.random.uniform(0, lim)
+                         ])
+
+    @staticmethod
+    def prepare_hydrogens(h_positions: dict[int, np.ndarray],  # H positions
+                          h_velocities: dict[int, np.ndarray]  # H velocities
+                          ) -> pd.DataFrame:
+        """prepare the aptes based on the structure of the main df"""
+        cols: list[str] = \
+            ['residue_number', 'residue_name', 'atom_name', 'atom_id',
+             'x', 'y', 'z', 'vx', 'vy', 'vz']
+        hn3_atoms: pd.DataFrame = pd.DataFrame(columns=cols)
+
+        for i, (key, pos) in enumerate(h_positions.items()):
+            atom_id = i+1
+            velo = h_velocities[key]
+            hn3_atoms.loc[i] = \
+                [key, 'APT', 'HN3', atom_id, pos[0],
+                 pos[1], pos[2], velo[0], velo[1], velo[2]]
+        return hn3_atoms
+
+
 if __name__ == '__main__':
-    print("This script should be call from 'updata_pdb_itp.py")
+    DATA = StandAlone()
+    UpdateItp(fname=sys.argv[1], hn3=DATA.new_nh3)
