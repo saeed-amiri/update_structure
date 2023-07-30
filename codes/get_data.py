@@ -317,10 +317,21 @@ class ProcessData:
     def __get_residues_atoms(self,
                              residues: list[str]  # Name of the residues
                              ) -> dict[str, pd.DataFrame]:
-        """return a dictionary of all the residues with thier atoms
-        information"""
+        """
+        Return a dictionary of all the residues with their atoms
+        information.
+
+        Parameters:
+            residues (list[str]): Names of the residues.
+
+        Returns:
+            Dict[str, pd.DataFrame]: A dictionary containing pandas
+            DataFrames for each residue's atoms.
+        """
         residues_atoms: dict[str, pd.DataFrame] = {}  # All the atoms data
         for res in residues:
+            # Filter the atoms DataFrame to get atoms belonging to each
+            # residue and store them in the dictionary.
             residues_atoms[res] = self.atoms[self.atoms['residue_name'] == res]
         return residues_atoms
 
