@@ -86,23 +86,41 @@ class ProcessData:
     def __get_unprto_chain(self,
                            sol_phase_aptes: list[int]  # Indices of APTES
                            ) -> list[int]:
-        """find all the chains at the intrface"""
+        """Find all the chains at the interface that require protonation.
+
+        Parameters:
+            sol_phase_aptes (List[int]): Indices of APTES residues.
+
+        Returns:
+            List[int]: A list of integers representing the indices of APTES
+            residues that require protonation.
+        """
+        # Get the DataFrame for APTES atoms
         df_apt: pd.DataFrame = self.residues_atoms['APT']
+
+        # Initialize an empty list to store unprotonated APTES indices
         unprotonated_aptes: list[int] = []
-        # Split the sol_phase_aptes list into chunks
+
+        # Split the sol_phase_aptes list into chunks for parallel processing
         num_processes: int = multip.cpu_count() // 2
         chunk_size: int = len(sol_phase_aptes) // num_processes
-        chunks = [sol_phase_aptes[i:i+chunk_size] for i in
+        chunks = [sol_phase_aptes[i:i + chunk_size] for i in
                   range(0, len(sol_phase_aptes), chunk_size)]
+
         # Create a Pool of processes
         with multip.Pool(processes=num_processes) as pool:
-            # Process the chunks in parallel
+            # Process the chunks in parallel using the process_chunk function
             results = pool.starmap(self.process_chunk,
                                    [(chunk, df_apt) for chunk in chunks])
-        # Combine the results
+
+        # Combine the results from each process
         for result in results:
             unprotonated_aptes.extend(result)
+
+        # Release memory by deleting the DataFrame
         del df_apt
+
+        # Return the list of unprotonated APTES indices
         return unprotonated_aptes
 
     @staticmethod
