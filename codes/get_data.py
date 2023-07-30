@@ -364,17 +364,33 @@ class ProcessData:
                          yrange: tuple[float, float],  # Range of NP in y
                          zrange: tuple[float, float]  # Range of NP in z
                          ) -> pd.DataFrame:
-        """get atoms inside the box"""
-        epsilon: float = 3  # increase the box in each direction
-        atoms_box: pd.DataFrame  # Atoms inside the box
+        """
+        Get atoms inside the box defined by the given x, y, and z anges.
+
+        Parameters:
+            xrange (tuple[float, float]): Range of the NP in the x
+                                          direction.
+            yrange (tuple[float, float]): Range of the NP in the y
+                                          direction.
+            zrange (tuple[float, float]): Range of the NP in the z
+                                          direction.
+
+        Returns:
+            pd.DataFrame: A DataFrame containing atoms inside the
+            specified box.
+        """
+        # Increase the box size in each direction by this value.
+        epsilon: float = 3
+        # Filter the atoms DataFrame to get atoms within the specified
+        # box range and return them.
         atoms_box = self.atoms[
-                               (self.atoms['x'] >= xrange[0]-epsilon) &
-                               (self.atoms['x'] <= xrange[1]+epsilon) &
-                               (self.atoms['y'] >= yrange[0]-epsilon) &
-                               (self.atoms['y'] <= yrange[1]+epsilon) &
-                               (self.atoms['z'] >= zrange[0]-epsilon) &
-                               (self.atoms['z'] <= zrange[1]+epsilon)
-                               ]
+            (self.atoms['x'] >= xrange[0] - epsilon) &
+            (self.atoms['x'] <= xrange[1] + epsilon) &
+            (self.atoms['y'] >= yrange[0] - epsilon) &
+            (self.atoms['y'] <= yrange[1] + epsilon) &
+            (self.atoms['z'] >= zrange[0] - epsilon) &
+            (self.atoms['z'] <= zrange[1] + epsilon)
+        ]
         return atoms_box
 
     @staticmethod
