@@ -34,14 +34,33 @@ class ProcessData:
                  fname: str,  # Name of the pdb file
                  log: logger.logging.Logger
                  ) -> None:
+        """
+        Initialize the ProcessData object.
+
+        Parameters:
+            fname (str): Name of the pdb file.
+            log (Logger): The logger object to log messages.
+        """
+        # Read parameters from the param file
         self.param = param.ReadParam(log=log).param
+
+        # Load atoms data from the specified file
         self.atoms = self.__get_data(fname, log)
+
+        # Extract atoms data for each residue and store them in a dictionary
         self.residues_atoms = self.__get_atoms()
-        # All the unprtonated aptes to be protonated:
+
+        # Find unprotonated APTES residues at the interface
         self.unproton_aptes, self.unprot_aptes_ind = self.process_data(log)
+
+        # Get the diameter of the NP
         self.np_diameter = self.__get_np_size()
+
+        # Write and log the initial message
         self.__write_msg(log)
-        self.info_msg = ''  # Empety the msg
+
+        # Empty the message
+        self.info_msg = ''
 
     def __get_data(self,
                    fname: str,  # Name of the pdb file
