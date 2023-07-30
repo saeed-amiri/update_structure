@@ -66,10 +66,21 @@ class ProcessData:
                    fname: str,  # Name of the pdb file
                    log: logger.logging.Logger
                    ) -> typing.Any:
-        """select which datafile to work with"""
+        """
+        Select which datafile to work with and load the atoms data.
+
+        Parameters:
+            fname (str): Name of the pdb file.
+            log (Logger): The logger object to log messages.
+
+        Returns:
+            typing.Any: The atoms data.
+        """
         if self.param['FILE'] == 'PDB':
+            # Load atoms data from PDB file
             atoms = pdbf.Pdb(fname, log).atoms
         elif self.param['FILE'] == 'GRO':
+            # Load atoms data from GRO file
             gro = grof.ReadGro(fname, log)
             atoms = gro.gro_data
             self.title = gro.title
