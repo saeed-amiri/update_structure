@@ -60,20 +60,40 @@ class ProcessData:
     def process_data(self,
                      log: logger.logging.Logger
                      ) -> tuple[np.ndarray, list[int]]:
-        """check and finds the unprotonated aptes group which has N at
-        interface"""
+        """Check and find the unprotonated APTES group that has N at
+        the interface.
+
+        Parameters:
+            log (Logger): A logging.Logger instance for logging
+            information.
+
+        Returns:
+            Tuple[np.ndarray, List[int]]: A tuple containing two elem-
+            ents:
+            - A numpy array containing all atoms in the chains of the
+              unprotonated APTES residues.
+            - A list of integers representing the indices of unproton-
+              ated APTES residues to be protonated.
+        """
         # Get the water surface
-        water_surface = pdb_surf.GetSurface(self.residues_atoms,
-                                            log,
-                                            write_debug=False)
-        zrange: tuple[float, float]  # Lower and upper bound of interface
-        zrange = self.__get_interface_range(water_surface)
-        sol_phase_aptes: list[int]  # Indices of all the APTES at sol phase
-        sol_phase_aptes = self.__get_aptes_indices(zrange)
-        unprot_aptes_ind: list[int]  # Index of the APTES to be protonated
-        unprot_aptes_ind = self.__get_unprto_chain(sol_phase_aptes)
-        self.info_msg += '\tNumber of chains to be protonated: '
-        self.info_msg += f'{len(unprot_aptes_ind)}\n'
+        water_surface = \
+            pdb_surf.GetSurface(self.residues_atoms, log, write_debug=False)
+
+        # Get the z-axis range of the water surface interface
+        zrange: tuple[float, float] = self.__get_interface_range(water_surface)
+
+        # Get the indices of all the APTES residues at the sol phase interface
+        sol_phase_aptes: list[int] = self.__get_aptes_indices(zrange)
+
+        # Get the indices of the unprotonated APTES residues to be protonated
+        unprot_aptes_ind: list[int] = self.__get_unprto_chain(sol_phase_aptes)
+
+        # Log the number of chains to be protonated
+        self.info_msg += \
+            f'\tNumber of chains to be protonated: {len(unprot_aptes_ind)}\n'
+
+        # Return a tuple containing the DataFrame of unprotonated APTES
+        # chains and the list of their indices
         return self.get_aptes_unproto(unprot_aptes_ind), unprot_aptes_ind
 
     def get_aptes_unproto(self,
@@ -206,8 +226,17 @@ class ProcessData:
     def __get_interface_range(self,
                               water_surface: typing.Any  # pdb_surf.GetSurface
                               ) -> tuple[float, float]:
-        """find all the aptes at interface."""
+        """Find all the APTES residues at the interface.
+
+        Parameters:
+            water_surface (Any): The result of pdb_surf.GetSurface.
+
+        Returns:
+            Tuple[float, float]: A tuple containing the lower and upper
+            bounds of the z-axis range that defines the interface.
+        """
         z_range: tuple[float, float]
+
         if self.param['READ'] == 'False':
             self.info_msg += '\tInterface data is read from update_param\n'
             # Interface is set with reference to the NP COM
@@ -217,13 +246,12 @@ class ProcessData:
         elif self.param['READ'] == 'True':
             # Interface is calculated directly
             self.info_msg += \
-                '\tInterface data is selcected from the input file\n'
+                '\tInterface data is selected from the input file\n'
             interface_z = water_surface.interface_z
             interface_w = water_surface.interface_std * 2
             aptes_com = 0
-        z_range = self.__interface_range(interface_z,
-                                         interface_w,
-                                         aptes_com)
+
+        z_range = self.__interface_range(interface_z, interface_w, aptes_com)
         return z_range
 
     def __interface_range(self,
