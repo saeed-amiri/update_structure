@@ -259,26 +259,39 @@ class ProcessData:
                           interface_w: float,  # Width of interface
                           aptes_com: float,  # COM of center of mass
                           ) -> tuple[float, float]:
-        """set the interface range"""
+        """Set the interface range.
+
+        Parameters:
+            interface_z (float): Location of the interface.
+            interface_w (float): Width of the interface.
+            aptes_com (float): COM (Center of Mass) of the center of
+            mass.
+
+        Returns:
+            Tuple[float, float]: A tuple containing the lower and upper
+            bounds of the z-axis range that defines the interface.
+        """
         if self.param['LINE'] == 'WITHIN':
             self.info_msg += \
-                '\tOnly checks APTES in the width of interface\n'
-            z_range = (interface_z-interface_w/2 + aptes_com,
-                       interface_z+interface_w/2 + aptes_com)
+                '\tOnly checks APTES in the width of the interface\n'
+            z_range = (interface_z - interface_w/2 + aptes_com,
+                       interface_z + interface_w/2 + aptes_com)
         elif self.param['LINE'] == 'INTERFACE':
-            self.info_msg += '\tChecks APTES under interface (average value)\n'
+            self.info_msg += \
+                '\tChecks APTES under the interface (average value)\n'
             z_range = (0, interface_z + aptes_com)
         elif self.param['LINE'] == 'LOWERBOUND':
             self.info_msg += \
-                '\tChecks APTES under interface - standard diviation\n'
+                '\tChecks APTES under the interface - standard deviation\n'
             z_range = (0, interface_z - interface_w/2 + aptes_com)
         elif self.param['LINE'] == 'UPPERBOUND':
             self.info_msg += \
-                '\tChecks APTES under interface + standard diviation\n'
+                '\tChecks APTES under the interface + standard deviation\n'
             z_range = (0, interface_z + interface_w/2 + aptes_com)
         else:
-            sys.exit(f'{self.__module__}:\n'
-                     '\tError! INTERFACE selection failed')
+            sys.exit(f'{self.__module__}:\n\tError! '
+                     f'INTERFACE selection failed')
+
         return z_range
 
     def __get_atoms(self) -> dict[str, pd.DataFrame]:
