@@ -127,13 +127,33 @@ class ProcessData:
     def process_chunk(chunk: np.ndarray,  # Chunk of a APTES indices
                       df_apt: pd.DataFrame  # For the APTES at the interface
                       ) -> list[int]:
-        """get index of unprotonated aptes"""
-        unprotonated_aptes_chunk: list[int] = []  # Index of unprotonated APTES
-        for ind in chunk:
-            df_i = df_apt[df_apt['residue_number'] == ind]
-            # Check if 'NH3' is present in 'atom_name'
+        """
+        Process a chunk of APTES residues to find unprotonated chains.
+
+        Parameters:
+            chunk (np.ndarray): A chunk of APTES indices to process.
+            df_apt (pd.DataFrame): DataFrame containing APTES atom data.
+
+        Returns:
+            List[int]: A list of integers representing the indices of
+            unprotonated APTES residues within the chunk.
+        """
+        # Initialize an empty list to store unprotonated APTES indices
+        # in the chunk
+        unprotonated_aptes_chunk: list[int] = []
+
+        # Iterate over the APTES indices in the chunk
+        for aptes_index in chunk:
+            # Filter the DataFrame for the current APTES index
+            df_i = df_apt[df_apt['residue_number'] == aptes_index]
+            # Check if 'HN3' is present in 'atom_name' for the current
+            # APTES residue
             if df_i[df_i['atom_name'].isin(['HN3'])].empty:
-                unprotonated_aptes_chunk.append(ind)
+                # If 'HN3' is not present, add the index to the list
+                # of unprotonated APTES
+                unprotonated_aptes_chunk.append(aptes_index)
+
+        # Return the list of unprotonated APTES indices in the chunk
         return unprotonated_aptes_chunk
 
     def __get_aptes_indices(self,
