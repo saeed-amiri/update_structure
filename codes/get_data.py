@@ -398,7 +398,16 @@ class ProcessData:
                        ) -> tuple[tuple[float, float],
                                   tuple[float, float],
                                   tuple[float, float]]:
-        """get the xyz range of NP"""
+        """
+        Get the xyz range of the NP.
+
+        Parameters:
+            aptes_atoms (pd.DataFrame): All APTES atoms DataFrame.
+
+        Returns:
+            Tuple[Tuple[float, float], Tuple[float, float],
+            Tuple[float, float]]:A tuple containing the x, y, and z ranges of the NP.
+        """
         xrange: tuple[float, float] = \
             (aptes_atoms['x'].min(), (aptes_atoms['x'].max()))
         yrange: tuple[float, float] = \
