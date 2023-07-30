@@ -121,7 +121,22 @@ class ProcessData:
     def __get_aptes_indices(self,
                             zrange: tuple[float, float]  # Bound of interface
                             ) -> list[int]:
-        """get the index of all the aptes at the interface range"""
+        """
+        Get the indices of APTES residues within the specified z-axis
+        range.
+
+        Parameters:
+            zrange (Tuple[float, float]): A tuple containing the lower
+            and upper bounds of the z-axis range.
+
+        Returns:
+            List[int]: A list of integers representing the indices of
+            APTES residues that lie within the specified z-axis range.
+        """
+        if not isinstance(zrange, tuple) or len(zrange) != 2:
+            raise ValueError(
+                "zrange must be a tuple containing two float values.")
+
         # Filter the DataFrame based on the specified conditions
         df_apt = self.residues_atoms['APT']
         filtered_df = df_apt[(df_apt['atom_name'] == 'N') &
@@ -235,11 +250,11 @@ class ProcessData:
                                   tuple[float, float]]:
         """get the xyz range of NP"""
         xrange: tuple[float, float] = \
-            (aptes_atoms['x'].min(), aptes_atoms['x'].max())
+            (aptes_atoms['x'].min(), (aptes_atoms['x'].max()))
         yrange: tuple[float, float] = \
-            (aptes_atoms['y'].min(), aptes_atoms['y'].max())
+            (aptes_atoms['y'].min(), (aptes_atoms['y'].max()))
         zrange: tuple[float, float] = \
-            (aptes_atoms['z'].min(), aptes_atoms['z'].max())
+            (aptes_atoms['z'].min(), (aptes_atoms['z'].max()))
         return xrange, yrange, zrange
 
     def __get_np_size(self) -> np.float64:
