@@ -406,7 +406,8 @@ class ProcessData:
 
         Returns:
             Tuple[Tuple[float, float], Tuple[float, float],
-            Tuple[float, float]]:A tuple containing the x, y, and z ranges of the NP.
+            Tuple[float, float]]:
+            A tuple containing the x, y, and z ranges of the NP.
         """
         xrange: tuple[float, float] = \
             (aptes_atoms['x'].min(), (aptes_atoms['x'].max()))
@@ -426,9 +427,16 @@ class ProcessData:
         return np.max(diameter)
 
     def __get_residues_names(self) -> list[str]:
-        """get the list of the residues in the system"""
-        residues: list[str]   # Name of the residues
-        residues = list(set(self.atoms['residue_name']))
+        """
+        Get the list of the residues in the system.
+
+        Returns:
+            List[str]: A list containing the names of the residues in
+            the system.
+        """
+        # Get the unique residue names from the 'residue_name' column
+        # in the atoms DataFrame.
+        residues: list[str] = list(set(self.atoms['residue_name']))
         return residues
 
     def __write_msg(self,
