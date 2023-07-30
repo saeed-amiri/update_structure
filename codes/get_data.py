@@ -442,7 +442,12 @@ class ProcessData:
     def __write_msg(self,
                     log: logger.logging.Logger
                     ) -> None:
-        """write and log messages"""
+        """
+        Write and log messages.
+
+        Parameters:
+            log (Logger): The logger object to log the messages.
+        """
         print(f'{bcolors.OKCYAN}{ProcessData.__module__}:\n'
               f'\t{self.info_msg}{bcolors.ENDC}')
         log.info(self.info_msg)
