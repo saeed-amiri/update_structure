@@ -110,7 +110,8 @@ class ProcessData:
             sol_phase_aptes (List[int]): Indices of APTES residues.
 
         Returns:
-            List[int]: A list of integers representing the indices of APTES
+            List[int]: A list of integers representing the indices of
+                       APTES
             residues that require protonation.
         """
         # Get the DataFrame for APTES atoms
