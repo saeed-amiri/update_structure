@@ -51,10 +51,11 @@ class ProcessData:
         self.residues_atoms = self.__get_atoms()
 
         # Find unprotonated APTES residues at the interface
-        self.unproton_aptes, self.unprot_aptes_ind = self.process_data(log)
+        self.unproton_aptes, self.unprot_aptes_ind = \
+            self.find_unprotonated_aptes(log)
 
         # Get the diameter of the NP
-        self.np_diameter = self.__get_np_size()
+        self.np_diameter = self.calculate_maximum_np_radius()
 
         # Write and log the initial message
         self.__write_msg(log)
@@ -87,9 +88,9 @@ class ProcessData:
             self.pbc_box = gro.pbc_box
         return atoms
 
-    def process_data(self,
-                     log: logger.logging.Logger
-                     ) -> tuple[np.ndarray, list[int]]:
+    def find_unprotonated_aptes(self,
+                                log: logger.logging.Logger
+                                ) -> tuple[np.ndarray, list[int]]:
         """Check and find the unprotonated APTES group that has N at
         the interface.
 
@@ -110,13 +111,15 @@ class ProcessData:
             pdb_surf.GetSurface(self.residues_atoms, log, write_debug=False)
 
         # Get the z-axis range of the water surface interface
-        zrange: tuple[float, float] = self.__get_interface_range(water_surface)
+        zrange: tuple[float, float] = \
+            self.find_interface_z_range(water_surface)
 
         # Get the indices of all the APTES residues at the sol phase interface
         sol_phase_aptes: list[int] = self.__get_aptes_indices(zrange)
 
         # Get the indices of the unprotonated APTES residues to be protonated
-        unprot_aptes_ind: list[int] = self.__get_unprto_chain(sol_phase_aptes)
+        unprot_aptes_ind: list[int] = \
+            self.find_unprotonated_aptes_chains(sol_phase_aptes)
 
         # Log the number of chains to be protonated
         self.info_msg += \
@@ -151,9 +154,9 @@ class ProcessData:
         # the unprotonated APTES
         return unprotonated_aptes_df
 
-    def __get_unprto_chain(self,
-                           sol_phase_aptes: list[int]  # Indices of APTES
-                           ) -> list[int]:
+    def find_unprotonated_aptes_chains(self,
+                                       sol_phase_aptes: list[int]  # Indices
+                                       ) -> list[int]:
         """Find all the chains at the interface that require protonation.
 
         Parameters:
@@ -253,9 +256,9 @@ class ProcessData:
         del df_apt
         return filtered_df['residue_number'].values
 
-    def __get_interface_range(self,
-                              water_surface: typing.Any  # pdb_surf.GetSurface
-                              ) -> tuple[float, float]:
+    def find_interface_z_range(self,
+                               water_surface: typing.Any  # pdb_surf.GetSurface
+                               ) -> tuple[float, float]:
         """Find all the APTES residues at the interface.
 
         Parameters:
@@ -281,14 +284,16 @@ class ProcessData:
             interface_w = water_surface.interface_std * 2
             aptes_com = 0
 
-        z_range = self.__interface_range(interface_z, interface_w, aptes_com)
+        z_range = self.calculate_interface_z_range(interface_z,
+                                                   interface_w,
+                                                   aptes_com)
         return z_range
 
-    def __interface_range(self,
-                          interface_z: float,  # Location of interface
-                          interface_w: float,  # Width of interface
-                          aptes_com: float,  # COM of center of mass
-                          ) -> tuple[float, float]:
+    def calculate_interface_z_range(self,
+                                    interface_z: float,  # Location of interfac
+                                    interface_w: float,  # Width of interface
+                                    aptes_com: float,  # COM of center of mass
+                                    ) -> tuple[float, float]:
         """Set the interface range.
 
         Parameters:
@@ -332,7 +337,7 @@ class ProcessData:
             DataFrames for each residue's atoms.
         """
         # Get the names of all residues
-        residues: list[str] = self.__get_residues_names()
+        residues: list[str] = self.get_unique_residue_names()
 
         # Get the atoms for each residue and store them in a dictionary
         residues_atoms: dict[str, pd.DataFrame] = \
@@ -383,8 +388,9 @@ class ProcessData:
         xrange: tuple[float, float]  # Range of NP in x direction
         yrange: tuple[float, float]  # Range of NP in y direction
         zrange: tuple[float, float]  # Range of NP in z direction
-        # Get the x, y, and z ranges of the NP using the __get_np_range method.
-        xrange, yrange, zrange = self.__get_np_range(residues_atoms['APT'])
+        # Get the x, y, and z ranges of the NP using  calculate_np_xyz_range
+        xrange, yrange, zrange = \
+            self.calculate_np_xyz_range(residues_atoms['APT'])
         # Get the atoms inside the bounding box using the __get_inside_box
         # method.
         return self.__get_inside_box(xrange, yrange, zrange)
@@ -424,10 +430,10 @@ class ProcessData:
         return atoms_box
 
     @staticmethod
-    def __get_np_range(aptes_atoms: pd.DataFrame  # All APTES atoms
-                       ) -> tuple[tuple[float, float],
-                                  tuple[float, float],
-                                  tuple[float, float]]:
+    def calculate_np_xyz_range(aptes_atoms: pd.DataFrame  # All APTES atoms
+                               ) -> tuple[tuple[float, float],
+                                          tuple[float, float],
+                                          tuple[float, float]]:
         """
         Get the xyz range of the NP.
 
@@ -447,7 +453,7 @@ class ProcessData:
             (aptes_atoms['z'].min(), (aptes_atoms['z'].max()))
         return xrange, yrange, zrange
 
-    def __get_np_size(self) -> np.float64:
+    def calculate_maximum_np_radius(self) -> np.float64:
         """get the maximum radius of NP, since APTES are most outward,
         here only looking at APTES residues"""
         aptes_atoms: pd.DataFrame = self.residues_atoms['APT']
@@ -456,7 +462,7 @@ class ProcessData:
             diameter.append(aptes_atoms[xyz].max() - aptes_atoms[xyz].min())
         return np.max(diameter)
 
-    def __get_residues_names(self) -> list[str]:
+    def get_unique_residue_names(self) -> list[str]:
         """
         Get the list of the residues in the system.
 
