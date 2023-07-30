@@ -79,9 +79,27 @@ class ProcessData:
     def get_aptes_unproto(self,
                           unprot_aptes_ind: list[int]  # Index of the APTES
                           ) -> pd.DataFrame:
-        """get all atoms in the chains of the unprotonated APTES"""
+        """Get all atoms in the chains of the unprotonated APTES.
+
+        Parameters:
+            unprot_aptes_ind (List[int]): A list of integers representing
+            the indices of unprotonated APTES residues.
+
+        Returns:
+            pd.DataFrame: DataFrame containing all atoms in the chains
+            of the unprotonated APTES residues.
+        """
+        # Access the DataFrame containing APTES atom data
         df_apt: pd.DataFrame = self.residues_atoms['APT']
-        return df_apt[df_apt['residue_number'].isin(unprot_aptes_ind)]
+
+        # Filter the DataFrame to get all atoms in the chains of\
+        # unprotonated APTES
+        unprotonated_aptes_df = \
+            df_apt[df_apt['residue_number'].isin(unprot_aptes_ind)]
+
+        # Return the DataFrame containing all atoms in the chains of
+        # the unprotonated APTES
+        return unprotonated_aptes_df
 
     def __get_unprto_chain(self,
                            sol_phase_aptes: list[int]  # Indices of APTES
