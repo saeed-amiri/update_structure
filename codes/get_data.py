@@ -295,11 +295,23 @@ class ProcessData:
         return z_range
 
     def __get_atoms(self) -> dict[str, pd.DataFrame]:
-        """get all the atoms for each residue"""
+        """Get all the atoms for each residue.
+
+        Returns:
+            Dict[str, pd.DataFrame]: A dictionary containing pandas
+            DataFrames for each residue's atoms.
+        """
+        # Get the names of all residues
         residues: list[str] = self.__get_residues_names()
+
+        # Get the atoms for each residue and store them in a dictionary
         residues_atoms: dict[str, pd.DataFrame] = \
             self.__get_residues_atoms(residues)
+
+        # Get the atoms in the bounding box enclosing the NP and add
+        # them to the dictionary
         residues_atoms['box'] = self.__get_np_box(residues_atoms)
+
         return residues_atoms
 
     def __get_residues_atoms(self,
