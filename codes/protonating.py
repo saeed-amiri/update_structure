@@ -140,7 +140,68 @@ class FindHPosition(get_data.ProcessData):
                        possible_loc: list[np.ndarray],  # Possible for H
                        v_mean: np.float64  # Mean of N-H bonds
                        ) -> np.ndarray:
-        """try to find the best position for H amoung the possible one"""
+        """
+        Attempt to find the best position for the H atom among the
+        possible positions. This method iterates through the list of
+        possible positions for the H atom and checks if each position
+        meets the condition of being within the specified radius 'v_mean'
+        from the N atom. It verifies whether the position avoids overlaps
+        with existing atoms in the 'atoms_around_n' DataFrame.
+
+        Parameters:
+            atoms_around_n (pd.DataFrame): DataFrame containing atoms
+            within a specified radius of the N atom.
+            possible_loc (List[np.ndarray]): A list of NumPy arrays
+            representing the possible positions for the H atom around
+            the N atom.
+            v_mean (np.float64): The mean length of N-H bonds.
+
+        Returns:
+            np.ndarray: A NumPy array representing the best position
+            found for the H atom around the N atom.
+
+        Note:
+            - The method iterates through the 'possible_loc' list to
+            find the best position for the H atom.
+            - It checks if each position in 'possible_loc' meets the
+            condition of being at least 'v_mean' away from any atom in
+            the 'atoms_around_n' DataFrame. If a position satisfies the
+            condition, it is considered as a potential position for the
+            H atom.
+            - The 'in_flag' variable is used to track whether a position
+            meets the condition or not. If a position does not meet the
+            condition, the method breaks out of the inner loop and checks
+            the next position.
+            - If a position is found that satisfies the condition and
+            avoids overlaps with existing atoms, it is returned as the
+            best position for the H atom.
+            - If no suitable position is found, the method raises a
+            'SystemExit' exception with an error message indicating that a
+            location for the H atom could not be found.
+
+        Example:
+            # DataFrame containing atoms within the radius of the N atom
+            atoms_around_n = pd.DataFrame({
+                'atom_name': ['N', 'H', 'C', 'H', 'H', ...],
+                'x': [0.0, 1.0, 0.5, 1.5, 0.5, ...],
+                'y': [0.0, 0.0, 0.5, 0.5, 1.5, ...],
+                'z': [0.0, 0.0, 1.0, 1.5, 0.5, ...],
+                ...
+            })
+
+            # List of possible positions for the H atom
+            possible_loc = \
+                [np.array([0.5, 0.5, 0.5]), np.array([1.0, 1.0, 1.0]), ...]
+
+            # Mean length of N-H bonds
+            v_mean = 1.0
+
+            # Find the best position for the H atom
+            best_position = \
+                ProcessData.__find_h_place(
+                    atoms_around_n, possible_loc, v_mean)
+        """
+
         in_flag: bool  # To check if the point meets the condition
         loc: np.ndarray = np.array([-1, -1, -1])  # initial point, CAN'T BE -1
         for loc in possible_loc:
