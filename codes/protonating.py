@@ -199,7 +199,51 @@ class FindHPosition(get_data.ProcessData):
                       axis: np.ndarray,  # Direction of the axis to rotate
                       angle: float  # Angle for rotation
                       ) -> list[np.ndarray]:
-        """return a list of all possible rotation"""
+        """
+        Rotate the given vector around the specified axis by the given
+        angle.
+
+        Parameters:
+            vector (np.ndarray): The normalized vector representing the
+            direction of rotation.
+            axis (np.ndarray): The normalized vector representing the
+            axis of rotation.
+            angle (float): The angle in radians for rotation.
+
+        Returns:
+            list[np.ndarray]: A list containing all possible rotated
+            vectors.
+
+        Note:
+            - The input 'vector' and 'axis' must be normalized before
+            calling this
+            method to ensure accurate results.
+            - The method returns a list of all possible rotated vectors
+            obtained by applying the rotation matrix to the input
+            'vector'.
+            - The rotation matrix is computed using the Rodrigues'
+            rotation formula.
+            - The method is intended for 3D vector rotation.
+            - The 'cos_theta' and 'sin_theta' values are precomputed
+            to optimize performance during the rotation calculation.
+            - The method is static and can be called directly on the
+            class.
+
+        Example:
+            # Define the normalized vector for rotation
+            vector = np.array([1.0, 0.0, 0.0])
+
+            # Define the normalized axis of rotation
+            axis = np.array([0.0, 0.0, 1.0])
+
+            # Define the angle for rotation (in radians)
+            angle = np.pi / 2
+
+            # Rotate the vector around the axis by the given angle
+            rotated_vectors = \
+                ProcessData.rotate_vector(vector, axis, angle)
+        """
+
         # Normalize the axis vector
         axis = axis / np.linalg.norm(axis)
 
