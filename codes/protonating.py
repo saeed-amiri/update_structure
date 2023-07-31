@@ -166,9 +166,71 @@ class FindHPosition(get_data.ProcessData):
                            v_mean: np.float64,  # Length of N-H bond
                            df_nh: pd.DataFrame,  # N and H infos
                            ) -> list[np.ndarray]:
-        """find all the points which have the angle and distance
-        conditions.
         """
+        Find all the points that satisfy the given angle and distance
+        conditions. This method generates a list of possible positions
+        around the N atom for new H atoms based on the vectors from N
+        to H1 and N to H2. The vectors are rotated around the axis
+        defined by the cross product of the normalized vectors.
+        The generated points are then normalized and scaled to the
+        average length of N-H bonds. The method considers a specified
+        number of samples to ensure uniform coverage around the N atom.
+
+        Parameters:
+            v_nh1 (np.ndarray): Vector from N to H1.
+            v_nh2 (np.ndarray): Vector from N to H2.
+            v_mean (np.float64): The average length of N-H bonds.
+            df_nh (pd.DataFrame): DataFrame containing N and H atoms
+            data.
+
+        Returns:
+            List[np.ndarray]: A list of NumPy arrays representing the
+            possible positions for new H atoms around the N atom.
+
+        Note:
+            - The method efficiently uses NumPy functions to normalize
+            the input vectors 'v_nh1' and 'v_nh2'.
+            - The axis of rotation is computed as the cross product of
+            the normalized vectors 'v_nh1' and 'v_nh2'.
+            - The 'num_samples' parameter, defined as
+            'self.param['NUMSAMPLE']',
+            represents the number of points to generate around the N
+            atom.
+            - The method extracts the position of the N atom from the
+            DataFrame 'df_nh' using the 'atom_name' column and constructs
+            a list 'n_pos' containing its x, y, and z coordinates.
+            - The method generates 'num_samples' vectors by incrementally
+            rotating the vector 'v_nh1' around the computed axis.
+            Each vector is normalized and scaled to the average length
+            of N-H bonds, and its position is adjusted based on the
+            position of the N atom.
+            - The method returns a list of NumPy arrays representing
+            the possible positions for new H atoms around the N atom.
+
+        Example:
+            # Vector from N to H1
+            v_nh1 = np.array([1.0, 0.0, 0.0])
+
+            # Vector from N to H2
+            v_nh2 = np.array([0.0, 1.0, 0.0])
+
+            # Average length of N-H bonds
+            v_mean = 1.0
+
+            # DataFrame containing N and H atoms
+            df_nh = pd.DataFrame({
+                'atom_name': ['N', 'H', 'C', 'H', 'H', ...],
+                'x': [0.0, 1.0, 0.5, 1.5, 0.5, ...],
+                'y': [0.0, 0.0, 0.5, 0.5, 1.5, ...],
+                'z': [0.0, 0.0, 1.0, 1.5, 0.5, ...],
+                ...
+            })
+
+            # Generate a list of possible positions for new H atoms
+            possible_positions = \
+                ProcessData.__get_possible_pos(v_nh1, v_nh2, v_mean, df_nh)
+        """
+
         num_samples: int = int(self.param['NUMSAMPLE'])  # How many points
         # Normalize the vectors
         v1_norm: np.ndarray = v_nh1 / np.linalg.norm(v_nh1)
