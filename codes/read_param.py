@@ -19,7 +19,7 @@ class ReadParam:
     essential_key: list[str] = [
         "ANGLE", "RADIUS", "READ", "FILE", "INTERFACE", "INTERFACE_WIDTH",
         "NUMSAMPLE", "ION_DISTANCE", "ION_ATTEPTS", "NP_ZLOC", "LINE",
-        "BETTER_POS", "NP_ITP", "APTES_NAMES"]
+        "BETTER_POS", "NP_ITP"]
 
     def __init__(self,
                  log: logger.logging.Logger
@@ -32,23 +32,50 @@ class ReadParam:
     def get_param(self,
                   log: logger.logging.Logger
                   ) -> None:
-        """check the file and read it"""
+        """
+        Check the file existence, read its content, and perform a
+        sanity check on the parameters.
+
+        Parameters:
+            log (Logger): The logger object to log messages.
+        """
+        # Check if the file exists, log the message if it does not.
         my_tools.check_file_exist(self.fname, log)
+
+        # Read the parameters from the file and store them in
+        # self.param dictionary.
         self.read_param()
+
+        # Perform a sanity check on the read parameters to ensure that
+        # all important keys exist.
         self.__sanity_check()
 
     def read_param(self) -> None:
-        """read the file"""
+        """
+        Read the file and store the key-value pairs in self.param
+        dictionary.
+        """
+        # Open the file in read mode
         with open(self.fname, 'r', encoding='utf8') as f_r:
+            # Read the file line by line until the end
             while True:
                 line = f_r.readline()
+
+                # If the line does not start with "@", it is not a
+                # parameter, so skip it.
                 if not line.strip().startswith("@"):
                     pass
                 else:
-                    key, vlaue = self.__process_line(line.strip())
-                    self.param[key] = vlaue
+                    # Process the line to extract key-value pair and
+                    # store in self.param
+                    key, value = self.__process_line(line.strip())
+                    self.param[key] = value
+
+                # If end of file is reached, break the loop
                 if not line:
                     break
+
+        # Log the message containing the parameters read from the file.
         self.info_msg += f'\tThe parameters read from {self.fname}:\n'
         self.info_msg += json.dumps(self.param, indent=4)
 
