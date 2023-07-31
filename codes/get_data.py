@@ -24,7 +24,7 @@ class ProcessData:
     atoms: pd.DataFrame  # All atoms dataframe
     param: dict[str, float]  # All the parameters from input file
     residues_atoms: dict[str, pd.DataFrame]  # Atoms info for each residue
-    unproton_aptes: pd.DataFrame  # APTES which should be protonated
+    unproton_aptes: dict[str, pd.DataFrame]  # APTES which should be protonated
     unprot_aptes_ind: list[int]  # Index of APTES which should be protonated
     np_diameter: np.float64  # Diameter of NP, based on APTES positions
     title: str  # Name of the system; if the file is gro
@@ -90,7 +90,7 @@ class ProcessData:
 
     def find_unprotonated_aptes(self,
                                 log: logger.logging.Logger
-                                ) -> tuple[np.ndarray, list[int]]:
+                                ) -> tuple[dict[str, np.ndarray], list[int]]:
         """Check and find the unprotonated APTES group that has N at
         the interface.
 
@@ -132,26 +132,26 @@ class ProcessData:
 
     def get_aptes_unproto(self,
                           unprot_aptes_ind: dict[str, list[int]]  # Aptes index
-                          ) -> pd.DataFrame:
+                          ) -> tuple[str, pd.DataFrame]:
         """Get all atoms in the chains of the unprotonated APTES.
 
         Parameters:
-            unprot_aptes_ind (List[int]): A list of integers representing
-            the indices of unprotonated APTES residues.
+            unprot_aptes_ind (dict[str, list[int]]): A list of integers
+            representing the indices of unprotonated APTES residues.
 
         Returns:
             pd.DataFrame: DataFrame containing all atoms in the chains
             of the unprotonated APTES residues.
         """
-        # Access the DataFrame containing APTES atom data
-        df_apt: pd.DataFrame = self.residues_atoms['APT']
-        # Filter the DataFrame to get all atoms in the chains of\
-        # unprotonated APTES
-        unprotonated_aptes_df = \
-            df_apt[df_apt['residue_number'].isin(unprot_aptes_ind)]
-        # Return the DataFrame containing all atoms in the chains of
-        # the unprotonated APTES
-        return unprotonated_aptes_df
+        unprotonated_aptes_df_dict: dict[str, pd.DataFrame] = {}
+        for aptes, item in unprot_aptes_ind.items():
+            # Access the DataFrame containing APTES atom data
+            df_apt: pd.DataFrame = self.residues_atoms[aptes]
+            # Filter the DataFrame to get all atoms in the chains of\
+            # unprotonated APTES
+            unprotonated_aptes_df_dict[aptes] = \
+                df_apt[df_apt['residue_number'].isin(item)]
+        return unprotonated_aptes_df_dict
 
     def find_unprotonated_aptes_chains(self,
                                        sol_phase_aptes: dict[str, list[int]]
