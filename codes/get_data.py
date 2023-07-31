@@ -18,7 +18,15 @@ from colors_text import TextColor as bcolors
 
 
 class ProcessData:
-    """process dataframe of the structure and plit them"""
+    """
+    Process the data and extract relevant sections of data for differ-
+    ent residues or residue groups.
+
+    The purpose of this script is to divide the data file and extract
+    the relevant section of data. It creates separate data frames for
+    different residues or groups of residues. The data is accessed th-
+    rough pdb_todf.py.
+    """
 
     info_msg: str = 'Message:\n'  # Message to pass for logging and writing
     atoms: pd.DataFrame  # All atoms dataframe
@@ -99,8 +107,8 @@ class ProcessData:
             information.
 
         Returns:
-            Tuple[np.ndarray, List[int]]: A tuple containing two elem-
-            ents:
+            Tuple[dict[str, np.ndarray], List[int]]: A tuple containing
+            two elements:
             - A numpy array containing all atoms in the chains of the
               unprotonated APTES residues.
             - A list of integers representing the indices of unproton-
@@ -152,14 +160,16 @@ class ProcessData:
     def find_unprotonated_aptes_chains(self,
                                        sol_phase_aptes: dict[str, list[int]]
                                        ) -> dict[str, list[int]]:
-        """Find all the chains at the interface that require protonation.
+        """
+        Find all the chains at the interface that require protonation.
 
         Parameters:
-            sol_phase_aptes (List[int]): Indices of APTES residues.
+            sol_phase_aptes dict[str, list[int]]): Indices of APTES
+            residues.
 
         Returns:
-            List[int]: A list of integers representing the indices of
-                       APTES
+            dict[str, list[int]]: A list of integers representing the
+                                  indices of APTES
             residues that require protonation.
         """
         # Initialize an empty list to store unprotonated APTES indices
