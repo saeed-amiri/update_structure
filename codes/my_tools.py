@@ -41,7 +41,7 @@ def check_file_reanme(fname: str,  # Name of the file to check
 
 
 def drop_string(input_string: str,
-                string_to_drop: str
+                *strings_to_drop: str
                 ) -> str:
     """
     Remove all occurrences of a specified substring from an input
@@ -62,7 +62,11 @@ def drop_string(input_string: str,
         str: A new string with all occurrences of string_to_drop
              removed.
     """
-    output_string = input_string.replace(string_to_drop, "")
+    output_string = input_string
+    for string_to_drop in strings_to_drop:
+        output_string = output_string.replace(string_to_drop, "")
+    
+    # Return the resulting modified string.
     return output_string
 
 
