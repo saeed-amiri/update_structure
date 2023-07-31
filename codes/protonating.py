@@ -37,8 +37,8 @@ class FindHPosition(get_data.ProcessData):
     """
 
     info_msg: str  # Message to pass for logging and writing
-    h_porotonations: dict[int, np.ndarray] = {}  # All H atoms & index of APT
-    h_velocities: dict[int, np.ndarray] = {}  # All H atoms & index of APT
+    h_porotonations: dict[str, dict[int, np.ndarray]] = {}
+    h_velocities: dict[str, dict[int, np.ndarray]] = {}
 
     def __init__(self,
                  fname: str,  # Name of the pdb file
@@ -58,8 +58,8 @@ class FindHPosition(get_data.ProcessData):
         # All the H locations wtih index
         results: list[tuple[dict[int, np.ndarray], dict[int, np.ndarray]]]
         num_processes: int = multip.cpu_count() // 2
-        h_porotonations: dict[int, np.ndarray] = {}  # All the dicts of locs
-        h_velocities: dict[int, np.ndarray] = {}  # All the dicts of velocities
+        h_porotonations: dict[str, dict[int, np.ndarray]] = {}  # dicts of locs
+        h_velocities: dict[str, dict[int, np.ndarray]] = {}  # dicts of velocs
         for aptes, items in self.unprot_aptes_ind.items():
             chunk_size: int = len(items) // num_processes
             chunks = [items[i:i+chunk_size] for i in
