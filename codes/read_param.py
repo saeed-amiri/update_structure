@@ -16,7 +16,7 @@ class ReadParam:
     """read param file here"""
     info_msg: str = 'Message:\n'  # Message to pass for logging and writing
     fname: str = 'update_param'
-    essential_key: list[str] = [
+    essential_keys: list[str] = [
         "ANGLE", "RADIUS", "READ", "FILE", "INTERFACE", "INTERFACE_WIDTH",
         "NUMSAMPLE", "ION_DISTANCE", "ION_ATTEPTS", "NP_ZLOC", "LINE",
         "BETTER_POS", "NP_ITP"]
@@ -25,13 +25,13 @@ class ReadParam:
                  log: logger.logging.Logger
                  ) -> None:
         self.param: dict[str, typing.Any] = {}
-        self.get_param(log)
+        self.load_param_from_file(log)
         self.__write_msg(log)
         self.info_msg = ''  # Empety the msg
 
-    def get_param(self,
-                  log: logger.logging.Logger
-                  ) -> None:
+    def load_param_from_file(self,
+                             log: logger.logging.Logger
+                             ) -> None:
         """
         Check the file existence, read its content, and perform a
         sanity check on the parameters.
@@ -48,7 +48,7 @@ class ReadParam:
 
         # Perform a sanity check on the read parameters to ensure that
         # all important keys exist.
-        self.__sanity_check()
+        self.check_essential_keys_exist()
 
     def read_param(self) -> None:
         """
@@ -90,7 +90,7 @@ class ReadParam:
         except ValueError:
             return data[0], data[1]
 
-    def __sanity_check(self) -> None:
+    def check_essential_keys_exist(self) -> None:
         """
         Check if all the important keys exist and have a value.
 
@@ -98,9 +98,9 @@ class ReadParam:
             SystemExit: If any of the important keys are missing in
             the param dictionary.
         """
-        # Find the missing items from essential_key in param dictionary
+        # Find the missing items from essential_keys in param dictionary
         missing_items = \
-            [item for item in self.essential_key if item not in self.param]
+            [item for item in self.essential_keys if item not in self.param]
 
         # Check if there are any missing items
         if missing_items:
