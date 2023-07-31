@@ -49,7 +49,34 @@ def drop_string(input_string: str,
 
 
 def extract_string(input_string: str) -> list[typing.Any]:
-    """return matches str"""
+    """
+    Extract substrings enclosed within double quotes from the input
+    string.
+
+    Parameters:
+        input_string (str): The string from which to extract substrings.
+
+    Returns:
+        List[typing.Any]: A list containing the substrings enclosed
+        within double quotes.
+
+    Example:
+        >>> result = extract_string('This is a "sample" string with
+        "multiple" occurrences of "double-quoted" substrings.')
+        >>> print(result)
+        ['sample', 'multiple', 'double-quoted']
+
+    Note:
+        - The function uses a non-greedy match to extract substrings
+        within the shortest possible double quotes pair.
+        - The function may return an empty list if no substrings
+        enclosed within double quotes are found in the input string.
+        - The function is case-sensitive and only considers double
+        quotes (") to enclose substrings.
+        - It does not handle escaped double quotes within substrings.
+    """
+    # Regular expression pattern to matchsubstrings within double quotes
     pattern = r'"(.*?)"'
+    # Find all occurrences of the pattern
     matches = re.findall(pattern, input_string)
     return matches
