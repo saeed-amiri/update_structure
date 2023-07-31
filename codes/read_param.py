@@ -64,11 +64,26 @@ class ReadParam:
             return data[0], data[1]
 
     def __sanity_check(self) -> None:
-        """check if all the important keys are exist and have value"""
-        # Check if all items in the list are keys in the dictionary
-        if not all(item in self.param for item in self.essential_key):
+        """
+        Check if all the important keys exist and have a value.
+
+        Raises:
+            SystemExit: If any of the important keys are missing in
+            the param dictionary.
+        """
+        # Find the missing items from essential_key in param dictionary
+        missing_items = \
+            [item for item in self.essential_key if item not in self.param]
+
+        # Check if there are any missing items
+        if missing_items:
+            # Join the missing items into a comma-separated string
+            missing_items_str = ', '.join(missing_items)
+
+            # Exit the program and display an error message
             sys.exit(f'{bcolors.FAIL}{self.__module__}:\n'
-                     f'\tNot all the information provided in `{self.fname}`'
+                     '\tThe following information is missing in '
+                     f'`{self.fname}`:\n\t{missing_items_str}'
                      f'{bcolors.ENDC}')
 
     def __write_msg(self,
