@@ -51,27 +51,34 @@ class FindHPosition(get_data.ProcessData):
         self.__write_msg(log)
         self.info_msg = ''  # clean the msg
 
-    def get_area(self) -> tuple[dict[int, np.ndarray], dict[int, np.ndarray]]:
+    def get_area(self) -> tuple[dict[str, dict[int, np.ndarray]],
+                                dict[str, dict[int, np.ndarray]]]:
         """find an area around the N, a cone with angle equal to the
         angle HN1-N-HN2; and find a velocity for the new H atom"""
         # All the H locations wtih index
         results: list[tuple[dict[int, np.ndarray], dict[int, np.ndarray]]]
         num_processes: int = multip.cpu_count() // 2
-        chunk_size: int = len(self.unprot_aptes_ind) // num_processes
-        chunks = [self.unprot_aptes_ind[i:i+chunk_size] for i in
-                    range(0, len(self.unprot_aptes_ind), chunk_size)]
-        with multip.Pool(processes=num_processes) as pool:
-            results = \
-                pool.starmap(self.process_ind, [(chunk,) for chunk in chunks])
         h_porotonations: dict[int, np.ndarray] = {}  # All the dicts of locs
         h_velocities: dict[int, np.ndarray] = {}  # All the dicts of velocities
-        for item in results:
-            h_porotonations.update(item[0])
-            h_velocities.update(item[1])
+        for aptes, items in self.unprot_aptes_ind.items():
+            chunk_size: int = len(items) // num_processes
+            chunks = [items[i:i+chunk_size] for i in
+                        range(0, len(items), chunk_size)]
+            with multip.Pool(processes=num_processes) as pool:
+                results = pool.starmap(
+                    self.process_ind, [(chunk, aptes) for chunk in chunks])
+            h_porotonations_i: dict[int, np.ndarray] = {}
+            h_velocities_i: dict[int, np.ndarray] = {}
+            for item in results:
+                h_porotonations_i.update(item[0])
+                h_velocities_i.update(item[1])
+            h_porotonations[aptes] = h_porotonations_i
+            h_velocities[aptes] = h_velocities_i
         return h_porotonations, h_velocities
 
     def process_ind(self,
-                    chunk: list[int]  # Chunk of the indices for loop over
+                    chunk: list[int],  # Chunk of the indices for loop over
+                    aptes: str  # Name of the APTES
                     ) -> tuple[dict[int, np.ndarray], dict[int, np.ndarray]]:
         """doing the calculations"""
         df_i: pd.DataFrame  # Local df for each residue index
@@ -85,9 +92,10 @@ class FindHPosition(get_data.ProcessData):
         h_loc: np.ndarray  # Possible location for H
         all_h_locs: dict[int, np.ndarray] = {}  # To save all the locations
         all_h_vels: dict[int, np.ndarray] = {}  # To save all the velocities
+
         for ind in chunk:
-            df_i = self.unproton_aptes[
-                self.unproton_aptes['residue_number'] == ind]
+            df_i = self.unproton_aptes[aptes][
+                self.unproton_aptes[aptes]['residue_number'] == ind]
             df_nh = df_i[df_i['atom_name'].isin(['N', 'HN1', 'HN2'])]
             v_nh1, v_nh2 = self.__get_vectors(df_nh)
             if 'vx' in df_nh.columns:
@@ -133,22 +141,22 @@ class FindHPosition(get_data.ProcessData):
                        v_mean: np.float64  # Mean of N-H bonds
                        ) -> np.ndarray:
         """try to find the best position for H amoung the possible one"""
-        in_flag: bool  # To check if the point meets the conditio
+        in_flag: bool  # To check if the point meets the condition
         loc: np.ndarray = np.array([-1, -1, -1])  # initial point, CAN'T BE -1
         for loc in possible_loc:
-            in_flag = False
+            in_flag = True
             for _, row in atoms_around_n.iterrows():
                 atom_i = np.array([row['x'], row['y'], row['z']])
                 distance = np.linalg.norm(loc-atom_i)
                 if distance >= v_mean:
-                    in_flag = True
+                    break
                 else:
                     in_flag = False
-                    break
-            if in_flag:
+            if not in_flag:
                 break
         if not in_flag:
-            sys.exit(f'{bcolors.FAIL}{self.__module__}:\n'
+            sys.exit(f'{bcolors.FAIL}Called from {self.__module__}:'
+                     ' (protonation.py)\n'   
                      '\tError! Could not find a location for H atom\n'
                      f'{bcolors.ENDC}')
         return loc
