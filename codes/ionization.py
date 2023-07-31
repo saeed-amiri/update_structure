@@ -18,8 +18,12 @@ from colors_text import TextColor as bcolors
 
 
 class IonizationSol(proton.FindHPosition):
-    """ionizing the water phase of the box. The number is equal to the
-    number of deprotonation of the APTES"""
+    """
+    The IonizationSol class ionizes the water phase of the system by
+    placing counterions in unoccupied spaces within the water section,
+    ensuring no overlap with existing atoms based on the number of new
+    protonations.
+    """
 
     info_msg: str  # Message to pass for logging and writing
     ion_poses: list[np.ndarray]  # Positoin for ions
@@ -32,11 +36,11 @@ class IonizationSol(proton.FindHPosition):
         super().__init__(fname, log)
         self.info_msg = 'Message:\n'
         self.info_msg += '\tFinding poistions for new ions\n'
-        self.ion_poses, self.ion_velos = self.mk_ionization()
+        self.ion_poses, self.ion_velos = self.ionize_water()
         self.__write_msg(log)
         self.info_msg = ''  # clean the msg
 
-    def mk_ionization(self) -> tuple[list[np.ndarray], list[np.ndarray]]:
+    def ionize_water(self) -> tuple[list[np.ndarray], list[np.ndarray]]:
         """get the numbers of ions and their locations in the water
         phase"""
         x_dims: np.ndarray  # Dimensions of the sol box in x
@@ -81,7 +85,16 @@ class IonizationSol(proton.FindHPosition):
     def __check_poses(self,
                       ion_poses: list[np.ndarray]  # Possible position for ions
                       ) -> np.ndarray:
-        """check for probable ovrlapping of positions"""
+        """
+        Check for probable overlapping positions.
+
+        Parameters:
+            ion_poses (list[np.ndarray]): List of possible positions
+            for ions.
+
+        Returns:
+            np.ndarray: Array of non-overlapping ion positions.
+        """
         atoms: np.ndarray = np.vstack(ion_poses)
 
         # Build a KDTree from the atom coordinates
@@ -102,7 +115,15 @@ class IonizationSol(proton.FindHPosition):
                             d_ions: list[float],  # Distnce of ions
                             n_portons: int  # Number of protonations
                             ) -> tuple[list[np.ndarray], list[np.ndarray]]:
-        """select random positions with respected velocities for the ions"""
+        """
+        Select random positions with respect to velocities for the ions.
+
+        Returns:
+            tuple[list[np.ndarray], list[np.ndarray]]:
+                A tuple containing two lists:
+                - List of selected positions for ions (list[np.ndarray]).
+                - List of selected velocities for ions (list[np.ndarray]).
+        """
         self.info_msg += f'\tTotal number of new ions is: `{n_portons}`\n'
         if len(poses) < n_portons:
             sys.exit(f'{bcolors.FAIL}{self.__module__}:\n'
@@ -213,7 +234,20 @@ class IonizationSol(proton.FindHPosition):
                                                         np.ndarray,
                                                         np.ndarray],  # Boxdims
                                         ) -> tuple[np.ndarray, float]:
-        """find the best place for ions in each box"""
+        """
+        Find the best place for ions in each box.
+
+        Parameters:
+            atoms (np.ndarray): Array of the coordinates of atoms.
+            box_dims (tuple[np.ndarray, np.ndarray, np.ndarray]):
+            Dimensions of the box.
+
+        Returns:
+            tuple[np.ndarray, float]:
+                A tuple containing two values:
+                - Array of ion positions (np.ndarray).
+                - Minimum distance between ion and the box (float).
+        """
 
         min_x, max_x = box_dims[0]
         min_y, max_y = box_dims[1]
@@ -262,8 +296,22 @@ class IonizationSol(proton.FindHPosition):
                              ) -> tuple[list[tuple[np.float64, np.float64]],
                                         list[tuple[np.float64, np.float64]],
                                         list[tuple[np.float64, np.float64]]]:
-        """get dimension of each chunk-box and return the dimension of
-        each chunk-box"""
+        """
+        Get dimensions of each chunk box and return the dimensions of
+        each chunk box.
+
+        Parameters:
+            x_dims (np.ndarray): Dimensions of the sol box in the x-axis.
+            y_dims (np.ndarray): Dimensions of the sol box in the y-axis.
+            z_dims (np.ndarray): Dimensions of the sol box in the z-axis.
+            n_protons (int): Number of protonated chains.
+
+        Returns:
+                A tuple containing three lists:
+                - List of chunk intervals along the x-axis
+                - List of chunk intervals along the y-axis
+                - List of chunk intervals along the z-axis
+        """
         x_lim: float = x_dims[1] - x_dims[0]
         y_lim: float = y_dims[1] - y_dims[0]
         z_lim: float = z_dims[1] - z_dims[0]
