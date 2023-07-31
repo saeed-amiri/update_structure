@@ -4,10 +4,10 @@ The contact angle of the nanoparticle (NP)
 @ANGLE=90
 Estimate radius of the NP before functionalization with APTES
 @RADIUS=25
-Name of the NP itp files, in list
-@NP_ITP=[APT_COR]
-Names of the APTES chains on the NP, in list
-APTES_NAMES=[APT]
+Name of the NP itp files, write them in list of list. The names of the APTES chain and CORE
+should follow the the name of the files. First the name of APTES than the name of the COR
+And seperate them with comma, like [file1, APT, COR], [file2, APU, COS]
+@NP_ITP=[APT_COR, APT, COR]
 ############### INTERACTIVE VALUES ###########
 intereface location -> caculated by analysing script
 If READ then read it from the READ file, otherwise from the fixed value set in here
