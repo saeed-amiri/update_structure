@@ -88,7 +88,6 @@ Methods:
 
 
 import sys
-import json
 import operator
 import multiprocessing as multip
 from scipy.spatial import cKDTree, KDTree
@@ -224,12 +223,10 @@ class IonizationSol(proton.FindHPosition):
             selected_d = [item[0] for item in combined_sorted[:n_portons]]
             selected_poses = [item[1] for item in combined_sorted[:n_portons]]
             selected_velos = [item[2] for item in combined_sorted[:n_portons]]
-            self.info_msg += '\tThe found spots have nighbours distance: \n'
-            self.info_msg += json.dumps([f'{i:.2f}' for i in d_ions], indent=8)
             self.info_msg += \
                 '\n\tThe selected spots have nighbours distance:\n'
             self.info_msg += \
-                json.dumps([f'{i:.2f}' for i in selected_d], indent=8)
+                ", ".join(["{:.2f}".format(num) for num in selected_d])
         return selected_poses, selected_velos
 
     @staticmethod
