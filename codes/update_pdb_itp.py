@@ -28,6 +28,7 @@ if __name__ == '__main__':
         write_gro_file.write_gromacs_gro(gro_data, 'updated_system.gro')
         new_hn3 = gro_data.new_hn3
     else:
+        sys.exit('\nDEPRECTED!CANNOT RUN READ THIS! USE GRO FILES\n')
         up_data = update_residues_pdb.UpdateResidues(sys.argv[1])
         write_pdb_file.WritePdb(up_data)
         new_hn3 = up_data.new_hn3
