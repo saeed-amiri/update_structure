@@ -97,6 +97,7 @@ class ReadParam:
                  ) -> None:
         self.param: dict[str, typing.Any] = {}
         self.load_param_from_file(log)
+        self.get_names_of_parts()
         self.__write_msg(log)
         self.info_msg = ''  # Empety the msg
 
@@ -146,6 +147,39 @@ class ReadParam:
                 if not line:
                     break
 
+    def get_names_of_parts(self) -> None:
+        """
+        Find the names of the APTES and CORE atoms and also ITP files.
+
+        This method extracts the names of the APTES and CORE atoms, as
+        well as the names of the ITP (GROMACS topology) files from the
+        `NP_ITP` parameter in the input file.
+        The extracted names are then stored in the `aptes`, `cores`,
+        and `itp_files` fields of the `param` dictionary.
+
+        Note: The `NP_ITP` parameter in the input file is expected to
+        be a semicolon-separated list of values in the format:
+        '[ITP_FILE_NAME], [APTES_NAME], [CORE_NAME]; [ITP_FILE_NAME],
+        [APTES_NAME], [CORE_NAME]; ...'
+
+        Raises:
+            ValueError: If the `NP_ITP` parameter is not in the correct
+                        format.
+        """
+        files_list: list[str] = []  # To save all the itp files names
+        aptes_list: list[str] = []  # To save all the aptes names
+        cores_list: list[str] = []  # To save all the cores names
+        files = self.param.get('NP_ITP', '').split(';')
+        for itp in files:
+            itp = itp.strip()
+            itps = my_tools.drop_string(itp, '[', ']')
+            names = itps.split(',')
+            files_list.append(names[0])
+            aptes_list.append(names[1])
+            cores_list.append(names[2])
+        self.param['itp_files'] = files_list
+        self.param['aptes'] = aptes_list
+        self.param['cores'] = cores_list
         # Log the message containing the parameters read from the file.
         self.info_msg += f'\tThe parameters read from {self.fname}:\n'
         self.info_msg += json.dumps(self.param, indent=4)
