@@ -53,8 +53,35 @@ class FindHPosition(get_data.ProcessData):
 
     def get_area(self) -> tuple[dict[str, dict[int, np.ndarray]],
                                 dict[str, dict[int, np.ndarray]]]:
-        """find an area around the N, a cone with angle equal to the
-        angle HN1-N-HN2; and find a velocity for the new H atom"""
+        """
+        Find an area around the N, forming a cone with an angle equal
+        to the angle HN1-N-HN2, and compute the velocity for the new
+        H atom.
+
+        Returns:
+            tuple[dict[str, dict[int, np.ndarray]],
+                  dict[str, dict[int, np.ndarray]]]:
+            A tuple containing two dictionaries:
+            1. 'h_porotonations': A nested dictionary mapping APTES
+            names to residue indices and the corresponding new H atom
+            positions.
+            2. 'h_velocities': A nested dictionary mapping APTES names
+            to residue indices and the corresponding velocities for the
+            new H atom.
+
+        Note:
+            - The method processes the APTES residues in parallel
+            using multiple processes to speed up calculations.
+            - For each APTES, the method iterates through its associated
+            residue indices and calculates the positions and velocities
+            of new H atoms based on the N and HN1/HN2 atoms' positions.
+            - The 'h_porotonations' dictionary maps APTES names to
+            dictionaries, where each inner dictionary maps residue
+            indices to the corresponding positions of new H atoms.
+            - The 'h_velocities' dictionary maps APTES names to
+            dictionaries, where each inner dictionary maps residue
+            indices to the corresponding velocities of new H atoms.
+        """
         # All the H locations wtih index
         results: list[tuple[dict[int, np.ndarray], dict[int, np.ndarray]]]
         num_processes: int = multip.cpu_count() // 2
@@ -80,7 +107,33 @@ class FindHPosition(get_data.ProcessData):
                     chunk: list[int],  # Chunk of the indices for loop over
                     aptes: str  # Name of the APTES
                     ) -> tuple[dict[int, np.ndarray], dict[int, np.ndarray]]:
-        """doing the calculations"""
+        """
+        Perform the necessary calculations for a chunk of residue
+        indices in an APTES.
+
+        Parameters:
+            chunk (list[int]): A list of residue indices for which the
+            calculations will be performed.
+            aptes (str): The name of the APTES.
+
+        Returns:
+            tuple[dict[int, np.ndarray], dict[int, np.ndarray]]: A
+            tuple containing two dictionaries:
+            1. A dictionary mapping residue indices to the corresponding
+            positions of new H atoms ('all_h_locs').
+            2. A dictionary mapping residue indices to the corresponding
+            velocities of new H atoms ('all_h_vels').
+
+        Note:
+            - The method calculates the positions and velocities of new
+            H atoms for the provided chunk of residue indices in a
+            specific APTES.
+            - The 'all_h_locs' dictionary maps residue indices to the
+            positions of new H atoms in the coordinate space.
+            - The 'all_h_vels' dictionary maps residue indices to the
+            velocities of new H atoms.
+        """
+
         df_i: pd.DataFrame  # Local df for each residue index
         df_nh: pd.DataFrame  # Local df for each residue index
         v_nh1: np.ndarray  # Vector from N to H1
