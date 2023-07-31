@@ -115,7 +115,8 @@ class ProcessData:
             self.find_interface_z_range(water_surface)
 
         # Get the indices of all the APTES residues at the sol phase interface
-        sol_phase_aptes: list[int] = self.__get_aptes_indices(zrange)
+        sol_phase_aptes: dict[str, list[int]] = \
+            self.__get_aptes_indices(zrange)
 
         # Get the indices of the unprotonated APTES residues to be protonated
         unprot_aptes_ind: list[int] = \
@@ -144,18 +145,16 @@ class ProcessData:
         """
         # Access the DataFrame containing APTES atom data
         df_apt: pd.DataFrame = self.residues_atoms['APT']
-
         # Filter the DataFrame to get all atoms in the chains of\
         # unprotonated APTES
         unprotonated_aptes_df = \
             df_apt[df_apt['residue_number'].isin(unprot_aptes_ind)]
-
         # Return the DataFrame containing all atoms in the chains of
         # the unprotonated APTES
         return unprotonated_aptes_df
 
     def find_unprotonated_aptes_chains(self,
-                                       sol_phase_aptes: list[int]  # Indices
+                                       sol_phase_aptes: dict[str, list[int]]
                                        ) -> list[int]:
         """Find all the chains at the interface that require protonation.
 
@@ -167,30 +166,31 @@ class ProcessData:
                        APTES
             residues that require protonation.
         """
-        # Get the DataFrame for APTES atoms
-        df_apt: pd.DataFrame = self.residues_atoms['APT']
-
         # Initialize an empty list to store unprotonated APTES indices
-        unprotonated_aptes: list[int] = []
+        unprotonated_aptes: dict[str, list[int]] = {}
+        for aptes, item in sol_phase_aptes.items():
+            aptes_list: list[int] = []
+            # Get the DataFrame for APTES atoms
+            df_apt: pd.DataFrame = self.residues_atoms[aptes]
 
-        # Split the sol_phase_aptes list into chunks for parallel processing
-        num_processes: int = multip.cpu_count() // 2
-        chunk_size: int = len(sol_phase_aptes) // num_processes
-        chunks = [sol_phase_aptes[i:i + chunk_size] for i in
-                  range(0, len(sol_phase_aptes), chunk_size)]
+            # Split the sol_phase_aptes list into chunks for parallel processing
+            num_processes: int = multip.cpu_count() // 2
+            chunk_size: int = len(item) // num_processes
+            chunks = [item[i:i + chunk_size] for i in
+                      range(0, len(item), chunk_size)]
 
-        # Create a Pool of processes
-        with multip.Pool(processes=num_processes) as pool:
-            # Process the chunks in parallel using the process_chunk function
-            results = pool.starmap(self.process_chunk,
-                                   [(chunk, df_apt) for chunk in chunks])
+            # Create a Pool of processes
+            with multip.Pool(processes=num_processes) as pool:
+                # Process the chunks in parallel using the process_chunk function
+                results = pool.starmap(self.process_chunk,
+                                       [(chunk, df_apt) for chunk in chunks])
 
-        # Combine the results from each process
-        for result in results:
-            unprotonated_aptes.extend(result)
-
-        # Release memory by deleting the DataFrame
-        del df_apt
+            # Release memory by deleting the DataFrame
+            del df_apt
+            # Combine the results from each process
+            for result in results:
+                aptes_list.extend(result)
+            unprotonated_aptes[aptes] = aptes_list
 
         # Return the list of unprotonated APTES indices
         return unprotonated_aptes
@@ -230,7 +230,7 @@ class ProcessData:
 
     def __get_aptes_indices(self,
                             zrange: tuple[float, float]  # Bound of interface
-                            ) -> list[int]:
+                            ) -> dict[str, list[int]]:
         """
         Get the indices of APTES residues within the specified z-axis
         range.
@@ -240,21 +240,23 @@ class ProcessData:
             and upper bounds of the z-axis range.
 
         Returns:
-            List[int]: A list of integers representing the indices of
-            APTES residues that lie within the specified z-axis range.
+            dict[str, list[int]]: A dict of lists of integers represe-
+            nting the indices of APTES residues that lie within the
+            specified z-axis range.
         """
         if not isinstance(zrange, tuple) or len(zrange) != 2:
             raise ValueError(
                 "zrange must be a tuple containing two float values.")
 
         # Filter the DataFrame based on the specified conditions
-        df_apt = self.residues_atoms['APT']
-        filtered_df = df_apt[(df_apt['atom_name'] == 'N') &
-                             (df_apt['z'].between(zrange[0], zrange[1]))]
-
-        # Get the 'residue_number' values for the filtered atoms
-        del df_apt
-        return filtered_df['residue_number'].values
+        aptes_index_dict: dict[str, list[int]] = {}
+        for aptes in self.param['aptes']:
+            df_apt = self.residues_atoms[aptes]
+            df_i = df_apt[(df_apt['atom_name'] == 'N') &
+                          (df_apt['z'].between(zrange[0], zrange[1]))]
+            # Get the 'residue_number' values for the filtered atoms
+            aptes_index_dict[aptes] = df_i['residue_number'].values
+        return aptes_index_dict
 
     def find_interface_z_range(self,
                                water_surface: typing.Any  # pdb_surf.GetSurface
