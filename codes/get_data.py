@@ -122,10 +122,6 @@ class ProcessData:
         unprot_aptes_ind: dict[str, list[int]] = \
             self.find_unprotonated_aptes_chains(sol_phase_aptes)
 
-        # Log the number of chains to be protonated
-        self.info_msg += \
-            f'\tNumber of chains to be protonated: {len(unprot_aptes_ind)}\n'
-
         # Return a tuple containing the DataFrame of unprotonated APTES
         # chains and the list of their indices
         return self.get_aptes_unproto(unprot_aptes_ind), unprot_aptes_ind
@@ -190,6 +186,8 @@ class ProcessData:
             # Combine the results from each process
             for result in results:
                 aptes_list.extend(result)
+            self.info_msg += (f'\tThe number of aptes: `{aptes}` '
+                              f'is {len(aptes_list)}\n')
             unprotonated_aptes[aptes] = aptes_list
 
         # Return the list of unprotonated APTES indices
