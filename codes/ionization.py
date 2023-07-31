@@ -1,8 +1,90 @@
-"""In order to incorporate counterions into the system, the script
-searches for unoccupied spaces within the water section and identifies
+"""
+IonizationSol: A script to incorporate counterions into the system by
+searching for unoccupied spaces within the water section and identifying
 all present atoms. It ensures that the placement of counterions does
 not overlap with any existing atoms based on the number of new
-protonation."""
+protonation.
+
+This script utilizes the Protonating class to find the positions for
+new ions within the water phase. The number of ions and their locations
+are determined based on the number of deprotonations of the APTES
+chains.
+
+Classes:
+    IonizationSol: A class representing the process of ionizing the
+    water phase of the box.
+
+Methods:
+    __init__(self, fname: str) -> None:
+        Initialize the IonizationSol object.
+
+    mk_ionization(self) -> tuple[list[np.ndarray], list[np.ndarray]]:
+        Find the numbers of ions and their locations in the water phase.
+
+    __check_poses(self, ion_poses: list[np.ndarray]) -> np.ndarray:
+        Check for probable overlapping of positions and drop positions
+        that are too close to each other.
+
+    __best_ion_selction(self, poses: np.ndarray, velos: np.ndarray,
+                        d_ions: list[float], n_portons: int) ->
+                        tuple[list[np.ndarray], list[np.ndarray]]:
+        Select random positions with respect to velocities for the ions.
+
+    __drop_near_ions(atoms: np.ndarray, distance: float, tree: KDTree)
+                    -> np.ndarray:
+        Drop the positions which are very close to each other.
+
+    __get_chunk_atoms(self, sol_atoms: pd.DataFrame,
+                      x_chunks: list[tuple[np.float64, np.float64]],
+                      y_chunks: list[tuple[np.float64, np.float64]],
+                      z_chunks: list[tuple[np.float64, np.float64]])
+                      -> tuple[list[np.ndarray], list[np.ndarray],
+                                list[float]]:
+        Get atoms within each chunk box and return a list of all
+        possible positions for ions.
+
+    _process_chunk_box(self, sol_atoms: pd.DataFrame, x_i: np.ndarray,
+                       y_i: np.ndarray, z_i: np.ndarray) ->
+                       tuple[np.ndarray, np.ndarray, float]:
+        Process the chunk box, getting atoms in each box, and find
+        positions for all the needed ions.
+
+    find_ion_velocity(velocities: np.ndarray) -> np.ndarray:
+        Find the average velocity of the water molecules in the
+        section and return their mean as the velocity of the ion.
+
+    find_position_with_min_distance(self, atoms: np.ndarray,
+                                    box_dims: tuple[np.ndarray,
+                                    np.ndarray, np.ndarray]) ->
+                                    tuple[np.ndarray, float]:
+        Find the best place for ions in each box.
+
+    __get_chunk_interval(self, x_dims: np.ndarray, y_dims: np.ndarray,
+    z_dims: np.ndarray, n_protons: int) -> tuple[list[tuple[np.float64,
+    np.float64]], list[tuple[np.float64, np.float64]],
+    list[tuple[np.float64, np.float64]]]:
+        Get dimensions of each chunk box and return the dimensions of
+        each chunk box.
+
+    __get_chunk_numbers(self, chunk_num: int, n_protons: int) ->
+                        tuple[int, int, int]:
+        Find the best numbers for dividing the box into chunks.
+
+    __get_axis_chunk(dims: np.ndarray, lims: float, chunk_num: int) ->
+    list[tuple[np.float64, np.float64]]:
+        Return the chunks of the axis.
+
+    __get_box_size(sol_atoms: pd.DataFrame) -> tuple[np.ndarray,
+                                                     np.ndarray,
+                                                     np.ndarray]:
+        Get the dimension of the sol box (water and ions).
+
+    __get_sol_phase_atoms(self) -> pd.DataFrame:
+        Get all the atoms below the interface, in the water section.
+
+    __write_msg(self, log: logger.logging.Logger):
+        Write and log messages.
+"""
 
 
 import sys
