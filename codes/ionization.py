@@ -57,9 +57,12 @@ class IonizationSol(proton.FindHPosition):
         # Get the dimension of the ares
         x_dims, y_dims, z_dims = self.__get_box_size(sol_atoms)
 
+        # Get the number of the chains to be protonated
+        n_protonation: int  # Number of the protonation
+        n_protonation = sum(len(lst) for lst in self.unprot_aptes_ind.values())
         # Get the chunk boxes to find atoms in them
         x_chunks, y_chunks, z_chunks = \
-            self.__get_chunk_interval(x_dims, y_dims, z_dims)
+            self.__get_chunk_interval(x_dims, y_dims, z_dims, n_protonation)
 
         # Find possible poistions for all the ions
         ion_poses_list, ion_velos_list, d_ions = \
@@ -72,7 +75,7 @@ class IonizationSol(proton.FindHPosition):
             self.__best_ion_selction(ion_poses_tmp,
                                      np.array(ion_velos_list),
                                      d_ions,
-                                     len(self.unprot_aptes_ind))
+                                     n_protonation)
         return ion_poses, ion_velos
 
     def __check_poses(self,
@@ -100,6 +103,7 @@ class IonizationSol(proton.FindHPosition):
                             n_portons: int  # Number of protonations
                             ) -> tuple[list[np.ndarray], list[np.ndarray]]:
         """select random positions with respected velocities for the ions"""
+        self.info_msg += f'\tTotal number of new ions is: `{n_portons}`\n'
         if len(poses) < n_portons:
             sys.exit(f'{bcolors.FAIL}{self.__module__}:\n'
                      f'\t Number of ions positoins: `{len(poses)}` is smaller'
@@ -253,7 +257,8 @@ class IonizationSol(proton.FindHPosition):
     def __get_chunk_interval(self,
                              x_dims: np.ndarray,  # Dimensions of sol box in x
                              y_dims: np.ndarray,  # Dimensions of sol box in y
-                             z_dims: np.ndarray  # Dimensions of sol box in z
+                             z_dims: np.ndarray,  # Dimensions of sol box in z
+                             n_protons: int  # Number of protonated chains
                              ) -> tuple[list[tuple[np.float64, np.float64]],
                                         list[tuple[np.float64, np.float64]],
                                         list[tuple[np.float64, np.float64]]]:
@@ -262,8 +267,9 @@ class IonizationSol(proton.FindHPosition):
         x_lim: float = x_dims[1] - x_dims[0]
         y_lim: float = y_dims[1] - y_dims[0]
         z_lim: float = z_dims[1] - z_dims[0]
-        chunk_num: int = int(np.cbrt(len(self.unprot_aptes_ind)))
-        chunk_axis: tuple[int, int, int] = self.__get_chunk_numbers(chunk_num)
+        chunk_num: int = int(np.cbrt(n_protons))
+        chunk_axis: tuple[int, int, int] = \
+            self.__get_chunk_numbers(chunk_num, n_protons)
         x_chunks: list[tuple[np.float64, np.float64]] = \
             self.__get_axis_chunk(x_dims, x_lim, chunk_axis[0])  # Chunks range
         y_chunks: list[tuple[np.float64, np.float64]] = \
@@ -274,15 +280,15 @@ class IonizationSol(proton.FindHPosition):
 
     def __get_chunk_numbers(self,
                             chunk_num: int,  # initial chunk number in each ax
+                            n_protons: int  # number of protonated chains
                             ) -> tuple[int, int, int]:
         """find best numbers for dividing the box into chunks"""
-        proton_num: int = int(len(self.unprot_aptes_ind))
         chunck_axis: tuple[int, int, int]
-        if chunk_num**3 == proton_num:
+        if chunk_num**3 == n_protons:
             chunck_axis = (chunk_num, chunk_num, chunk_num)
-        elif chunk_num**3 < proton_num:
+        elif chunk_num**3 < n_protons:
             x_chunk, y_chunk, z_chunk = chunk_num, chunk_num, chunk_num
-            while x_chunk * y_chunk * z_chunk < proton_num:
+            while x_chunk * y_chunk * z_chunk < n_protons:
                 x_chunk += 1
             chunck_axis = x_chunk, y_chunk, z_chunk
         return chunck_axis
