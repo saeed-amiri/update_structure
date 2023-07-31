@@ -19,7 +19,18 @@ from colors_text import TextColor as bcolors
 
 
 class FindHPosition(get_data.ProcessData):
-    """Find an area in which the new H could set"""
+    """Find an area in which the new H could set
+    Attributes of get_data..ProcessData
+
+    atoms: pd.DataFrame  -> All atoms dataframe
+    param: dict[str, float]  -> All the parameters from input file
+    residues_atoms: dict[str, pd.DataFrame]  -> Atoms info for each residue
+    unproton_aptes: dict[str, pd.DataFrame]  -> APTES which should be protonated
+    unprot_aptes_ind: list[int]  -> Index of APTES which should be protonated
+    np_diameter: np.float64  -> Diameter of NP, based on APTES positions
+    title: str  -> Name of the system; if the file is gro
+    pbc_box: str  -> PBC of the system; if the file is gro    
+    """
 
     info_msg: str  # Message to pass for logging and writing
     h_porotonations: dict[int, np.ndarray] = {}  # All H atoms & index of APT
