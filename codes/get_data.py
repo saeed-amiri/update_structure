@@ -239,7 +239,7 @@ class ProcessData:
 
     def get_aptes_unproto(self,
                           unprot_aptes_ind: dict[str, list[int]]  # Aptes index
-                          ) -> tuple[str, pd.DataFrame]:
+                          ) -> tuple[str, dict[str, pd.DataFrame]]:
         """Get all atoms in the chains of the unprotonated APTES.
 
         Parameters:
@@ -247,8 +247,8 @@ class ProcessData:
             representing the indices of unprotonated APTES residues.
 
         Returns:
-            pd.DataFrame: DataFrame containing all atoms in the chains
-            of the unprotonated APTES residues.
+            dict[str, pd.DataFrame]: DataFrame containing all atoms
+            in the chains of the unprotonated APTES residues.
         """
         unprotonated_aptes_df_dict: dict[str, pd.DataFrame] = {}
         for aptes, item in unprot_aptes_ind.items():
