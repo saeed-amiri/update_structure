@@ -33,7 +33,7 @@ class FindHPosition(get_data.ProcessData):
         np_diameter: np.float64  -> Diameter of NP, based on APTES
                                     positions
         title: str  -> Name of the system; if the file is gro
-        pbc_box: str  -> PBC of the system; if the file is gro    
+        pbc_box: str  -> PBC of the system; if the file is gro
     """
 
     info_msg: str  # Message to pass for logging and writing
@@ -63,7 +63,7 @@ class FindHPosition(get_data.ProcessData):
         for aptes, items in self.unprot_aptes_ind.items():
             chunk_size: int = len(items) // num_processes
             chunks = [items[i:i+chunk_size] for i in
-                        range(0, len(items), chunk_size)]
+                      range(0, len(items), chunk_size)]
             with multip.Pool(processes=num_processes) as pool:
                 results = pool.starmap(
                     self.process_ind, [(chunk, aptes) for chunk in chunks])
@@ -150,13 +150,12 @@ class FindHPosition(get_data.ProcessData):
                 distance = np.linalg.norm(loc-atom_i)
                 if distance >= v_mean:
                     break
-                else:
-                    in_flag = False
+                in_flag = False
             if not in_flag:
                 break
         if not in_flag:
             sys.exit(f'{bcolors.FAIL}Called from {self.__module__}:'
-                     ' (protonation.py)\n'   
+                     ' (protonation.py)\n'
                      '\tError! Could not find a location for H atom\n'
                      f'{bcolors.ENDC}')
         return loc
