@@ -274,12 +274,62 @@ class FindHPosition(get_data.ProcessData):
                              df_nh: pd.DataFrame,  # N and H dataframe
                              v_mean: np.float64  # Average length of N-H bonds
                              ) -> pd.DataFrame:
-        """Generate a dataframe that includes atoms within a specified
-        radius of N atoms. This is a more efficient way to check for
-        overlaps with new H since it only considers the relevant atoms.
-        The analysis is limited to the atoms in the box enclosing the
-        NP, which contains significantly fewer atoms than the entire
-        system."""
+        """
+        Generate a DataFrame that includes atoms within a specified
+        radius around N atoms. This method efficiently checks for
+        overlaps with new H atoms by only considering the relevant
+        atoms. The analysis is limited to the atoms in the box enclosing
+        the NP, which contains significantly fewer atoms than the entire
+        system.
+
+        Parameters:
+            df_nh (pd.DataFrame): DataFrame containing N and H atoms
+            data.
+            v_mean (np.float64): The average length of N-H bonds.
+
+        Returns:
+            pd.DataFrame: DataFrame containing atoms within the
+            specified radius around N atoms.
+
+        Note:
+            - The method efficiently uses a KD-tree data structure to
+            find the atoms within the specified radius.
+            - The input DataFrame 'df_nh' must contain data for N and H
+            atoms to find the atoms around N.
+            - The 'v_mean' parameter represents the average length of
+            N-H bonds and is used to determine the search radius.
+            - The method extracts the x, y, and z coordinates from the
+            DataFrame 'self.residues_atoms['box']' that contains atoms
+            in the bounding box enclosing the NP, ensuring a more
+            efficient search.
+            - The method calculates the search radius as 'v_mean + 2'
+            to account for possible variations in bond lengths and
+            provide a buffer around N atoms.
+            - The KD-tree efficiently queries the points within the
+            radius and returns the indices of the atoms within the
+            radius.
+            - The method returns the DataFrame containing the atoms
+            within the specified radius around N atoms, which can be
+            used for checking overlaps with new H atoms.
+
+        Example:
+            # DataFrame containing N and H atoms
+            df_nh = pd.DataFrame({
+                'atom_name': ['N', 'H', 'C', 'H', 'H', ...],
+                'x': [0.0, 1.0, 0.5, 1.5, 0.5, ...],
+                'y': [0.0, 0.0, 0.5, 0.5, 1.5, ...],
+                'z': [0.0, 0.0, 1.0, 1.5, 0.5, ...],
+                ...
+            })
+
+            # Define the average length of N-H bonds
+            v_mean = 1.0
+
+            # Generate the DataFrame with atoms around N within the
+            # radius
+            atoms_around_n = \
+                ProcessData.__get_atoms_around_n(df_nh, v_mean)
+        """
         # Extract the x, y, z coordinates from the dataframe
         coordinates: np.ndarray = \
             self.residues_atoms['box'][['x', 'y', 'z']].values
