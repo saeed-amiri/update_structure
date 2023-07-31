@@ -1,0 +1,35 @@
+All the distance values are in angestrom and angles in degree
+############### CONSTANT VALUES ##############
+The contact angle of the nanoparticle (NP)
+@ANGLE=90
+Estimate radius of the NP before functionalization with APTES
+@RADIUS=25
+Name of the NP itp files, in list
+@NP_ITP=[APT_COR]
+Names of the APTES chains on the NP, in list
+APTES_NAMES=[APT]
+############### INTERACTIVE VALUES ###########
+intereface location -> caculated by analysing script
+If READ then read it from the READ file, otherwise from the fixed value set in here
+@READ=True
+@FILE=GRO
+If no READ the interface is got from here: (They should set anyway)
+@INTERFACE=12.81
+interface thickness
+@INTERFACE_WIDTH=10.47
+How to select atoms, under intereface: INTERFACE
+under upper bound of the interface: UPPERBOUND
+under lower bound of the interface: LOWERBOUND
+within the interface: WHITIN
+@LINE=UPPERBOUND
+the center of mass of the nanoparticle
+@NP_ZLOC=10
+
+@BETTER_POS=100
+############### Computation parameters ###########
+Number of points to make to try to put H of new protonation there
+@NUMSAMPLE=100
+Distance to put between ION and other atoms
+@ION_DISTANCE=1
+Number of times try to find a place for an ion
+@ION_ATTEPTS=1000
