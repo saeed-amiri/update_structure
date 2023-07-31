@@ -1,7 +1,74 @@
-"""read parameter file
-in this file # is comment symbol
-the equal (=) sign is used for geting the value for the key
-All the info must be in capital
+"""
+Read Parameter File
+
+This script reads a parameter file and extracts key-value pairs from
+it. The parameter file is a text file with lines of
+the form 'key = value'. Lines starting with '#' are considered comments
+and ignored. All the keys in the parameter file must be in capital
+letters.
+
+The script performs the following steps:
+    1. Check the existence of the parameter file.
+    2. Read the parameter file and store the key-value pairs in a
+    dictionary.
+    3. Perform a sanity check to ensure that all essential keys are
+    present in the parameter dictionary.
+
+Usage:
+    The script can be executed directly, and it takes an optional
+    argument 'fname', which specifies the name of the parameter file.
+    If 'fname' is not provided, it defaults to 'update_param'.
+    The script will log information and errors to the 'update.log' file.
+
+Classes:
+    ReadParam:
+        The main class that reads the parameter file, extracts
+        key-value pairs, and performs the sanity check on essential
+        keys.
+
+        Attributes:
+            fname (str): The name of the parameter file.
+            param (dict): A dictionary to store the key-value pairs
+            from the parameter file.
+            log (Logger): The logger object for logging messages.
+            info_msg (str): A message string for logging and writing
+            information.
+            essential_keys (list[str]): A list of essential keys that
+            must exist in the parameter dictionary.
+
+        Methods:
+            __init__(self, fname='update_param', log=None):
+                Initialize the ReadParam object.
+
+            load_param_from_file(self):
+                Check the existence of the parameter file, read its
+                content, and load parameters from the file.
+
+            read_param_file(self):
+                Read the parameter file and store the key-value pairs
+                in self.param dictionary.
+
+            process_line(self, line: str) -> tuple[str, typing.Any]:
+                Process a line from the parameter file and extract
+                the key-value pair.
+
+            check_essential_keys_exist(self):
+                Check if all the essential keys exist in the parameter
+                dictionary.
+
+            write_log_message(self):
+                Write and log messages after processing the parameter
+                file.
+
+    Dependencies:
+    The script relies on several external modules, including:
+     'typing', 'json', 'my_tools', 'logger', and 'colors_text',
+
+    Example:
+    The script can be executed directly to read the 'update_param'
+    file and log the extracted key-value pairs:
+        if __name__ == '__main__':
+            read = ReadParam(log=logger.setup_logger('update.log'))
 """
 
 import sys
@@ -13,7 +80,11 @@ from colors_text import TextColor as bcolors
 
 
 class ReadParam:
-    """read param file here"""
+    """read parameter file
+    in this file # is comment symbol
+    the equal (=) sign is used for geting the value for the key
+    All the info must be in capital
+    """
     info_msg: str = 'Message:\n'  # Message to pass for logging and writing
     fname: str = 'update_param'
     essential_keys: list[str] = [
