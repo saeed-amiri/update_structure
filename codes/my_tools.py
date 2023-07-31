@@ -43,7 +43,25 @@ def check_file_reanme(fname: str,  # Name of the file to check
 def drop_string(input_string: str,
                 string_to_drop: str
                 ) -> str:
-    """drop strings"""
+    """
+    Remove all occurrences of a specified substring from an input
+    string.
+
+    This function performs a substring replacement in the given
+    input_string
+    by removing all instances of the specified string_to_drop.
+    The resulting modified string is returned.
+
+    Parameters:
+        input_string (str): The input string from which the substring
+                            will be removed.
+        string_to_drop (str): The substring that needs to be removed
+                              from the input_string.
+
+    Returns:
+        str: A new string with all occurrences of string_to_drop
+             removed.
+    """
     output_string = input_string.replace(string_to_drop, "")
     return output_string
 
