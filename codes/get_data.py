@@ -119,7 +119,7 @@ class ProcessData:
             self.__get_aptes_indices(zrange)
 
         # Get the indices of the unprotonated APTES residues to be protonated
-        unprot_aptes_ind: list[int] = \
+        unprot_aptes_ind: dict[str, list[int]] = \
             self.find_unprotonated_aptes_chains(sol_phase_aptes)
 
         # Log the number of chains to be protonated
@@ -131,7 +131,7 @@ class ProcessData:
         return self.get_aptes_unproto(unprot_aptes_ind), unprot_aptes_ind
 
     def get_aptes_unproto(self,
-                          unprot_aptes_ind: list[int]  # Index of the APTES
+                          unprot_aptes_ind: dict[str, list[int]]  # Aptes index
                           ) -> pd.DataFrame:
         """Get all atoms in the chains of the unprotonated APTES.
 
@@ -155,7 +155,7 @@ class ProcessData:
 
     def find_unprotonated_aptes_chains(self,
                                        sol_phase_aptes: dict[str, list[int]]
-                                       ) -> list[int]:
+                                       ) -> dict[str, list[int]]:
         """Find all the chains at the interface that require protonation.
 
         Parameters:
@@ -173,7 +173,7 @@ class ProcessData:
             # Get the DataFrame for APTES atoms
             df_apt: pd.DataFrame = self.residues_atoms[aptes]
 
-            # Split the sol_phase_aptes list into chunks for parallel processing
+            # Split the sol_phase_aptes into chunks for parallel processing
             num_processes: int = multip.cpu_count() // 2
             chunk_size: int = len(item) // num_processes
             chunks = [item[i:i + chunk_size] for i in
@@ -181,7 +181,7 @@ class ProcessData:
 
             # Create a Pool of processes
             with multip.Pool(processes=num_processes) as pool:
-                # Process the chunks in parallel using the process_chunk function
+                # Process chunks in parallel using the process_chunk function
                 results = pool.starmap(self.process_chunk,
                                        [(chunk, df_apt) for chunk in chunks])
 
