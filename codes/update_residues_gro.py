@@ -455,9 +455,36 @@ class UpdateResidues:
 def mk_atom_id_cycle(list_len: int,  # Size of the list,
                      id_limit=99999  # Limit of the cycle
                      ) -> list[int]:
-    """list of integers in a cycle for the atom_id.
-    The atom id in the gro file seems like this:
-    The first cycle starts from 1 to 99999, the other cycles start from 0.
+    """
+    Generate a list of unique atom IDs in Gromacs-style cycle.
+
+    The atom IDs in a gro file follow a specific cycle pattern: the
+    first cycle starts from 1 to 99999, and subsequent cycles start
+    from 0 to 99999.
+
+    This function generates a list of unique integers that mimics the
+    Gromacs-style cycle for atom IDs. The generated list can be used
+    to assign unique atom IDs to atoms in a molecular system, ensuring
+    compliance with Gromacs format.
+
+    Parameters:
+        list_len (int): The desired size of the list to be generated.
+                        The function will generate unique atom IDs
+                        until reaching this size.
+        id_limit (int, optional): The upper limit of the atom ID cycle.
+                                  The default value is 99999, which
+                                  follows the Gromacs convention.
+
+    Returns:
+        List[int]: A list of unique atom IDs in Gromacs-style cycle.
+
+    Example:
+        >>> mk_atom_id_cycle(5)
+        [1, 2, 3, 4, 5]
+        >>> mk_atom_id_cycle(8)
+        [1, 2, 3, 4, 5, 0, 1, 2]
+        >>> mk_atom_id_cycle(12, id_limit=100)
+        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0]
     """
     counter: int = 0   # The first atom id
     atoms_id: list[int] = []  # List of the atom id
