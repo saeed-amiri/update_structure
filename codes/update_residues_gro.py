@@ -164,21 +164,26 @@ class UpdateCorDf:
     """preparing COR residue for updating. Nothing needs to be
     change"""
 
-    update_cor: pd.DataFrame  # Updated COR df
+    update_cor: dict[str, pd.DataFrame]  # Updated COR df
 
     def __init__(self,
-                 atoms: pd.DataFrame  # All COR atoms
+                 atoms: dict[str, pd.DataFrame]  # All the cores atoms
                  ) -> None:
         self.update_cor = self.update_cor_df(atoms)
 
     @staticmethod
-    def update_cor_df(atoms: pd.DataFrame  # All COR atoms
-                      ) -> pd.DataFrame:
-        """update core (COR) atoms if needed to be updated"""
-        atom_ids: list[int] = [i+1 for i in range(len(atoms.index))]
-        df_c: pd.DataFrame = atoms.copy()
-        df_c['atom_id'] = atom_ids
-        return df_c
+    def update_cor_df(atoms: dict[str, pd.DataFrame]  # All the cores atoms
+                      ) -> dict[str, pd.DataFrame]:
+        """update core atoms if needed to be updated"""
+        id_updated_cores: dict[str, pd.DataFrame] = {}
+        for cor, item in atoms.items():
+            atom_ids: list[int] = [i+1 for i in range(len(item.index))]
+            df_c: pd.DataFrame = item.copy()
+            df_c['atom_id'] = atom_ids
+            id_updated_cores[cor] = df_c
+            df_c.to_csv(f'{cor}.test', sep=' ')
+            del df_c
+        return id_updated_cores
 
 
 class UpdateOdaDf:
@@ -370,15 +375,18 @@ class UpdateResidues:
                      data: ionization.IonizationSol  # All the data
                      ) -> None:
         """get all the residues"""
+        updated_aptes: dict[str, pd.DataFrame]  # All the updated aptes groups
+        all_cores: dict[str, pd.DataFrame]  # All the cores atoms
         self.updated_residues['SOL'] = self.get_sol(data)
         self.updated_residues['D10'] = self.get_oil(data)
-        self.updated_residues['COR'] = self.get_cor(data)
         self.updated_residues['CLA'] = self.get_ions(data)
         self.updated_residues['ODN'] = self.get_oda(data)
-        updated_aptes: dict[str, pd.DataFrame]  # All the updated aptes groups
         updated_aptes, self.new_hn3 = self.get_aptes(data)
         for aptes, item in updated_aptes.items():
             self.updated_residues[aptes] = item
+        all_cores = self.get_cor(data)
+        for cores, item in all_cores.items():
+            self.updated_residues[cores] = item
 
     @staticmethod
     def get_atoms(atoms: pd.DataFrame,  # Initial system
@@ -418,8 +426,11 @@ class UpdateResidues:
     def get_cor(data: ionization.IonizationSol  # All the data
                 ) -> pd.DataFrame:
         """return core atoms of NP residues"""
-        updated_oils = UpdateCorDf(data.residues_atoms['COR'])
-        return updated_oils.update_cor
+        cores_atoms: dict[str, pd.DataFrame] = {}  # All the cores atoms
+        for cor in data.param['cores']:
+            cores_atoms[cor] = data.residues_atoms[cor]
+        updated_cors = UpdateCorDf(cores_atoms)
+        return updated_cors.update_cor
 
     @staticmethod
     def get_ions(data: ionization.IonizationSol  # All the data
