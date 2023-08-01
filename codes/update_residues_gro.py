@@ -412,7 +412,8 @@ class UpdateResidues:
     def get_sol(data: ionization.IonizationSol  # All the data
                 ) -> pd.DataFrame:
         """return water residues"""
-        return data.residues_atoms['SOL']
+        updated_sol = UpdateSolDf(data.residues_atoms['SOL'])
+        return updated_sol.update_waters
 
     @staticmethod
     def get_oil(data: ionization.IonizationSol  # All the data
