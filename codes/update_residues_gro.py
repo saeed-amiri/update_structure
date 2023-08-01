@@ -157,17 +157,28 @@ class UpdateSolDf:
                         atoms: pd.DataFrame  # All SOL atoms
                         ) -> pd.DataFrame:
         """update water atoms if needed to be updated"""
+        atoms_c = atoms.copy()
         nr_atoms: int = len(atoms.index)
         zero_res: int = atoms['residue_number'].iloc[0]
         updated_res_id: list[int] = \
-            self.get_updated_residue_index(nr_atoms, zero_res)
-        atoms['residue_number'] = updated_res_id
-        atoms.to_csv('sol_res_update.test', sep=' ')
+            self.update_residue_index(nr_atoms, zero_res)
+        atoms_c.loc[:, 'residue_number'] = updated_res_id
+        updated_atom_id: list[int] = \
+            self.update_atom_index(nr_atoms, zero_atom=1)
+        atoms_c.loc[:, 'atom_id'] = updated_atom_id
+        atoms_c.to_csv('sol_res_update.test', sep=' ')
 
     @staticmethod
-    def get_updated_residue_index(nr_atoms: int,  # Number of all SOL atoms
-                                  zero_res: int  # First residues index
-                                  ) -> list[int]:
+    def update_atom_index(nr_atoms: int,  # Number of all SOL atoms
+                          zero_atom: int  # First residues index
+                          ) -> list[int]:
+        """update atoms indices"""
+        return mk_atom_id_cycle(nr_atoms, zero_atom)
+
+    @staticmethod
+    def update_residue_index(nr_atoms: int,  # Number of all SOL atoms
+                             zero_res: int  # First residues index
+                             ) -> list[int]:
         """
         Prepare the the residues index of the sol molecules
         """
