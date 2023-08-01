@@ -158,8 +158,11 @@ class UpdateSolDf:
                         ) -> pd.DataFrame:
         """update water atoms if needed to be updated"""
         nr_atoms: int = len(atoms.index)
-        zero_res: int = atoms['residue_number']
-        self.get_updated_residue_index(nr_atoms, zero_res)
+        zero_res: int = atoms['residue_number'].iloc[0]
+        updated_res_id: list[int] = \
+            self.get_updated_residue_index(nr_atoms, zero_res)
+        atoms['residue_number'] = updated_res_id
+        atoms.to_csv('sol_res_update.test', sep=' ')
 
     @staticmethod
     def get_updated_residue_index(nr_atoms: int,  # Number of all SOL atoms
@@ -168,10 +171,10 @@ class UpdateSolDf:
         """
         Prepare the the residues index of the sol molecules
         """
-        llist = mk_atom_id_cycle(nr_atoms, zero_res)
-        print(llist)
-        print(len(llist))
-        return llist
+        n_atom_per_res: int = 3  # Number of atoms in SOL residues
+        list_index: list[int] = \
+            mk_atom_id_cycle(nr_atoms//n_atom_per_res, zero_res)
+        return repeat_items(list_index, n_atom_per_res)
 
 
 class UpdateCorDf:
@@ -513,6 +516,7 @@ def mk_atom_id_cycle(list_len: int,  # Size of the list,
         atoms_id.extend(slice_i)
         del slice_i
     return atoms_id[:list_len]
+
 
 def repeat_items(lst: list[int],  # List index which should repeat for residues
                  n_atom_per_res: int  # Number of the atoms in residues
