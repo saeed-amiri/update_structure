@@ -37,7 +37,7 @@ class UpdateAptesDf:
                         h_velocities: dict[str, dict[int, np.ndarray]]  # H vel
                         ) -> tuple[pd.DataFrame, pd.DataFrame]:
         """update the aptes dataframe by adding new HN3 atoms"""
-        nh3_atoms: pd.DataFrame = \
+        nh3_atoms: dict[str, pd.DataFrame] = \
             self.prepare_hydrogens(h_positions, h_velocities)
         all_aptes: pd.DataFrame = self.__append_hydrogens(df_aptes, nh3_atoms)
         updated_aptes: pd.DataFrame = self.__update_aptes_atom_id(all_aptes)
@@ -273,7 +273,42 @@ class UpdateIonDf:
 
 
 class UpdateResidues:
-    """get all the dataframes as an object"""
+    """get all the dataframes as an object
+    data: ionization.IonizationSol has following attributes:
+
+        'atoms': pd.DataFrame -> All atoms from get_data.py
+
+        'h_porotonations': dict[str, dict[int, np.ndarray]] -> All new
+                           HN3 positions from protonation.py
+
+        'h_velocities': dict[str, dict[int, np.ndarray]] -> All new
+                        HN3 velocities from protonation.py
+
+        'ion_poses': list[np.ndarray] -> Positoin for ions from
+                     ionization.py
+
+        'ion_velos': list[np.ndarray] -> Positoin for ions from
+                     ionization.py
+
+        'np_diameter': np.float64  -> Diameter of NP, based on APTES
+                      positions from get_data.py
+
+        'param': dict[str, typing.Any] -> Parameters for reading data
+                 from read_param.py
+
+        'pbc_box': str -> PBC of the system from get_data.py
+
+        'residues_atoms': dict[str, pd.DataFrame] -> Atoms info for
+                          each residue from get_data.py
+
+        'title': str -> Name of the system from get_data.py
+
+        'unprot_aptes_ind': dict[str, list[int]]  -> Index of APTES to
+                            be protonated from get_data.py
+
+        'unproton_aptes': dict[str, pd.DataFrame]  -> APTES which
+                          should be protonated from get_data.py
+    """
 
     # To append all the residues to the dict
     updated_residues: dict[str, pd.DataFrame] = {}
