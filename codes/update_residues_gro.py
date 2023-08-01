@@ -167,6 +167,7 @@ class UpdateSolDf:
             self.update_atom_index(nr_atoms, zero_atom=1)
         atoms_c.loc[:, 'atom_id'] = updated_atom_id
         atoms_c.to_csv('sol_res_update.test', sep=' ')
+        return atoms_c
 
     @staticmethod
     def update_atom_index(nr_atoms: int,  # Number of all SOL atoms
