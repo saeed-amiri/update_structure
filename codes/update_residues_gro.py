@@ -157,6 +157,10 @@ class UpdateSolDf:
     def update_water_df(atoms: pd.DataFrame  # All SOL atoms
                         ) -> pd.DataFrame:
         """update water atoms if needed to be updated"""
+        length = len(atoms.index) // 3
+        llist = mk_atom_id_cycle(length, 1803)
+        print(llist)
+        print(len(llist))
         return atoms
 
 
@@ -355,7 +359,8 @@ class UpdateResidues:
         """set the atom_id for the all the atoms"""
         df_c: pd.DataFrame = combine_residues.copy()
         # Specify the limit for the atom IDs
-        atom_id: list[int] = mk_atom_id_cycle(len(combine_residues))
+        atom_id: list[int] = \
+            mk_atom_id_cycle(len(combine_residues), start_id=1)
         # Calculate the number of cycles
         df_c['atom_id'] = atom_id
         df_c.to_csv('combine_residues', sep=' ')
@@ -453,45 +458,43 @@ class UpdateResidues:
 
 # Helper function to update index in gro fasion
 def mk_atom_id_cycle(list_len: int,  # Size of the list,
+                     start_id: int,  # First index of the residues
                      id_limit=99999  # Limit of the cycle
                      ) -> list[int]:
     """
-    Generate a list of unique atom IDs in Gromacs-style cycle.
+    Generate a list of unique atom IDs in a custom cycle.
 
-    The atom IDs in a gro file follow a specific cycle pattern: the
-    first cycle starts from 1 to 99999, and subsequent cycles start
-    from 0 to 99999.
-
-    This function generates a list of unique integers that mimics the
-    Gromacs-style cycle for atom IDs. The generated list can be used
-    to assign unique atom IDs to atoms in a molecular system, ensuring
-    compliance with Gromacs format.
+    This function generates a list of unique integers that follows a
+    custom cycle pattern for atom IDs. The first cycle starts from the
+    provided 'start_id' and goes up to 'id_limit', and subsequent
+    cycles continue from 0 to 'id_limit'.
 
     Parameters:
         list_len (int): The desired size of the list to be generated.
                         The function will generate unique atom IDs
                         until reaching this size.
+        start_id (int, optional): The starting value for the first
+                                  cycle. The default value is 1.
         id_limit (int, optional): The upper limit of the atom ID cycle.
-                                  The default value is 99999, which
-                                  follows the Gromacs convention.
+                                  The default value is 99999.
 
     Returns:
-        List[int]: A list of unique atom IDs in Gromacs-style cycle.
+        List[int]: A list of unique atom IDs in the custom cycle.
 
     Example:
         >>> mk_atom_id_cycle(5)
         [1, 2, 3, 4, 5]
-        >>> mk_atom_id_cycle(8)
-        [1, 2, 3, 4, 5, 0, 1, 2]
-        >>> mk_atom_id_cycle(12, id_limit=100)
-        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0]
+        >>> mk_atom_id_cycle(8, start_id=10)
+        [10, 11, 12, 13, 14, 0, 1, 2]
+        >>> mk_atom_id_cycle(12, start_id=100, id_limit=105)
+        [100, 101, 102, 103, 104, 105, 0, 1, 2, 3, 4, 5]
     """
-    counter: int = 0   # The first atom id
-    atoms_id: list[int] = []  # List of the atom id
+    counter = 0
+    atoms_id = []
     while counter < list_len:
         if counter == 0:
-            cycle_i = 1
-            cycle_f = id_limit
+            cycle_i = start_id
+            cycle_f = id_limit + 1 - start_id
         else:
             cycle_i = 0
             cycle_f = id_limit + 1
