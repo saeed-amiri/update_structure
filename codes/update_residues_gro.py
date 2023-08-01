@@ -514,7 +514,9 @@ def mk_atom_id_cycle(list_len: int,  # Size of the list,
         del slice_i
     return atoms_id[:list_len]
 
-def repeat_items(lst: list, n: int) -> list:
+def repeat_items(lst: list[int],  # List index which should repeat for residues
+                 n_atom_per_res: int  # Number of the atoms in residues
+                 ) -> list:
     """
     Repeat each item in the list 'n' times.
 
@@ -534,7 +536,7 @@ def repeat_items(lst: list, n: int) -> list:
         >>> repeat_items(['a', 'b', 'c'], 3)
         ['a', 'a', 'a', 'b', 'b', 'b', 'c', 'c', 'c']
     """
-    repeated_list = [item for item in lst for _ in range(n)]
+    repeated_list = [item for item in lst for _ in range(n_atom_per_res)]
     return repeated_list
 
 
