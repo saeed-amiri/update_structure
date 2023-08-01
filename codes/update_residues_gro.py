@@ -373,9 +373,12 @@ class UpdateResidues:
         self.updated_residues['SOL'] = self.get_sol(data)
         self.updated_residues['D10'] = self.get_oil(data)
         self.updated_residues['COR'] = self.get_cor(data)
-        self.updated_residues['APT'], self.new_hn3 = self.get_aptes(data)
         self.updated_residues['CLA'] = self.get_ions(data)
         self.updated_residues['ODN'] = self.get_oda(data)
+        updated_aptes: dict[str, pd.DataFrame]  # All the updated aptes groups
+        updated_aptes, self.new_hn3 = self.get_aptes(data)
+        for aptes, item in updated_aptes.items():
+            self.updated_residues[aptes] = item
 
     @staticmethod
     def get_atoms(atoms: pd.DataFrame,  # Initial system
