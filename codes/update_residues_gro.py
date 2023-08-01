@@ -25,16 +25,16 @@ class UpdateAptesDf:
 
     def __init__(self,
                  df_aptes: pd.DataFrame,  # All the APTES informations
-                 h_positions: dict[int, np.ndarray],  # Index and coordinates
-                 h_velocities: dict[int, np.ndarray]  # Index and velocities
+                 h_positions: dict[str, dict[int, np.ndarray]],  # Coordinates
+                 h_velocities: dict[str, dict[int, np.ndarray]]  # Velocities
                  ) -> None:
         self.update_aptes, self.new_nh3 = \
             self.update_aptes_df(df_aptes, h_positions, h_velocities)
 
     def update_aptes_df(self,
                         df_aptes: pd.DataFrame,  # Aptes chains
-                        h_positions: dict[int, np.ndarray],  # H positions
-                        h_velocities: dict[int, np.ndarray]  # H velocities
+                        h_positions: dict[str, dict[int, np.ndarray]],  # H pos
+                        h_velocities: dict[str, dict[int, np.ndarray]]  # H vel
                         ) -> tuple[pd.DataFrame, pd.DataFrame]:
         """update the aptes dataframe by adding new HN3 atoms"""
         nh3_atoms: pd.DataFrame = \
@@ -60,22 +60,75 @@ class UpdateAptesDf:
         return pd.concat([df_aptes, hn3_atoms], ignore_index=False)
 
     @staticmethod
-    def prepare_hydrogens(h_positions: dict[int, np.ndarray],  # H positions
-                          h_velocities: dict[int, np.ndarray]  # H velocities
-                          ) -> pd.DataFrame:
-        """prepare the aptes based on the structure of the main df"""
+    def prepare_hydrogens(h_positions: dict[str, dict[int, np.ndarray]],
+                          h_velocities: dict[str, dict[int, np.ndarray]]
+                          ) -> dict[str, pd.DataFrame]:
+        """
+        Prepare the aptes based on the structure of the main DataFrame.
+
+        This method takes the positions and velocities of hydrogen atoms
+        (HN3) and prepares a DataFrame for each APTES molecule based on
+        the provided positions and velocities.
+
+        Parameters:
+            h_positions (Dict[str, Dict[int, np.ndarray]]): A dictionary
+                containing hydrogen positions for each APTES molecule.
+                The dictionary has APTES names as keys, and each value is
+                another dictionary with integer keys (atom IDs) and numpy
+                arrays representing the 3D coordinates (x, y, z) of the
+                hydrogen atom.
+            h_velocities (Dict[str, Dict[int, np.ndarray]]): A dictionary
+                containing hydrogen velocities for each APTES molecule.
+                The dictionary has APTES names as keys, and each value is
+                another dictionary with integer keys (atom IDs) and numpy
+                arrays representing the 3D velocities (vx, vy, vz) of the
+                hydrogen atom.
+
+        Returns:
+            Dict[str, pd.DataFrame]: A dictionary containing DataFrames
+            for each APTES molecule, with columns ['residue_number',
+            'residue_name', 'atom_name', 'atom_id', 'x', 'y', 'z', 'vx',
+            'vy', 'vz'], where each row represents a hydrogen atom with
+            its respective properties.
+
+        Example:
+            h_positions = {'APTES1': {1: np.array([1.0, 2.0, 3.0]),
+                                      2: np.array([4.0, 5.0, 6.0])},
+                           'APTES2': {1: np.array([7.0, 8.0, 9.0]),
+                                      2: np.array([10.0, 11.0, 12.0])}}
+
+            h_velocities = {'APTES1': {1: np.array([0.1, 0.2, 0.3]),
+                                       2: np.array([0.4, 0.5, 0.6])},
+                            'APTES2': {1: np.array([0.7, 0.8, 0.9]),
+                                       2: np.array([0.10, 0.11, 0.12])}}
+
+            result = prepare_hydrogens(h_positions, h_velocities)
+
+            Output:
+            {'APTES1': residue_number residue_name atom_name atom_id\
+                    x    y    z   vx   vy   vz
+                       0  1  APTES  HN3  1  1.0  2.0  3.0  0.1  0.2  0.3
+                       1  2  APTES  HN3  2  4.0  5.0  6.0  0.4  0.5  0.6,
+             'APTES2': residue_number residue_name atom_name atom_id\
+                    x    y    z   vx   vy   vz
+                         0  1  APTES  HN3  1  7.0  8.0  9.0  0.7  0.8  0.9
+                         1  2  APTES  HN3  2 10.0 11.0 12.0 0.10 0.11 0.12
+                         }}
+        """
         cols: list[str] = \
             ['residue_number', 'residue_name', 'atom_name', 'atom_id',
              'x', 'y', 'z', 'vx', 'vy', 'vz']
-        hn3_atoms: pd.DataFrame = pd.DataFrame(columns=cols)
-
-        for i, (key, pos) in enumerate(h_positions.items()):
-            atom_id = i+1
-            velo = h_velocities[key]
-            hn3_atoms.loc[i] = \
-                [key, 'APT', 'HN3', atom_id, pos[0],
-                 pos[1], pos[2], velo[0], velo[1], velo[2]]
-        return hn3_atoms
+        hn3_atoms_dict: dict[str, np.ndarray] = {}
+        for aptes, positions in h_positions.items():
+            hn3_atoms_i: pd.DataFrame = pd.DataFrame(columns=cols)
+            for i, (key, pos) in enumerate(positions.items()):
+                atom_id = i+1
+                velo = h_velocities[aptes][int(key)]
+                hn3_atoms_i.loc[i] = \
+                    [key, aptes, 'HN3', atom_id, pos[0],
+                     pos[1], pos[2], velo[0], velo[1], velo[2]]
+            hn3_atoms_dict[aptes] = hn3_atoms_i
+        return hn3_atoms_dict
 
 
 class UpdateSolDf:
