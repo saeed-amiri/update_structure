@@ -153,15 +153,25 @@ class UpdateSolDf:
                  ) -> None:
         self.update_waters = self.update_water_df(atoms)
 
-    @staticmethod
-    def update_water_df(atoms: pd.DataFrame  # All SOL atoms
+    def update_water_df(self,
+                        atoms: pd.DataFrame  # All SOL atoms
                         ) -> pd.DataFrame:
         """update water atoms if needed to be updated"""
-        length = len(atoms.index) // 3
-        llist = mk_atom_id_cycle(length, 1803)
+        nr_atoms: int = len(atoms.index)
+        zero_res: int = atoms['residue_number']
+        self.get_updated_residue_index(nr_atoms, zero_res)
+
+    @staticmethod
+    def get_updated_residue_index(nr_atoms: int,  # Number of all SOL atoms
+                                  zero_res: int  # First residues index
+                                  ) -> list[int]:
+        """
+        Prepare the the residues index of the sol molecules
+        """
+        llist = mk_atom_id_cycle(nr_atoms, zero_res)
         print(llist)
         print(len(llist))
-        return atoms
+        return llist
 
 
 class UpdateCorDf:
@@ -503,6 +513,29 @@ def mk_atom_id_cycle(list_len: int,  # Size of the list,
         atoms_id.extend(slice_i)
         del slice_i
     return atoms_id[:list_len]
+
+def repeat_items(lst: list, n: int) -> list:
+    """
+    Repeat each item in the list 'n' times.
+
+    This function takes a list and repeats each item in the list 'n'
+    times, creating a new list with the repeated items.
+
+    Parameters:
+        lst (list): The input list to repeat items from.
+        n (int): The number of times each item should be repeated.
+
+    Returns:
+        List: A new list with each item repeated 'n' times.
+
+    Example:
+        >>> repeat_items([1, 2, 3], 2)
+        [1, 1, 2, 2, 3, 3]
+        >>> repeat_items(['a', 'b', 'c'], 3)
+        ['a', 'a', 'a', 'b', 'b', 'b', 'c', 'c', 'c']
+    """
+    repeated_list = [item for item in lst for _ in range(n)]
+    return repeated_list
 
 
 if __name__ == '__main__':
