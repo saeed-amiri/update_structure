@@ -20,11 +20,11 @@ class UpdateAptesDf:
     positions, we have to make H atoms to be added to the gro file.
     """
 
-    update_aptes: pd.DataFrame  # Updated APTES df
-    new_nh3: pd.DataFrame  # All the new HN3 atoms
+    update_aptes:  dict[str, pd.DataFrame]  # Updated APTES df
+    new_nh3:  dict[str, pd.DataFrame]  # All the new HN3 atoms
 
     def __init__(self,
-                 df_aptes: pd.DataFrame,  # All the APTES informations
+                 df_aptes: dict[str, pd.DataFrame],  # All the APTES informatio
                  h_positions: dict[str, dict[int, np.ndarray]],  # Coordinates
                  h_velocities: dict[str, dict[int, np.ndarray]]  # Velocities
                  ) -> None:
@@ -32,32 +32,43 @@ class UpdateAptesDf:
             self.update_aptes_df(df_aptes, h_positions, h_velocities)
 
     def update_aptes_df(self,
-                        df_aptes: pd.DataFrame,  # Aptes chains
+                        df_aptes: dict[str, pd.DataFrame],  # Aptes chains
                         h_positions: dict[str, dict[int, np.ndarray]],  # H pos
                         h_velocities: dict[str, dict[int, np.ndarray]]  # H vel
-                        ) -> tuple[pd.DataFrame, pd.DataFrame]:
+                        ) -> tuple[dict[str, pd.DataFrame],
+                                   dict[str, pd.DataFrame]]:
         """update the aptes dataframe by adding new HN3 atoms"""
         nh3_atoms: dict[str, pd.DataFrame] = \
             self.prepare_hydrogens(h_positions, h_velocities)
-        all_aptes: pd.DataFrame = self.__append_hydrogens(df_aptes, nh3_atoms)
-        updated_aptes: pd.DataFrame = self.__update_aptes_atom_id(all_aptes)
+        all_aptes:  dict[str, pd.DataFrame] = \
+            self.__append_hydrogens(df_aptes, nh3_atoms)
+        updated_aptes:  dict[str, pd.DataFrame] = \
+            self.__update_aptes_atom_id(all_aptes)
         return updated_aptes, nh3_atoms
 
     @staticmethod
-    def __update_aptes_atom_id(df_aptes: pd.DataFrame  # APTES from file
-                               ) -> pd.DataFrame:
+    def __update_aptes_atom_id(df_aptes: dict[str, pd.DataFrame]  # APTES
+                               ) -> dict[str, pd.DataFrame]:
         """reindex atoms and residues ids from 1"""
-        df_c: pd.DataFrame = df_aptes.copy()
-        atom_ind: list[int] = [i+1 for i in range(len(df_c))]
-        df_c['atom_id'] = atom_ind
-        return df_c
+        id_updated_aptes: dict[str, pd.DataFrame] = {}
+        for aptes, item in df_aptes.items():
+            df_c: pd.DataFrame = item.copy()
+            atom_ind: list[int] = [i+1 for i in range(len(df_c))]
+            df_c['atom_id'] = atom_ind
+            id_updated_aptes[aptes] = df_c
+            del df_c
+        return id_updated_aptes
 
     @staticmethod
-    def __append_hydrogens(df_aptes: pd.DataFrame,  # Aptes chains
+    def __append_hydrogens(df_aptes: dict[str, pd.DataFrame],  # Aptes chains
                            hn3_atoms: pd.DataFrame  # H atoms to append
-                           ) -> pd.DataFrame:
+                           ) -> dict[str, pd.DataFrame]:
         """append NH3 atoms to the main df"""
-        return pd.concat([df_aptes, hn3_atoms], ignore_index=False)
+        appneded_hn3_df: dict[str, pd.DataFrame] = {}
+        for aptes, item in df_aptes.items():
+            appneded_hn3_df[aptes] = \
+                pd.concat([item, hn3_atoms[aptes]], ignore_index=False)
+        return appneded_hn3_df
 
     @staticmethod
     def prepare_hydrogens(h_positions: dict[str, dict[int, np.ndarray]],
@@ -374,11 +385,14 @@ class UpdateResidues:
         """append the new atoms to the main dataframe with all atoms"""
         return pd.concat([atoms, new_hn3, new_ions])
 
-    @staticmethod
-    def get_aptes(data: ionization.IonizationSol  # All the data
+    def get_aptes(self,
+                  data: ionization.IonizationSol  # All the data
                   ) -> tuple[pd.DataFrame, pd.DataFrame]:
         """get updated aptes dataframe"""
-        updated_aptes = UpdateAptesDf(data.residues_atoms['APT'],
+        aptes_df_dict: dict[str, pd.DataFrame] = {}
+        for aptes in data.param['aptes']:
+            aptes_df_dict[aptes] = data.residues_atoms[aptes]
+        updated_aptes = UpdateAptesDf(aptes_df_dict,
                                       data.h_porotonations,
                                       data.h_velocities)
         return updated_aptes.update_aptes, updated_aptes.new_nh3
