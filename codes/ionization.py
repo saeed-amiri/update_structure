@@ -209,7 +209,7 @@ class IonizationSol(proton.FindHPosition):
         if len(poses) < n_portons:
             sys.exit(f'{bcolors.FAIL}{self.__module__}:\n'
                      f'\t Number of ions positoins: `{len(poses)}` is smaller'
-                     f' than protonation: `{n_portons}`')
+                     f' than protonation: `{n_portons}`{bcolors.ENDC}\n')
         else:
             # Combine the two lists using zip
             combined = list(zip(d_ions, poses, velos))
