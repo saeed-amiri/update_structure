@@ -12,6 +12,7 @@ import sys
 import numpy as np
 import pandas as pd
 import ionization
+import my_tools
 
 
 class UpdateBaseDf:
@@ -78,6 +79,37 @@ class UpdateBaseDf:
         return repeat_items(list_index, self.atoms_per_res)
 
 
+class UpdateNanoParticle:
+    """
+    Update nanoparticles by staking cores aptes by fixing the indicies
+    """
+    def __init__(self,
+                 aptes_df: pd.DataFrame,  # Aptes' atoms
+                 cores_df: pd.DataFrame,  # Cores' atoms
+                 ) -> None:
+        self.nanop_updated: pd.DataFrame = \
+            self.stack_nano_p(aptes_df, cores_df)
+
+    def stack_nano_p(self,
+                     aptes_df: pd.DataFrame,  # Aptes' atoms
+                     cores_df: pd.DataFrame  # Cores' atoms
+                     ) -> pd.DataFrame:
+        """making the total nanoparticle"""
+        cor_lst_atom: int = cores_df.iloc[-1]['atom_id']
+        cor_lst_res: int = cores_df.iloc[-1]['residue_number']
+        aptes_df = self.update_aptes_atom_id(aptes_df, cor_lst_atom)
+        return pd.concat([cores_df, aptes_df])
+
+    @staticmethod
+    def update_aptes_atom_id(aptes_df: pd.DataFrame,  # Aptes atoms
+                             cor_lst_atom: int
+                             ) -> pd.DataFrame:
+        """update the indices of the aptes"""
+        atoms_c: pd.DataFrame = aptes_df.copy()
+        atoms_c['atom_id'] += cor_lst_atom
+        return atoms_c
+
+
 class UpdateAptesDf:
     """
     Updates APTES dataframe, by adding the hydrogens. Based on the
@@ -131,7 +163,7 @@ class UpdateAptesDf:
         appneded_hn3_df: dict[str, pd.DataFrame] = {}
         for aptes, item in df_aptes.items():
             appneded_hn3_df[aptes] = \
-                pd.concat([item, hn3_atoms[aptes]], ignore_index=False)
+                pd.concat([item, hn3_atoms[aptes]], ignore_index=True)
         return appneded_hn3_df
 
     @staticmethod
@@ -204,6 +236,32 @@ class UpdateAptesDf:
                      pos[1], pos[2], velo[0], velo[1], velo[2]]
             hn3_atoms_dict[aptes] = hn3_atoms_i
         return hn3_atoms_dict
+
+
+class UpdateCorDf:
+    """preparing COR residue for updating. Nothing needs to be
+    change"""
+
+    update_cor: dict[str, pd.DataFrame]  # Updated COR df
+
+    def __init__(self,
+                 atoms: dict[str, pd.DataFrame]  # All the cores atoms
+                 ) -> None:
+        self.update_cor = self.update_cor_df(atoms)
+
+    @staticmethod
+    def update_cor_df(atoms: dict[str, pd.DataFrame]  # All the cores atoms
+                      ) -> dict[str, pd.DataFrame]:
+        """update core atoms if needed to be updated"""
+        id_updated_cores: dict[str, pd.DataFrame] = {}
+        for cor, item in atoms.items():
+            atom_ids: list[int] = [i+1 for i in range(len(item.index))]
+            df_c: pd.DataFrame = item.copy()
+            df_c['atom_id'] = atom_ids
+            id_updated_cores[cor] = df_c
+            df_c.to_csv(f'{cor}.test', sep=' ')
+            del df_c
+        return id_updated_cores
 
 
 class UpdateSolDf(UpdateBaseDf):
@@ -311,32 +369,6 @@ class UpdateIonDf(UpdateBaseDf):
         return new_ions
 
 
-class UpdateCorDf:
-    """preparing COR residue for updating. Nothing needs to be
-    change"""
-
-    update_cor: dict[str, pd.DataFrame]  # Updated COR df
-
-    def __init__(self,
-                 atoms: dict[str, pd.DataFrame]  # All the cores atoms
-                 ) -> None:
-        self.update_cor = self.update_cor_df(atoms)
-
-    @staticmethod
-    def update_cor_df(atoms: dict[str, pd.DataFrame]  # All the cores atoms
-                      ) -> dict[str, pd.DataFrame]:
-        """update core atoms if needed to be updated"""
-        id_updated_cores: dict[str, pd.DataFrame] = {}
-        for cor, item in atoms.items():
-            atom_ids: list[int] = [i+1 for i in range(len(item.index))]
-            df_c: pd.DataFrame = item.copy()
-            df_c['atom_id'] = atom_ids
-            id_updated_cores[cor] = df_c
-            df_c.to_csv(f'{cor}.test', sep=' ')
-            del df_c
-        return id_updated_cores
-
-
 class UpdateResidues:
     """get all the dataframes as an object
     data: ionization.IonizationSol has following attributes:
@@ -414,7 +446,7 @@ class UpdateResidues:
     def concate_residues(self) -> pd.DataFrame:
         """concate all the residues in one dataframe, The order is
         very important. it should follow the order in the main file"""
-        cols_order: list[str] = ['SOL', 'CLA', 'ODN', 'D10', 'COR', 'APT']
+        cols_order: list[str] = ['SOL', 'CLA', 'ODN', 'D10']
         # Concatenate DataFrames in the desired order
         combine_residues: pd.DataFrame = \
             pd.concat([self.updated_residues[col] for col in cols_order],
@@ -427,7 +459,7 @@ class UpdateResidues:
         """get all the residues"""
         updated_aptes: dict[str, pd.DataFrame]  # All the updated aptes groups
         all_cores: dict[str, pd.DataFrame]  # All the cores atoms
-        
+
         update_sol: UpdateSolDf = self.get_sol(data)
         self.updated_residues['SOL'] = update_sol.update_df
 
@@ -447,11 +479,34 @@ class UpdateResidues:
         self.updated_residues['CLA'] = update_ion.update_df
 
         updated_aptes, self.new_hn3 = self.get_aptes(data)
-        for aptes, item in updated_aptes.items():
-            self.updated_residues[aptes] = item
+        updated_np_dict: dict[str, pd.DataFrame] = \
+            self.update_nanoparticles(data, updated_aptes)
+
+        last_residue: int = update_ion.last_res + 1
+        last_atom: int = update_ion.last_atom + 1
+        # update_np = UpdateBaseDf(np_atoms, last_residue, last_atom)
+        # self.updated_residues[np_name] = update_np.update_df
+        # last_residue = update_np.last_res + 1
+        # last_atom = update_np.last_atom + 1
+
+    def update_nanoparticles(self,
+                             data: ionization.IonizationSol,
+                             updated_aptes:  dict[str, pd.DataFrame]
+                             ) -> dict[str, pd.DataFrame]:
+        """update nanoparticles"""
         all_cores = self.get_cor(data)
-        for cores, item in all_cores.items():
-            self.updated_residues[cores] = item
+        updated_np_dict: dict[str, pd.DataFrame] = {}
+        for i in range(len(data.param['itp_files'])):
+            aptes: str = data.param['aptes'][i]
+            cores: str = data.param['cores'][i]
+            np_atoms = UpdateNanoParticle(
+                aptes_df=updated_aptes[aptes], cores_df=all_cores[cores])
+            np_name: str = \
+                my_tools.drop_string(data.param['itp_files'][i], '.itp')
+            np_atoms.nanop_updated.to_csv(f'{np_name}.test', sep=' ')
+            updated_np_dict[data.param['itp_files'][i]] = \
+                np_atoms.nanop_updated
+        return updated_np_dict
 
     @staticmethod
     def get_atoms(atoms: pd.DataFrame,  # Initial system
@@ -463,7 +518,7 @@ class UpdateResidues:
 
     def get_aptes(self,
                   data: ionization.IonizationSol  # All the data
-                  ) -> tuple[pd.DataFrame, pd.DataFrame]:
+                  ) -> tuple[dict[str, pd.DataFrame], pd.DataFrame]:
         """get updated aptes dataframe"""
         aptes_df_dict: dict[str, pd.DataFrame] = {}
         for aptes in data.param['aptes']:
@@ -506,7 +561,7 @@ class UpdateResidues:
     def get_oda(data: ionization.IonizationSol,  # All the data
                 oil_last_res: int,  # Last residue index in water
                 oil_last_atom: int  # Last atom index in water
-                ) -> tuple[pd.DataFrame, pd.DataFrame]:
+                ) -> UpdateOdaDf:
         """get updated ions data frame"""
         updated_oda = UpdateOdaDf(data.residues_atoms['ODN'],
                                   oil_last_res,
@@ -518,7 +573,7 @@ class UpdateResidues:
     def get_ions(data: ionization.IonizationSol,  # All the data
                  oda_last_res: int,
                  oda_last_atom: int
-                 ) -> tuple[pd.DataFrame, pd.DataFrame]:
+                 ) -> UpdateIonDf:
         """get updated ions data frame"""
         updated_ions = UpdateIonDf(data.residues_atoms['CLA'],
                                    data.ion_poses,
