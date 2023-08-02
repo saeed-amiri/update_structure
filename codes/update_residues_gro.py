@@ -475,6 +475,16 @@ class UpdateResidues:
         return updated_aptes.update_aptes, updated_aptes.new_nh3
 
     @staticmethod
+    def get_cor(data: ionization.IonizationSol  # All the data
+                ) -> pd.DataFrame:
+        """return core atoms of NP residues"""
+        cores_atoms: dict[str, pd.DataFrame] = {}  # All the cores atoms
+        for cor in data.param['cores']:
+            cores_atoms[cor] = data.residues_atoms[cor]
+        updated_cors = UpdateCorDf(cores_atoms)
+        return updated_cors.update_cor
+
+    @staticmethod
     def get_sol(data: ionization.IonizationSol  # All the data
                 ) -> pd.DataFrame:
         """return water residues"""
@@ -517,16 +527,6 @@ class UpdateResidues:
                                    oda_last_atom
                                    )
         return updated_ions
-
-    @staticmethod
-    def get_cor(data: ionization.IonizationSol  # All the data
-                ) -> pd.DataFrame:
-        """return core atoms of NP residues"""
-        cores_atoms: dict[str, pd.DataFrame] = {}  # All the cores atoms
-        for cor in data.param['cores']:
-            cores_atoms[cor] = data.residues_atoms[cor]
-        updated_cors = UpdateCorDf(cores_atoms)
-        return updated_cors.update_cor
 
 
 # Helper function to update index in gro fasion
