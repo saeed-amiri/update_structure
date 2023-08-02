@@ -443,7 +443,6 @@ class UpdateResidues:
         update_ion: UpdateIonDf = self.get_ions(data,
                                                 update_oda.last_res,
                                                 update_oda.last_atom)
-
         self.updated_residues['CLA'] = update_ion.update_df
 
         updated_aptes, self.new_hn3 = self.get_aptes(data)
