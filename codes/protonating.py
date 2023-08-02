@@ -24,7 +24,7 @@ class FindHPosition(get_data.ProcessData):
     Attributes of get_data.ProcessData:
 
         atoms: pd.DataFrame  -> All atoms dataframe
-        param: dict[str, float]  -> All the parameters from input file
+        param: dict[str, Any]  -> All the parameters from input file
         residues_atoms: dict[str, pd.DataFrame]  # Atoms info for each
                                                    residue
         unproton_aptes: dict[str, pd.DataFrame]  # APTES to be protonated
