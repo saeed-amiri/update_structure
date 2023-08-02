@@ -193,6 +193,58 @@ class UpdateSolDf:
         return repeat_items(list_index, n_atom_per_res)
 
 
+class UpdateOilDf:
+    """preparing D10 residue for updating.The residue index should be
+    changed"""
+
+    update_oil: pd.DataFrame  # Updated D10 df
+
+    def __init__(self,
+                 atoms: pd.DataFrame,  # All oil atoms
+                 sol_last_res: int,  # Last residue index in water
+                 sol_last_atom: int  # Last atom index in water
+                 ) -> None:
+        self.update_oil = \
+            self.update_oil_df(atoms, sol_last_res, sol_last_atom)
+
+    def update_oil_df(self,
+                      atoms: pd.DataFrame,  # All oil atoms
+                      sol_last_res: int,  # Last residue index in water
+                      sol_last_atom: int  # Last atom index in water
+                      ) -> pd.DataFrame:
+        """update oil atoms if needed to be updated"""
+        atoms_c: pd.DataFrame = atoms.copy()
+        nr_atoms: int = len(atoms_c.index)
+        updated_res_id: list[int] = \
+            self.update_residue_index(nr_atoms, zero_res=sol_last_res)
+        atoms_c.loc[:, 'residue_number'] = updated_res_id
+
+        updated_atom_id: list[int] = \
+            self.update_atom_index(nr_atoms, zero_atom=sol_last_atom)
+        atoms_c.loc[:, 'atom_id'] = updated_atom_id
+        atoms_c.to_csv('oil_res_update.test', sep=' ')
+        return atoms_c
+
+    @staticmethod
+    def update_atom_index(nr_atoms: int,  # Number of all SOL atoms
+                          zero_atom: int  # First residues index
+                          ) -> list[int]:
+        """update atoms indices"""
+        return mk_atom_id_cycle(nr_atoms, zero_atom)
+
+    @staticmethod
+    def update_residue_index(nr_atoms: int,  # Number of all OIL atoms
+                             zero_res: int  # First residues index
+                             ) -> list[int]:
+        """
+        Prepare the the residues index of the sol molecules
+        """
+        n_atom_per_res: int = 32  # Number of atoms in SOL residues
+        list_index: list[int] = \
+            mk_atom_id_cycle(nr_atoms//n_atom_per_res, zero_res)
+        return repeat_items(list_index, n_atom_per_res)
+
+
 class UpdateCorDf:
     """preparing COR residue for updating. Nothing needs to be
     change"""
@@ -236,31 +288,6 @@ class UpdateOdaDf:
                       protonation_nr: int  # Number of protonation
                       ) -> pd.DataFrame:
         """update ODA atoms if needed to be updated"""
-        df_c: pd.DataFrame = atoms.copy()
-        updated_res: list[int] = atoms['residue_number'] + protonation_nr
-        atoms_id: list[int] = [i+1 for i in range(len(atoms.index))]
-        df_c['residue_number'] = updated_res
-        df_c['atom_id'] = atoms_id
-        return df_c
-
-
-class UpdateOilDf:
-    """preparing D10 residue for updating.The residue index should be
-    changed"""
-
-    update_oil: pd.DataFrame  # Updated D10 df
-
-    def __init__(self,
-                 atoms: pd.DataFrame,  # All oil atoms
-                 protonation_nr: int  # Number of protonation
-                 ) -> None:
-        self.update_oil = self.update_oil_df(atoms, protonation_nr)
-
-    @staticmethod
-    def update_oil_df(atoms: pd.DataFrame,  # All oil atoms
-                      protonation_nr: int  # Number of protonation
-                      ) -> pd.DataFrame:
-        """update oil atoms if needed to be updated"""
         df_c: pd.DataFrame = atoms.copy()
         updated_res: list[int] = atoms['residue_number'] + protonation_nr
         atoms_id: list[int] = [i+1 for i in range(len(atoms.index))]
@@ -413,7 +440,13 @@ class UpdateResidues:
         all_cores: dict[str, pd.DataFrame]  # All the cores atoms
         update_sol: UpdateSolDf = self.get_sol(data)
         self.updated_residues['SOL'] = update_sol.update_waters
-        self.updated_residues['D10'] = self.get_oil(data)
+
+        update_oil: UpdateOilDf = \
+            self.get_oil(data,
+                         update_sol.sol_last_res,
+                         update_sol.sol_last_atom)
+        self.updated_residues['D10'] = update_oil.update_oil
+
         self.updated_residues['CLA'] = self.get_ions(data)
         self.updated_residues['ODN'] = self.get_oda(data)
         updated_aptes, self.new_hn3 = self.get_aptes(data)
@@ -451,12 +484,15 @@ class UpdateResidues:
         return updated_sol
 
     @staticmethod
-    def get_oil(data: ionization.IonizationSol  # All the data
+    def get_oil(data: ionization.IonizationSol,  # All the data
+                sol_last_res: int,  # Last residue index in water
+                sol_last_atom: int  # Last atom index in water
                 ) -> pd.DataFrame:
         """return oil residues"""
         updated_oils = UpdateOilDf(data.residues_atoms['D10'],
-                                   int(len(data.ion_poses)))
-        return updated_oils.update_oil
+                                   sol_last_res,
+                                   sol_last_atom)
+        return updated_oils
 
     @staticmethod
     def get_cor(data: ionization.IonizationSol  # All the data
