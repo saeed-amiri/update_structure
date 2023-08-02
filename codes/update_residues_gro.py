@@ -147,11 +147,15 @@ class UpdateSolDf:
     change"""
 
     update_waters: pd.DataFrame  # Updated APTES df
+    sol_last_res: int  # Last residue index in the dataframe
+    sol_last_atom: int  # Last atom index in the dataframe
 
     def __init__(self,
                  atoms: pd.DataFrame  # All SOL atoms
                  ) -> None:
         self.update_waters = self.update_water_df(atoms)
+        self.sol_last_res = self.update_waters['residue_number'].iloc[-1]
+        self.sol_last_atom = self.update_waters['atom_id'].iloc[-1]
 
     def update_water_df(self,
                         atoms: pd.DataFrame  # All SOL atoms
