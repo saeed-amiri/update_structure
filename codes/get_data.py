@@ -133,7 +133,7 @@ class ProcessData:
 
     info_msg: str = 'Message:\n'  # Message to pass for logging and writing
     atoms: pd.DataFrame  # All atoms dataframe
-    param: dict[str, float]  # All the parameters from input file
+    param: dict[str, typing.Any]  # All the parameters from input file
     residues_atoms: dict[str, pd.DataFrame]  # Atoms info for each residue
     unproton_aptes: dict[str, pd.DataFrame]  # APTES which should be protonated
     unprot_aptes_ind: dict[str, list[int]]  # Index of APTES to be protonated
