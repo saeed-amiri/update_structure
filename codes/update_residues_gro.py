@@ -9,9 +9,11 @@ All the dataframes are needed. Everthing should be updated.
 """
 
 import sys
+import typing
 import numpy as np
 import pandas as pd
 import ionization
+import my_tools
 from colors_text import TextColor as bcolors
 
 
@@ -426,7 +428,7 @@ class UpdateResidues:
         self.title = data.title
         self.pbc_box = data.pbc_box
         self.get_residues(data)
-        combine_residues = self.concate_residues()
+        combine_residues = self.concate_residues(data.param)
         self.combine_residues = self.__set_atom_id(combine_residues)
 
     @staticmethod
@@ -442,10 +444,15 @@ class UpdateResidues:
         df_c.to_csv('combine_residues', sep=' ')
         return df_c
 
-    def concate_residues(self) -> pd.DataFrame:
+    def concate_residues(self,
+                         param: dict[str, typing.Any]
+                         ) -> pd.DataFrame:
         """concate all the residues in one dataframe, The order is
         very important. it should follow the order in the main file"""
-        cols_order: list[str] = ['SOL', 'CLA', 'ODN', 'D10']
+        cols_order: list[str] = ['SOL', 'D10', 'ODN', 'CLA']
+        for item in param['itp_files']:
+            np_name: str = my_tools.drop_string(item, '.itp')
+            cols_order.append(np_name)
         # Concatenate DataFrames in the desired order
         combine_residues: pd.DataFrame = \
             pd.concat([self.updated_residues[col] for col in cols_order],
@@ -526,8 +533,9 @@ class UpdateResidues:
             cores: str = data.param['cores'][i]
             np_atoms = UpdateNanoParticle(
                 aptes_df=updated_aptes[aptes], cores_df=all_cores[cores])
-            updated_np_dict[data.param['itp_files'][i]] = \
-                np_atoms.nanop_updated
+            np_name: str = \
+                my_tools.drop_string(data.param['itp_files'][i], '.itp')
+            updated_np_dict[np_name] = np_atoms.nanop_updated
         return updated_np_dict
 
     @staticmethod
