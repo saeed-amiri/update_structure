@@ -411,7 +411,8 @@ class UpdateResidues:
         """get all the residues"""
         updated_aptes: dict[str, pd.DataFrame]  # All the updated aptes groups
         all_cores: dict[str, pd.DataFrame]  # All the cores atoms
-        self.updated_residues['SOL'] = self.get_sol(data)
+        update_sol: UpdateSolDf = self.get_sol(data)
+        self.updated_residues['SOL'] = update_sol.update_waters
         self.updated_residues['D10'] = self.get_oil(data)
         self.updated_residues['CLA'] = self.get_ions(data)
         self.updated_residues['ODN'] = self.get_oda(data)
@@ -447,7 +448,7 @@ class UpdateResidues:
                 ) -> pd.DataFrame:
         """return water residues"""
         updated_sol = UpdateSolDf(data.residues_atoms['SOL'])
-        return updated_sol.update_waters
+        return updated_sol
 
     @staticmethod
     def get_oil(data: ionization.IonizationSol  # All the data
