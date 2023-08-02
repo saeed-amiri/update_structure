@@ -198,6 +198,8 @@ class UpdateOilDf:
     changed"""
 
     update_oil: pd.DataFrame  # Updated D10 df
+    oil_last_res: int  # Last residue index in the oil dataframe
+    oil_last_atom: int  # Last atom index in the oil dataframe
 
     def __init__(self,
                  atoms: pd.DataFrame,  # All oil atoms
@@ -206,6 +208,8 @@ class UpdateOilDf:
                  ) -> None:
         self.update_oil = \
             self.update_oil_df(atoms, sol_last_res, sol_last_atom)
+        self.oil_last_res = self.update_oil['residue_number'].iloc[-1]
+        self.oil_last_atom = self.update_oil['atom_id'].iloc[-1]
 
     def update_oil_df(self,
                       atoms: pd.DataFrame,  # All oil atoms
@@ -216,11 +220,11 @@ class UpdateOilDf:
         atoms_c: pd.DataFrame = atoms.copy()
         nr_atoms: int = len(atoms_c.index)
         updated_res_id: list[int] = \
-            self.update_residue_index(nr_atoms, zero_res=sol_last_res)
+            self.update_residue_index(nr_atoms, zero_res=sol_last_res+1)
         atoms_c.loc[:, 'residue_number'] = updated_res_id
 
         updated_atom_id: list[int] = \
-            self.update_atom_index(nr_atoms, zero_atom=sol_last_atom)
+            self.update_atom_index(nr_atoms, zero_atom=sol_last_atom+1)
         atoms_c.loc[:, 'atom_id'] = updated_atom_id
         atoms_c.to_csv('oil_res_update.test', sep=' ')
         return atoms_c
