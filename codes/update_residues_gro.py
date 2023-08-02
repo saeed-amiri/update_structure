@@ -12,6 +12,7 @@ import sys
 import numpy as np
 import pandas as pd
 import ionization
+from colors_text import TextColor as bcolors
 
 
 class UpdateBaseDf:
@@ -476,10 +477,22 @@ class UpdateResidues:
         self.updated_residues['CLA'] = update_ion.update_df
 
         updated_aptes, self.new_hn3 = self.get_aptes(data)
+        self.add_nanoparticles_to_updated_residues(data,
+                                                   update_ion,
+                                                   updated_aptes)
+
+    def add_nanoparticles_to_updated_residues(self,
+                                              data: ionization.IonizationSol,
+                                              update_ion: UpdateIonDf,
+                                              updated_aptes: dict[str,
+                                                                  pd.DataFrame]
+                                              ) -> None:
+        """
+        Update nanoparticles by updating residues and atoms indices
+        """
         updated_np_dict: dict[str, pd.DataFrame] = \
             self.update_nanoparticles(data, updated_aptes)
-
-        last_residue: int = update_ion.last_res + 1
+        last_residue: int = update_ion.last_res
         last_atom: int = update_ion.last_atom + 1
         for nano_p, item in updated_np_dict.items():
             df_c: pd.DataFrame = item.copy()
@@ -487,10 +500,18 @@ class UpdateResidues:
             updated_atom_id: list[int] = \
                 mk_atom_id_cycle(list_len=nr_atoms, start_id=last_atom)
             df_c.loc[:, 'atom_id'] = updated_atom_id
-            self.updated_residues[nano_p] = df_c
-            df_c.to_csv(f'{nano_p}.test', sep=' ')
+            updated_res_id: list[int] = df_c['residue_number'] + last_residue
+            if not any(num > 99999 for num in updated_res_id):
+                df_c.loc[:, 'residue_number'] += last_residue
+                self.updated_residues[nano_p] = df_c
+                df_c.to_csv(f'{nano_p}.test', sep=' ')
+            else:
+                sys.exit(f'\n{bcolors.FAIL}{self.__module__}:\n'
+                         'Error: Some members in the list are bigger '
+                         'than the 99999 value. Must update the codes!'
+                         f'{bcolors.ENDC}\n')
             last_atom = df_c.iloc[-1]['atom_id'] + 1
-            # last_residue = update_np.last_res + 1
+            last_residue = int(np.max(df_c['residue_number']))
 
     def update_nanoparticles(self,
                              data: ionization.IonizationSol,
