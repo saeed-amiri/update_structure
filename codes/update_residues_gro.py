@@ -484,10 +484,16 @@ class UpdateResidues:
 
         last_residue: int = update_ion.last_res + 1
         last_atom: int = update_ion.last_atom + 1
-        # update_np = UpdateBaseDf(np_atoms, last_residue, last_atom)
-        # self.updated_residues[np_name] = update_np.update_df
-        # last_residue = update_np.last_res + 1
-        # last_atom = update_np.last_atom + 1
+        for nano_p, item in updated_np_dict.items():
+            df_c: pd.DataFrame = item.copy()
+            nr_atoms: int = len(item.index)
+            updated_atom_id: list[int] = \
+                mk_atom_id_cycle(list_len=nr_atoms, start_id=last_atom)
+            df_c.loc[:, 'atom_id'] = updated_atom_id
+            self.updated_residues[nano_p] = df_c
+            df_c.to_csv(f'{nano_p}.test', sep=' ')
+            last_atom = df_c.iloc[-1]['atom_id'] + 1
+            # last_residue = update_np.last_res + 1
 
     def update_nanoparticles(self,
                              data: ionization.IonizationSol,
@@ -503,7 +509,6 @@ class UpdateResidues:
                 aptes_df=updated_aptes[aptes], cores_df=all_cores[cores])
             np_name: str = \
                 my_tools.drop_string(data.param['itp_files'][i], '.itp')
-            np_atoms.nanop_updated.to_csv(f'{np_name}.test', sep=' ')
             updated_np_dict[data.param['itp_files'][i]] = \
                 np_atoms.nanop_updated
         return updated_np_dict
