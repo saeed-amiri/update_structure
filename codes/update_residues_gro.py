@@ -14,6 +14,70 @@ import pandas as pd
 import ionization
 
 
+class UpdateBaseDf:
+    """Base class for updating dataframes."""
+
+    def __init__(self,
+                 atoms: pd.DataFrame,  # Atoms to update their indices
+                 first_res: int,  # The First index to start with
+                 first_atom: int,  # The First index to start with
+                 atoms_per_res: int,  # The First index to start with
+                 ) -> None:
+        self.first_res = first_res
+        self.first_atom = first_atom
+        self.atoms_per_res = atoms_per_res
+        self.update_df = self.mk_update_df(atoms)
+        self.last_res = self.update_df['residue_number'].iloc[-1]
+        self.last_atom = self.update_df['atom_id'].iloc[-1]
+
+    def mk_update_df(self,
+                     atoms: pd.DataFrame  # Atoms to update their indices
+                     ) -> pd.DataFrame:
+        """Update the dataframe with the given atoms.
+
+        Parameters:
+            atoms (pd.DataFrame): All atoms dataframe.
+
+        Returns:
+            pd.DataFrame: Updated dataframe.
+        """
+        atoms_c = atoms.copy()
+        nr_atoms = len(atoms.index)
+        updated_res_id = self.update_residue_index(nr_atoms)
+        atoms_c.loc[:, 'residue_number'] = updated_res_id
+        updated_atom_id = self.update_atom_index(nr_atoms)
+        atoms_c.loc[:, 'atom_id'] = updated_atom_id
+        return atoms_c
+
+    def update_atom_index(self,
+                          nr_atoms: int  # Number of the atoms in the df
+                          ) -> list[int]:
+        """Update atom indices.
+
+        Parameters:
+            nr_atoms (int): Number of all atoms.
+
+        Returns:
+            list[int]: List of updated atom_id values.
+        """
+        return mk_atom_id_cycle(nr_atoms, self.first_atom)
+
+    def update_residue_index(self,
+                             nr_atoms: int  # Number of the atoms in the df
+                             ) -> list[int]:
+        """Prepare the residues index.
+
+        Parameters:
+            nr_atoms (int): Number of all atoms.
+
+        Returns:
+            list[int]: List of updated residue_number values.
+        """
+        list_index = \
+            mk_atom_id_cycle(nr_atoms // self.atoms_per_res, self.first_res)
+        return repeat_items(list_index, self.atoms_per_res)
+
+
 class UpdateAptesDf:
     """
     Updates APTES dataframe, by adding the hydrogens. Based on the
@@ -140,70 +204,6 @@ class UpdateAptesDf:
                      pos[1], pos[2], velo[0], velo[1], velo[2]]
             hn3_atoms_dict[aptes] = hn3_atoms_i
         return hn3_atoms_dict
-
-
-class UpdateBaseDf:
-    """Base class for updating dataframes."""
-
-    def __init__(self,
-                 atoms: pd.DataFrame,  # Atoms to update their indices
-                 first_res: int,  # The First index to start with
-                 first_atom: int,  # The First index to start with
-                 atoms_per_res: int,  # The First index to start with
-                 ) -> None:
-        self.first_res = first_res
-        self.first_atom = first_atom
-        self.atoms_per_res = atoms_per_res
-        self.update_df = self.mk_update_df(atoms)
-        self.last_res = self.update_df['residue_number'].iloc[-1]
-        self.last_atom = self.update_df['atom_id'].iloc[-1]
-
-    def mk_update_df(self,
-                     atoms: pd.DataFrame  # Atoms to update their indices
-                     ) -> pd.DataFrame:
-        """Update the dataframe with the given atoms.
-
-        Parameters:
-            atoms (pd.DataFrame): All atoms dataframe.
-
-        Returns:
-            pd.DataFrame: Updated dataframe.
-        """
-        atoms_c = atoms.copy()
-        nr_atoms = len(atoms.index)
-        updated_res_id = self.update_residue_index(nr_atoms)
-        atoms_c.loc[:, 'residue_number'] = updated_res_id
-        updated_atom_id = self.update_atom_index(nr_atoms)
-        atoms_c.loc[:, 'atom_id'] = updated_atom_id
-        return atoms_c
-
-    def update_atom_index(self,
-                          nr_atoms: int  # Number of the atoms in the df
-                          ) -> list[int]:
-        """Update atom indices.
-
-        Parameters:
-            nr_atoms (int): Number of all atoms.
-
-        Returns:
-            list[int]: List of updated atom_id values.
-        """
-        return mk_atom_id_cycle(nr_atoms, self.first_atom)
-
-    def update_residue_index(self,
-                             nr_atoms: int  # Number of the atoms in the df
-                             ) -> list[int]:
-        """Prepare the residues index.
-
-        Parameters:
-            nr_atoms (int): Number of all atoms.
-
-        Returns:
-            list[int]: List of updated residue_number values.
-        """
-        list_index = \
-            mk_atom_id_cycle(nr_atoms // self.atoms_per_res, self.first_res)
-        return repeat_items(list_index, self.atoms_per_res)
 
 
 class UpdateSolDf(UpdateBaseDf):
@@ -427,6 +427,7 @@ class UpdateResidues:
         """get all the residues"""
         updated_aptes: dict[str, pd.DataFrame]  # All the updated aptes groups
         all_cores: dict[str, pd.DataFrame]  # All the cores atoms
+        
         update_sol: UpdateSolDf = self.get_sol(data)
         self.updated_residues['SOL'] = update_sol.update_df
 
