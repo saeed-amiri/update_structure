@@ -12,7 +12,6 @@ import sys
 import numpy as np
 import pandas as pd
 import ionization
-import my_tools
 
 
 class UpdateBaseDf:
@@ -96,7 +95,6 @@ class UpdateNanoParticle:
                      ) -> pd.DataFrame:
         """making the total nanoparticle"""
         cor_lst_atom: int = cores_df.iloc[-1]['atom_id']
-        cor_lst_res: int = cores_df.iloc[-1]['residue_number']
         aptes_df = self.update_aptes_atom_id(aptes_df, cor_lst_atom)
         return pd.concat([cores_df, aptes_df])
 
@@ -458,7 +456,6 @@ class UpdateResidues:
                      ) -> None:
         """get all the residues"""
         updated_aptes: dict[str, pd.DataFrame]  # All the updated aptes groups
-        all_cores: dict[str, pd.DataFrame]  # All the cores atoms
 
         update_sol: UpdateSolDf = self.get_sol(data)
         self.updated_residues['SOL'] = update_sol.update_df
@@ -500,6 +497,7 @@ class UpdateResidues:
                              updated_aptes:  dict[str, pd.DataFrame]
                              ) -> dict[str, pd.DataFrame]:
         """update nanoparticles"""
+        all_cores: dict[str, pd.DataFrame]  # All the cores atoms
         all_cores = self.get_cor(data)
         updated_np_dict: dict[str, pd.DataFrame] = {}
         for i in range(len(data.param['itp_files'])):
@@ -507,8 +505,6 @@ class UpdateResidues:
             cores: str = data.param['cores'][i]
             np_atoms = UpdateNanoParticle(
                 aptes_df=updated_aptes[aptes], cores_df=all_cores[cores])
-            np_name: str = \
-                my_tools.drop_string(data.param['itp_files'][i], '.itp')
             updated_np_dict[data.param['itp_files'][i]] = \
                 np_atoms.nanop_updated
         return updated_np_dict
