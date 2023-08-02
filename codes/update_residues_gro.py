@@ -6,6 +6,40 @@ last residue written in the input file. Additionally, IONs will
 increase the number of residues and atom numbers, but the new HN3 only
 increases the number of atoms.
 All the dataframes are needed. Everthing should be updated.
+    Classes:
+        UpdateBaseDf: This is a base class for updating dataframes.
+                      It includes methods to update the indices of
+                      atoms and residues in a given dataframe.
+        UpdateNanoParticle: This class updates nanoparticles by
+                            stacking core atoms and APTES atoms, fixing
+                            their indices accordingly.
+        UpdateAptesDf: This class updates the APTES dataframe by
+                       adding new HN3 atoms based on provided positions
+                       and velocities.
+        UpdateCorDf: This class prepares the COR residue for updating.
+                     It doesn't need any changes.
+        UpdateSolDf: This class prepares the SOL (water) residue for
+                     updating. It updates the atom and residue indices.
+        UpdateOilDf: This class prepares the D10 residue for updating.
+                     It updates the atom and residue indices.
+        UpdateOdaDf: This class prepares the ODA residue for updating.
+                     It updates the atom and residue indices.
+        UpdateIonDf: This class prepares the ION residue for updating.
+                     It updates the atom and residue indices and adds
+                     new counterions to the initial ones.
+        UpdateResidues: This is the main class that coordinates the
+                        updating of all residues. It includes methods
+                        to update water, oil, APTES, and other
+                        nanoparticle residues.
+
+    Helper Functions:
+        mk_atom_id_cycle: This function generates a list of unique
+                          atom IDs in a custom cycle, starting from a
+                          specified value and repeating within a
+                          specified limit.
+        repeat_items: This function repeats each item in a list a given
+                      number of times.
+
 """
 
 import sys
