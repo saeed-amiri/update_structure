@@ -2,6 +2,7 @@
 
 import typing
 import pandas as pd
+import logger
 import update_itp as upitp
 from colors_text import TextColor as bcolors
 
@@ -10,13 +11,19 @@ class WriteItp:
     """write itp file
     There is no uniqe structure one should follow
     The columns will be seperated by single space"""
+
+    info_msg = 'Message from WriteItp:\n'
+
     def __init__(self,
                  itp: upitp.UpdateItp,  # Dataframes of updated sections
-                 fname: str  # Name of the updated itp file
+                 fname: str,  # Name of the updated itp file
+                 log: logger.logging.Logger
                  ) -> None:
         """call functions"""
         self.fname: str = fname  # Name of the itp file making in the class
         self.write_itp(itp)
+        self.__write_msg(log)
+        self.info_msg = ''  # clean the msg
 
     def write_itp(self,
                   itp: upitp.UpdateItp  # Dataframes of updated sections
@@ -34,6 +41,7 @@ class WriteItp:
             self.write_bonds(f_w, itp.bonds_updated)
             self.write_angles(f_w, itp.angles_updated)
             self.write_dihedrals(f_w, itp.dihedrals_updated)
+            self.info_msg += f'\tThe updated NP itp file is: `{self.fname}`\n'
 
     @staticmethod
     def write_molecule(f_w: typing.Any,  # The out put file
@@ -130,29 +138,40 @@ class WriteItp:
                          float_format='%.5f')
         f_w.write('\n')
 
+    def __write_msg(self,
+                    log: logger.logging.Logger
+                    ) -> None:
+        """write and log messages"""
+        print(f'{bcolors.OKCYAN}{WriteItp.__module__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)
+
 
 class WrapperWriteItp:
     """
     A wrapper class to cover all the itp files
     """
     def __init__(self,
-                 itps: upitp.WrapperUpdateItp
+                 itps: upitp.WrapperUpdateItp,
+                 log: logger.logging.Logger
                  ) -> None:
-        self.write_itp_files(itps)
+        self.write_itp_files(itps, log)
 
     def write_itp_files(self,
-                        itps: upitp.WrapperUpdateItp
+                        itps: upitp.WrapperUpdateItp,
+                        log: logger.logging.Logger
                         ) -> None:
         """loop over all the itp files"""
         print(type(itps))
         for nano_p, itp_item in itps.updated_itp.items():
             print(self.mk_out_name(nano_p))
-            WriteItp(itp_item, self.mk_out_name(nano_p))
+            WriteItp(itp_item, self.mk_out_name(nano_p), log)
 
     @staticmethod
     def mk_out_name(nano_p: str) -> str:
         """make an output file name"""
-        return nano_p.split('.')[0].__add__('_updated.itp')
+        ouput_filename = nano_p.split('.')[0] + '_updated.itp'
+        return ouput_filename
 
 
 if __name__ == '__main__':
