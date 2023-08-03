@@ -352,7 +352,7 @@ class UpdateOdaDf(UpdateBaseDf):
         atoms_per_res = 59
         super().__init__(atoms, first_res, first_atom, atoms_per_res)
         if debug:
-            self.update_df.to_csv(f'{name}_res_update.test', sep=' ')
+            self.update_df.to_csv(f'{name}_res_update.debug', sep=' ')
 
 
 class UpdateIonDf(UpdateBaseDf):
