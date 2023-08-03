@@ -66,6 +66,9 @@ class UpdateBaseDf:
         self.update_df = self.mk_update_df(atoms)
         self.last_res = self.update_df['residue_number'].iloc[-1]
         self.last_atom = self.update_df['atom_id'].iloc[-1]
+        self.nr_atoms: int = int(len(self.update_df))
+        self.nr_residues: int = self.nr_atoms // self.atoms_per_res
+
 
     def mk_update_df(self,
                      atoms: pd.DataFrame  # Atoms to update their indices
