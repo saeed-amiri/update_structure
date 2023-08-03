@@ -452,7 +452,9 @@ class UpdateResidues:
         'unproton_aptes': dict[str, pd.DataFrame]  -> APTES which
                           should be protonated from get_data.py
     """
-
+    
+    # Message to pass for logging and writing
+    info_msg: str = 'Messages from UpdateResidues:\n'
     # To append all the residues to the dict
     updated_residues: dict[str, pd.DataFrame] = {}
     # To append new atoms to the main atoms
@@ -476,6 +478,7 @@ class UpdateResidues:
         combine_residues = self.concate_residues(data.param)
         self.combine_residues = self.__set_atom_id(combine_residues,
                                                    data.param['DEBUG'])
+        self.count_number_atoms_residues()
 
     @staticmethod
     def __set_atom_id(combine_residues: pd.DataFrame,  # All the rsidues
@@ -665,6 +668,37 @@ class UpdateResidues:
                                    data.param['DEBUG']
                                    )
         return updated_ions
+
+    def count_number_atoms_residues(self) -> dict[str, dict[int, int]]:
+        """
+        Count unique numbers in 'atom_id' and 'residue_number' columns
+        for each DataFrame in the dictionary.
+
+        Parameters:
+            dataframes (dict[str, pd.DataFrame]): A dictionary where
+            keys are name of the residue and values are the DataFrames.
+
+        Returns:
+            dict[str, dict[int, int]]: A dictionary where keys are
+            names and values are tuples containing the count
+            of unique numbers in 'atom_id' and 'residue_number' columns,
+            respectively.
+        """
+        nr_atom_res: dict[str, dict[str, dict]] = {}
+    
+        for key, df in self.updated_residues.items():
+            # Count unique numbers in 'atom_id' and 'residues_number' columns
+            atom_id_count = len(df['atom_id'])
+            residues_number_count = df['residue_number'].nunique()
+
+            # Store the counts in the result dictionary
+            nr_atom_res[key] = {
+                'nr_atom': atom_id_count,
+                'nr_residue': residues_number_count
+            }
+        print(nr_atom_res)
+        return nr_atom_res
+    
 
 
 # Helper function to update index in gro fasion
