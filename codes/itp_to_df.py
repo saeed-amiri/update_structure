@@ -48,7 +48,7 @@ class Itp:
     def __init__(self,
                  fname: str  # Name of the itp file
                  ) -> None:
-        print(f"Reading '{fname}' ...")
+        print(f"{bcolors.OKBLUE}Reading '{fname}' ...{bcolors.ENDC}")
         self.get_itp(fname)
 
     def get_itp(self,
