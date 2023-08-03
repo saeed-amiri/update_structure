@@ -69,7 +69,6 @@ class UpdateBaseDf:
         self.nr_atoms: int = int(len(self.update_df))
         self.nr_residues: int = self.nr_atoms // self.atoms_per_res
 
-
     def mk_update_df(self,
                      atoms: pd.DataFrame  # Atoms to update their indices
                      ) -> pd.DataFrame:
@@ -455,7 +454,7 @@ class UpdateResidues:
         'unproton_aptes': dict[str, pd.DataFrame]  -> APTES which
                           should be protonated from get_data.py
     """
-    
+
     # Message to pass for logging and writing
     info_msg: str = 'Messages from UpdateResidues:\n'
     # To append all the residues to the dict
@@ -467,6 +466,7 @@ class UpdateResidues:
     new_ions: pd.DataFrame
     # Final datafrme
     combine_residues: pd.DataFrame
+    nr_atoms_residues: dict[str, dict[str, int]] = {}
     # Title and pbc of the system to write in the final file
     title: str
     pbc_box: str
@@ -481,7 +481,6 @@ class UpdateResidues:
         combine_residues = self.concate_residues(data.param)
         self.combine_residues = self.__set_atom_id(combine_residues,
                                                    data.param['DEBUG'])
-        self.count_number_atoms_residues()
 
     @staticmethod
     def __set_atom_id(combine_residues: pd.DataFrame,  # All the rsidues
@@ -517,30 +516,40 @@ class UpdateResidues:
                      data: ionization.IonizationSol  # All the data
                      ) -> None:
         """get all the residues"""
-        updated_aptes: dict[str, pd.DataFrame]  # All the updated aptes groups
 
         update_sol: UpdateSolDf = self.get_sol(data)
         self.updated_residues['SOL'] = update_sol.update_df
+        self.nr_atoms_residues['SOL'] = {'nr_atoms': update_sol.nr_atoms,
+                                         'nr_residues': update_sol.nr_residues}
 
         update_oil: UpdateOilDf = self.get_oil(data,
                                                update_sol.last_res,
                                                update_sol.last_atom)
         self.updated_residues['D10'] = update_oil.update_df
+        self.nr_atoms_residues['D10'] = {'nr_atoms': update_oil.nr_atoms,
+                                         'nr_residues': update_oil.nr_residues}
 
         update_oda: UpdateOdaDf = self.get_oda(data,
                                                update_oil.last_res,
                                                update_oil.last_atom)
         self.updated_residues['ODN'] = update_oda.update_df
+        self.nr_atoms_residues['ODN'] = {'nr_atoms': update_oda.nr_atoms,
+                                         'nr_residues': update_oda.nr_residues}
 
         update_ion: UpdateIonDf = self.get_ions(data,
                                                 update_oda.last_res,
                                                 update_oda.last_atom)
         self.updated_residues['CLA'] = update_ion.update_df
+        self.nr_atoms_residues['CLA'] = {'nr_atoms': update_ion.nr_atoms,
+                                         'nr_residues': update_ion.nr_residues}
 
+        updated_aptes: dict[str, pd.DataFrame]  # All the updated aptes groups
         updated_aptes, self.new_hn3 = self.get_aptes(data)
         self.add_nanoparticles_to_updated_residues(data,
                                                    update_ion,
                                                    updated_aptes)
+        self.get_nr_atoms_residues_in_np(data.param)
+        print(self.nr_atoms_residues)
 
     def add_nanoparticles_to_updated_residues(self,
                                               data: ionization.IonizationSol,
@@ -672,36 +681,26 @@ class UpdateResidues:
                                    )
         return updated_ions
 
-    def count_number_atoms_residues(self) -> dict[str, dict[int, int]]:
+    def get_nr_atoms_residues_in_np(self,
+                                    param: dict[str, typing.Any]
+                                    ) -> None:
         """
         Count unique numbers in 'atom_id' and 'residue_number' columns
-        for each DataFrame in the dictionary.
-
-        Parameters:
-            dataframes (dict[str, pd.DataFrame]): A dictionary where
-            keys are name of the residue and values are the DataFrames.
-
-        Returns:
-            dict[str, dict[int, int]]: A dictionary where keys are
-            names and values are tuples containing the count
-            of unique numbers in 'atom_id' and 'residue_number' columns,
-            respectively.
+        for each nanoparticles.
         """
-        nr_atom_res: dict[str, dict[str, dict]] = {}
-    
-        for key, df in self.updated_residues.items():
+
+        for nano_p in param["itp_files"]:
+            np_name: str = my_tools.drop_string(nano_p, '.itp')
+            df_i: pd.DataFrame = self.updated_residues[np_name]
             # Count unique numbers in 'atom_id' and 'residues_number' columns
-            atom_id_count = len(df['atom_id'])
-            residues_number_count = df['residue_number'].nunique()
+            atom_id_count = len(df_i['atom_id'])
+            residues_number_count = df_i['residue_number'].nunique()
 
             # Store the counts in the result dictionary
-            nr_atom_res[key] = {
-                'nr_atom': atom_id_count,
-                'nr_residue': residues_number_count
+            self.nr_atoms_residues[nano_p] = {
+                'nr_atoms': atom_id_count,
+                'nr_residues': residues_number_count
             }
-        print(nr_atom_res)
-        return nr_atom_res
-    
 
 
 # Helper function to update index in gro fasion
