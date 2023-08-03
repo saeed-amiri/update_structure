@@ -44,10 +44,12 @@ All the dataframes are needed. Everthing should be updated.
 
 import sys
 import typing
+import json
 import numpy as np
 import pandas as pd
-import ionization
+import logger
 import my_tools
+import ionization
 from colors_text import TextColor as bcolors
 
 
@@ -472,15 +474,17 @@ class UpdateResidues:
     pbc_box: str
 
     def __init__(self,
-                 fname: str  # Name of the input file (pdb)
+                 fname: str,  # Name of the input file (pdb)
+                 log=logger.setup_logger('update.log')
                  ) -> None:
-        data = ionization.IonizationSol(fname)
+        data = ionization.IonizationSol(fname, log)
         self.title = data.title
         self.pbc_box = data.pbc_box
         self.get_residues(data)
         combine_residues = self.concate_residues(data.param)
         self.combine_residues = self.__set_atom_id(combine_residues,
                                                    data.param['DEBUG'])
+        self.write_log_msg(log)
 
     @staticmethod
     def __set_atom_id(combine_residues: pd.DataFrame,  # All the rsidues
@@ -549,6 +553,10 @@ class UpdateResidues:
                                                    update_ion,
                                                    updated_aptes)
         self.get_nr_atoms_residues_in_np(data.param)
+        
+        self.info_msg += '\tNumber of residues and atoms in each residue:\n'
+        self.info_msg += json.dumps(self.nr_atoms_residues, indent=8)
+        self.info_msg += '\n'
 
     def add_nanoparticles_to_updated_residues(self,
                                               data: ionization.IonizationSol,
@@ -701,6 +709,15 @@ class UpdateResidues:
                 'nr_residues': residues_number_count
             }
 
+    @classmethod
+    def write_log_msg(self,
+                      log: logger.logging.Logger  # Name of the output file
+                      ) -> None:
+        """writing and logging messages from methods"""
+        log.info(self.info_msg)
+        print(f'{bcolors.OKBLUE}{UpdateResidues.__module__}:\n'
+              f'\t{self.info_msg}\n{bcolors.ENDC}')
+
 
 # Helper function to update index in gro fasion
 def mk_atom_id_cycle(list_len: int,  # Size of the list,
@@ -778,4 +795,4 @@ def repeat_items(lst: list[int],  # List index which should repeat for residues
 
 
 if __name__ == '__main__':
-    UpdateResidues(sys.argv[1])
+    UpdateResidues(sys.argv[1], log=logger.setup_logger('update.log'))
