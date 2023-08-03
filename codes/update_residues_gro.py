@@ -549,7 +549,6 @@ class UpdateResidues:
                                                    update_ion,
                                                    updated_aptes)
         self.get_nr_atoms_residues_in_np(data.param)
-        print(self.nr_atoms_residues)
 
     def add_nanoparticles_to_updated_residues(self,
                                               data: ionization.IonizationSol,
