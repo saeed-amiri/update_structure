@@ -482,6 +482,34 @@ class UpdateAtom:
                      f' APTES list.\n{bcolors.ENDC}')
         return np.max(np.array([max_atomnr, lst_atomnr]))
 
+class WrapperUpdateItp:
+    """An wrapper to update itp files"""
+    def __init__(self,
+                 param: dict[str, typing.Any],  # All the parameters
+                 hn3_dict: dict[str, pd.DataFrame]
+                 ) -> None:
+        self.updated_itp: dict[str, UpdateItp] = \
+            self.update_all_np_itp(param, hn3_dict)
+
+    def update_all_np_itp(self,
+                          param: dict[str, typing.Any],  # All the parameters
+                          hn3_dict: dict[str, pd.DataFrame]
+                          ) -> None:
+        """get all the files and update them"""
+        updated_itp: dict[str, UpdateItp] = {}
+        for aptes, item in hn3_dict.items():
+            for fname_i in param['itp_files']:
+                if aptes in fname_i:
+                    fname = fname_i
+                    break
+                fname = None
+            if fname is not None:
+                updated_itp[aptes] = UpdateItp(fname, item)
+            else:
+                sys.exit(f'{bcolors.FAIL}\nThere is a problem in '
+                         f'naming the nanoparticles\n{bcolors.ENDC}')
+        return updated_itp
+
 
 class StandAlone:
     """
@@ -511,6 +539,7 @@ class StandAlone:
 
     @staticmethod
     def generate_list(start, end):
+        """generate a list"""
         return list(range(start, end + 1))
 
     @staticmethod
