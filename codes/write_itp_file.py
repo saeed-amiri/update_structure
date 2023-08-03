@@ -131,5 +131,29 @@ class WriteItp:
         f_w.write('\n')
 
 
+class WrapperWriteItp:
+    """
+    A wrapper class to cover all the itp files
+    """
+    def __init__(self,
+                 itps: upitp.WrapperUpdateItp
+                 ) -> None:
+        self.write_itp_files(itps)
+
+    def write_itp_files(self,
+                        itps: upitp.WrapperUpdateItp
+                        ) -> None:
+        """loop over all the itp files"""
+        print(type(itps))
+        for nano_p, itp_item in itps.updated_itp.items():
+            print(self.mk_out_name(nano_p))
+            WriteItp(itp_item, self.mk_out_name(nano_p))
+
+    @staticmethod
+    def mk_out_name(nano_p: str) -> str:
+        """make an output file name"""
+        return nano_p.split('.')[0].__add__('_updated.itp')
+
+
 if __name__ == '__main__':
     pass
