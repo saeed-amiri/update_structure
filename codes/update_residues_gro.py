@@ -485,6 +485,8 @@ class UpdateResidues:
         self.combine_residues = self.__set_atom_id(combine_residues,
                                                    data.param['DEBUG'])
         self.write_log_msg(log)
+        # last mins add!!
+        self.param = data.param
 
     @staticmethod
     def __set_atom_id(combine_residues: pd.DataFrame,  # All the rsidues
