@@ -35,4 +35,4 @@ Number of times try to find a place for an ion, around 1000
 @ION_ATTEPTS=1000
 ####################### DEBUG ###################
 If writing True many data files will be written
-DEBUG=True
+@DEBUG=True
