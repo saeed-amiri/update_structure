@@ -14,6 +14,7 @@ the NP's location.
 
 import sys
 import pandas as pd
+import logger
 import update_residues_pdb
 import update_residues_gro
 import write_pdb_file
@@ -23,9 +24,11 @@ import write_gro_file
 
 
 STYLE: str = 'GRO'
+LOG = logger.setup_logger('update.log')
 if __name__ == '__main__':
     if STYLE == 'GRO':
-        gro_data = update_residues_gro.UpdateResidues(sys.argv[1])
+        gro_data = \
+            update_residues_gro.UpdateResidues(sys.argv[1], log=LOG)
         write_gro_file.write_gromacs_gro(gro_data, 'updated_system.gro')
         new_hn3_dict: dict[str, pd.DataFrame] = gro_data.new_hn3
     else:
@@ -35,4 +38,4 @@ if __name__ == '__main__':
         new_hn3 = up_data.new_hn3
     itp = update_itp.WrapperUpdateItp(
         param=gro_data.param, hn3_dict=new_hn3_dict)
-    write_itp_file.WrapperWriteItp(itp)
+    write_itp_file.WrapperWriteItp(itp, log=LOG)
