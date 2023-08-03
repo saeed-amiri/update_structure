@@ -90,7 +90,7 @@ class ReadParam:
     essential_keys: list[str] = [
         "ANGLE", "RADIUS", "READ", "FILE", "INTERFACE", "INTERFACE_WIDTH",
         "NUMSAMPLE", "ION_DISTANCE", "ION_ATTEPTS", "NP_ZLOC", "LINE",
-        "BETTER_POS", "NP_ITP"]
+        "BETTER_POS", "NP_ITP", "DEBUG"]
 
     def __init__(self,
                  log: logger.logging.Logger
