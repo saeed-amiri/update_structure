@@ -111,9 +111,9 @@ class IonizationSol(proton.FindHPosition):
     ion_velos: list[np.ndarray]  # Velocity for ions
 
     def __init__(self,
-                 fname: str  # Name of the pdb file
+                 fname: str,  # Name of the pdb file
+                 log = logger.setup_logger('update.log')
                  ) -> None:
-        log = logger.setup_logger('update.log')
         super().__init__(fname, log)
         self.info_msg = 'Message:\n'
         self.info_msg += '\tFinding poistions for new ions\n'
@@ -457,4 +457,4 @@ class IonizationSol(proton.FindHPosition):
 
 
 if __name__ == '__main__':
-    ioning = IonizationSol(sys.argv[1])
+    ioning = IonizationSol(sys.argv[1], log=logger.setup_logger('update.log'))
