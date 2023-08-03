@@ -13,6 +13,7 @@ import typing
 import numpy as np
 import pandas as pd
 import itp_to_df as itp
+import my_tools
 from colors_text import TextColor as bcolors
 
 
@@ -32,16 +33,20 @@ class UpdateItp(itp.Itp):
 
     def __init__(self,
                  fname: str,  # Name of the itp file
-                 hn3: pd.DataFrame  # Information for new NH3 atoms
+                 hn3: pd.DataFrame,  # Information for new NH3 atoms
+                 aptes: str,  # Name of the APTES branches
+                 core: str  # Name of the CORE residues
                  ) -> None:
         super().__init__(fname)
-        self.update_itp(hn3)
+        self.update_itp(hn3, aptes, core)
 
     def update_itp(self,
-                   hn3: pd.DataFrame  # NH3 atoms
+                   hn3: pd.DataFrame,  # NH3 atoms
+                   aptes: str,  # Name of the APTES branches
+                   core: str  # Name of the CORE residues
                    ) -> None:
         """get all the data and return final df"""
-        up_atoms = UpdateAtom(self.atoms, hn3)
+        up_atoms = UpdateAtom(self.atoms, hn3, aptes, core)
         up_bonds = UpdateBond(self.bonds, hn3, up_atoms.atoms_updated)
         up_angles = UpdateAngle(self.angles, hn3, up_atoms.atoms_updated)
         up_dihedrals = \
@@ -310,22 +315,26 @@ class UpdateAtom:
 
     def __init__(self,
                  atoms_np: pd.DataFrame,  # Atoms form the itp file for NP
-                 hn3: pd.DataFrame  # New HN3 to add to the atoms
+                 hn3: pd.DataFrame,  # New HN3 to add to the atoms
+                 aptes: str,  # Name of the APTES branches
+                 core: str  # Name of the CORE residues
                  ) -> None:
-        self.atoms_updated = self.update_atoms(atoms_np, hn3)
+        self.atoms_updated = self.update_atoms(atoms_np, hn3, aptes, core)
 
     def update_atoms(self,
                      atoms_np: pd.DataFrame,  # Atoms form the itp file for NP
-                     hn3: pd.DataFrame  # New HN3 to add to the atoms
+                     hn3: pd.DataFrame,  # New HN3 to add to the atoms
+                     aptes: str,  # Name of the APTES branches
+                     core: str  # Name of the CORE residues
                      ) -> pd.DataFrame:
         """update the atoms"""
         # Sanity check of indeces and return the atom index in atoms
         lst_atom: np.int64  # index of the final atoms
         lst_atom = self.__get_indices(atoms_np, hn3)
         # Get only APT atoms
-        atoms: pd.DataFrame = atoms_np[atoms_np['resname'] == 'APT']
+        atoms: pd.DataFrame = atoms_np[atoms_np['resname'] == aptes]
         # Get COR atoms
-        cor_atoms: pd.DataFrame = atoms_np[atoms_np['resname'] == 'COR']
+        cor_atoms: pd.DataFrame = atoms_np[atoms_np['resname'] == core]
         # Get information for protonated H-N group from the itp file
         h_n_df: pd.DataFrame = self.__get_n_h_proton_info(atoms)
         # Make a dataframe in format of itp for new nh3
@@ -482,6 +491,7 @@ class UpdateAtom:
                      f' APTES list.\n{bcolors.ENDC}')
         return np.max(np.array([max_atomnr, lst_atomnr]))
 
+
 class WrapperUpdateItp:
     """An wrapper to update itp files"""
     def __init__(self,
@@ -494,17 +504,19 @@ class WrapperUpdateItp:
     def update_all_np_itp(self,
                           param: dict[str, typing.Any],  # All the parameters
                           hn3_dict: dict[str, pd.DataFrame]
-                          ) -> None:
+                          ) -> dict[str, UpdateItp]:
         """get all the files and update them"""
         updated_itp: dict[str, UpdateItp] = {}
         for aptes, item in hn3_dict.items():
             for fname_i in param['itp_files']:
                 if aptes in fname_i:
                     fname = fname_i
+                    itp_i: str = my_tools.drop_string(fname, '.itp')
+                    core: str = itp_i.split('_')[1].strip()
                     break
                 fname = None
             if fname is not None:
-                updated_itp[aptes] = UpdateItp(fname, item)
+                updated_itp[fname] = UpdateItp(fname, item, aptes, core)
             else:
                 sys.exit(f'{bcolors.FAIL}\nThere is a problem in '
                          f'naming the nanoparticles\n{bcolors.ENDC}')
@@ -574,7 +586,8 @@ class StandAlone:
 
 if __name__ == '__main__':
     import write_itp_file
-    write_itp_file.WriteItp(UpdateItp(fname=sys.argv[1],
-                            hn3=StandAlone().new_nh3),
-                            fname='APT_COR_updated.itp')
-    
+    write_itp_file.WriteItp(UpdateItp(
+                            fname=sys.argv[1],
+                            hn3=StandAlone().new_nh3,
+                            aptes='APT',
+                            core='COR'), fname='APT_COR_updated.itp')
