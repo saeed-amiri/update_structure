@@ -6,9 +6,12 @@ follows:
 """
 
 import sys
+import typing
 import numpy as np
 import pandas as pd
 import ionization
+if typing.TYPE_CHECKING:
+    from ionization import IonizationSol
 
 
 class UpdateAptesDf:
@@ -146,7 +149,7 @@ class UpdateResidues:
         self.get_residues(data)
 
     def get_residues(self,
-                     data: ionization.IonizationSol  # All the data
+                     data: 'IonizationSol'  # All the data
                      ) -> None:
         """get all the residues"""
         self.updated_residues['D10'] = self.get_oil(data)
@@ -167,7 +170,7 @@ class UpdateResidues:
         return pd.concat([atoms, new_hn3, new_ions])
 
     @staticmethod
-    def get_ions(data: ionization.IonizationSol  # All the data
+    def get_ions(data: 'IonizationSol'  # All the data
                  ) -> tuple[pd.DataFrame, pd.DataFrame]:
         """get updated ions data frame"""
         updated_ions = UpdateIonDf(data.atoms,
@@ -176,7 +179,7 @@ class UpdateResidues:
         return updated_ions.update_ions, updated_ions.new_ions
 
     @staticmethod
-    def get_aptes(data: ionization.IonizationSol  # All the data
+    def get_aptes(data: 'IonizationSol'  # All the data
                   ) -> tuple[pd.DataFrame, pd.DataFrame]:
         """get updated aptes dataframe"""
         updated_aptes = UpdateAptesDf(data.atoms,
@@ -185,19 +188,19 @@ class UpdateResidues:
         return updated_aptes.update_aptes, updated_aptes.new_nh3
 
     @staticmethod
-    def get_sol(data: ionization.IonizationSol  # All the data
+    def get_sol(data: 'IonizationSol'  # All the data
                 ) -> pd.DataFrame:
         """return water residues"""
         return data.residues_atoms['SOL']
 
     @staticmethod
-    def get_oil(data: ionization.IonizationSol  # All the data
+    def get_oil(data: 'IonizationSol'  # All the data
                 ) -> pd.DataFrame:
         """return oil residues"""
         return data.residues_atoms['D10']
 
     @staticmethod
-    def get_cor(data: ionization.IonizationSol  # All the data
+    def get_cor(data: 'IonizationSol'  # All the data
                 ) -> pd.DataFrame:
         """return core atoms of NP residues"""
         return data.residues_atoms['COR']
