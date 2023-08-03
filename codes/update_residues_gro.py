@@ -280,12 +280,14 @@ class UpdateCorDf:
     update_cor: dict[str, pd.DataFrame]  # Updated COR df
 
     def __init__(self,
-                 atoms: dict[str, pd.DataFrame]  # All the cores atoms
+                 atoms: dict[str, pd.DataFrame],  # All the cores atoms,
+                 debug: bool
                  ) -> None:
-        self.update_cor = self.update_cor_df(atoms)
+        self.update_cor = self.update_cor_df(atoms, debug)
 
     @staticmethod
-    def update_cor_df(atoms: dict[str, pd.DataFrame]  # All the cores atoms
+    def update_cor_df(atoms: dict[str, pd.DataFrame],  # All the cores atoms
+                      debug: bool
                       ) -> dict[str, pd.DataFrame]:
         """update core atoms if needed to be updated"""
         id_updated_cores: dict[str, pd.DataFrame] = {}
@@ -294,7 +296,8 @@ class UpdateCorDf:
             df_c: pd.DataFrame = item.copy()
             df_c['atom_id'] = atom_ids
             id_updated_cores[cor] = df_c
-            df_c.to_csv(f'{cor}.test', sep=' ')
+            if debug:
+                df_c.to_csv(f'{cor}_update_atom_id.debug', sep=' ')
             del df_c
         return id_updated_cores
 
@@ -303,14 +306,16 @@ class UpdateSolDf(UpdateBaseDf):
     """Class for preparing water (SOL) residue for updating."""
 
     def __init__(self,
-                 atoms: pd.DataFrame
+                 atoms: pd.DataFrame,
+                 debug: bool
                  ) -> None:
         name = 'sol'
         first_res = atoms['residue_number'].iloc[0]
         first_atom = 1
         atoms_per_res = 3
         super().__init__(atoms, first_res, first_atom, atoms_per_res)
-        self.update_df.to_csv(f'{name}_res_update.test', sep=' ')
+        if debug:
+            self.update_df.to_csv(f'{name}_res_update.debug', sep=' ')
 
 
 class UpdateOilDf(UpdateBaseDf):
@@ -319,14 +324,16 @@ class UpdateOilDf(UpdateBaseDf):
     def __init__(self,
                  atoms: pd.DataFrame,
                  sol_last_res: int,
-                 sol_last_atom: int
+                 sol_last_atom: int,
+                 debug: bool
                  ) -> None:
         name = 'oil'
         first_res = sol_last_res + 1
         first_atom = sol_last_atom + 1
         atoms_per_res = 32
         super().__init__(atoms, first_res, first_atom, atoms_per_res)
-        self.update_df.to_csv(f'{name}_res_update.test', sep=' ')
+        if debug:
+            self.update_df.to_csv(f'{name}_res_update.debug', sep=' ')
 
 
 class UpdateOdaDf(UpdateBaseDf):
@@ -336,14 +343,16 @@ class UpdateOdaDf(UpdateBaseDf):
     def __init__(self,
                  atoms: pd.DataFrame,
                  oil_last_res: int,
-                 oil_last_atom: int
+                 oil_last_atom: int,
+                 debug: bool
                  ) -> None:
         name = 'oda'
         first_res = oil_last_res + 1
         first_atom = oil_last_atom + 1
         atoms_per_res = 59
         super().__init__(atoms, first_res, first_atom, atoms_per_res)
-        self.update_df.to_csv(f'{name}_res_update.test', sep=' ')
+        if debug:
+            self.update_df.to_csv(f'{name}_res_update.test', sep=' ')
 
 
 class UpdateIonDf(UpdateBaseDf):
@@ -355,7 +364,8 @@ class UpdateIonDf(UpdateBaseDf):
                  ion_poses: list[np.ndarray],  # Position for the new ions
                  ion_velos: list[np.ndarray],  # Velocities for the new ions
                  oda_last_res: int,
-                 oda_last_atom: int
+                 oda_last_atom: int,
+                 debug: bool
                  ) -> None:
         all_ion = self.update_ion_df(atoms, ion_poses, ion_velos)
         name = 'ion'
@@ -363,7 +373,8 @@ class UpdateIonDf(UpdateBaseDf):
         first_atom = oda_last_atom + 1
         atoms_per_res = 1
         super().__init__(all_ion, first_res, first_atom, atoms_per_res)
-        self.update_df.to_csv(f'{name}_res_update.test', sep=' ')
+        if debug:
+            self.update_df.to_csv(f'{name}_res_update.debug', sep=' ')
 
     def update_ion_df(self,
                       atoms: pd.DataFrame,  # All ION atoms
@@ -463,10 +474,12 @@ class UpdateResidues:
         self.pbc_box = data.pbc_box
         self.get_residues(data)
         combine_residues = self.concate_residues(data.param)
-        self.combine_residues = self.__set_atom_id(combine_residues)
+        self.combine_residues = self.__set_atom_id(combine_residues,
+                                                   data.param['DEBUG'])
 
     @staticmethod
-    def __set_atom_id(combine_residues: pd.DataFrame  # All the rsidues
+    def __set_atom_id(combine_residues: pd.DataFrame,  # All the rsidues
+                      debug: bool
                       ) -> pd.DataFrame:
         """set the atom_id for the all the atoms"""
         df_c: pd.DataFrame = combine_residues.copy()
@@ -475,7 +488,8 @@ class UpdateResidues:
             mk_atom_id_cycle(len(combine_residues), start_id=1)
         # Calculate the number of cycles
         df_c['atom_id'] = atom_id
-        df_c.to_csv('combine_residues', sep=' ')
+        if debug:
+            df_c.to_csv('combine_residues.debug', sep=' ')
         return df_c
 
     def concate_residues(self,
@@ -545,7 +559,8 @@ class UpdateResidues:
             if not any(num > 99999 for num in updated_res_id):
                 df_c.loc[:, 'residue_number'] += last_residue
                 self.updated_residues[nano_p] = df_c
-                df_c.to_csv(f'{nano_p}.test', sep=' ')
+                if data.param['DEBUG']:
+                    df_c.to_csv(f'{nano_p}_res_uodate.debug', sep=' ')
             else:
                 sys.exit(f'\n{bcolors.FAIL}{self.__module__}:\n'
                          'Error: Some members in the list are bigger '
@@ -600,14 +615,15 @@ class UpdateResidues:
         cores_atoms: dict[str, pd.DataFrame] = {}  # All the cores atoms
         for cor in data.param['cores']:
             cores_atoms[cor] = data.residues_atoms[cor]
-        updated_cors = UpdateCorDf(cores_atoms)
+        updated_cors = UpdateCorDf(cores_atoms, data.param['DEBUG'])
         return updated_cors.update_cor
 
     @staticmethod
     def get_sol(data: ionization.IonizationSol  # All the data
                 ) -> pd.DataFrame:
         """return water residues"""
-        updated_sol = UpdateSolDf(data.residues_atoms['SOL'])
+        updated_sol = UpdateSolDf(data.residues_atoms['SOL'],
+                                  data.param['DEBUG'])
         return updated_sol
 
     @staticmethod
@@ -618,7 +634,8 @@ class UpdateResidues:
         """return oil residues"""
         updated_oils = UpdateOilDf(data.residues_atoms['D10'],
                                    sol_last_res,
-                                   sol_last_atom)
+                                   sol_last_atom,
+                                   data.param['DEBUG'])
         return updated_oils
 
     @staticmethod
@@ -629,7 +646,8 @@ class UpdateResidues:
         """get updated ions data frame"""
         updated_oda = UpdateOdaDf(data.residues_atoms['ODN'],
                                   oil_last_res,
-                                  oil_last_atom
+                                  oil_last_atom,
+                                  data.param['DEBUG']
                                   )
         return updated_oda
 
@@ -643,7 +661,8 @@ class UpdateResidues:
                                    data.ion_poses,
                                    data.ion_velos,
                                    oda_last_res,
-                                   oda_last_atom
+                                   oda_last_atom,
+                                   data.param['DEBUG']
                                    )
         return updated_ions
 
