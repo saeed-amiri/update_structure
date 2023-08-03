@@ -709,7 +709,6 @@ class UpdateResidues:
                 'nr_residues': residues_number_count
             }
 
-    @classmethod
     def write_log_msg(self,
                       log: logger.logging.Logger  # Name of the output file
                       ) -> None:
