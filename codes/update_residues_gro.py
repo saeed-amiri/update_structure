@@ -298,7 +298,7 @@ class UpdateCorDf:
             df_c: pd.DataFrame = item.copy()
             df_c['atom_id'] = atom_ids
             id_updated_cores[cor] = df_c
-            if debug:
+            if debug is not 'None':
                 df_c.to_csv(f'{cor}_update_atom_id.debug', sep=' ')
             del df_c
         return id_updated_cores
@@ -316,7 +316,7 @@ class UpdateSolDf(UpdateBaseDf):
         first_atom = 1
         atoms_per_res = 3
         super().__init__(atoms, first_res, first_atom, atoms_per_res)
-        if debug:
+        if debug is not 'None':
             self.update_df.to_csv(f'{name}_res_update.debug', sep=' ')
 
 
@@ -334,7 +334,7 @@ class UpdateOilDf(UpdateBaseDf):
         first_atom = sol_last_atom + 1
         atoms_per_res = 32
         super().__init__(atoms, first_res, first_atom, atoms_per_res)
-        if debug:
+        if debug is not 'None':
             self.update_df.to_csv(f'{name}_res_update.debug', sep=' ')
 
 
@@ -353,7 +353,7 @@ class UpdateOdaDf(UpdateBaseDf):
         first_atom = oil_last_atom + 1
         atoms_per_res = 59
         super().__init__(atoms, first_res, first_atom, atoms_per_res)
-        if debug:
+        if debug is not 'None':
             self.update_df.to_csv(f'{name}_res_update.debug', sep=' ')
 
 
@@ -375,7 +375,7 @@ class UpdateIonDf(UpdateBaseDf):
         first_atom = oda_last_atom + 1
         atoms_per_res = 1
         super().__init__(all_ion, first_res, first_atom, atoms_per_res)
-        if debug:
+        if debug is not 'None':
             self.update_df.to_csv(f'{name}_res_update.debug', sep=' ')
 
     def update_ion_df(self,
@@ -493,7 +493,7 @@ class UpdateResidues:
             mk_atom_id_cycle(len(combine_residues), start_id=1)
         # Calculate the number of cycles
         df_c['atom_id'] = atom_id
-        if debug:
+        if debug is not 'None':
             df_c.to_csv('combine_residues.debug', sep=' ')
         return df_c
 
