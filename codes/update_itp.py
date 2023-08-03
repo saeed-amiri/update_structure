@@ -1,11 +1,35 @@
-"""The script updates the "APT_COR.itp" file using the HN3 atoms set by
-update_residue.py. To do this, we need to add the correct information
-for the name and charge for the new HN3 in the atoms section.
+"""
+The script updates the nanoparticles "itp" file using the HN3 atoms set
+by update_residue_gro.py. To do this, we need to add the correct
+information for the name and charge for the new HN3 in the atoms
+section.
 Additionally, for chains that have been protonated, It also updates
 the name and charges for N, HN1, and HN2 to match the new values.
 The script needs to add bonds between N and the new HN3. Since force-
 field values are set in different files, we only need to update the
 sections for the extra H in each chain, including angles and dihedrals.
+
+There are several classes defined in the script, including:
+    UpdateItp, UpdateDihedral, UpdateAngle, UpdateBond, UpdateAtom,
+    WrapperUpdateItp, and StandAlone.
+
+The UpdateItp class is the main class responsible for updating the ITP
+    file. It initializes with the name of the ITP file, information
+    about new HN3 atoms, and the names of APTES and CORE residues.
+The UpdateDihedral, UpdateAngle, UpdateBond, and UpdateAtom classes
+    are helper classes used by UpdateItp to update specific sections
+    (dihedrals, angles, bonds, atoms) in the ITP file.
+The WrapperUpdateItp class acts as a wrapper to update multiple ITP
+    files, each corresponding to a different set of HN3 atoms.
+The StandAlone class is used to generate random positions and velocities
+    for the new HN3 atoms for testing purposes.
+The script reads an ITP file, updates the specified sections, and writes
+    the updated ITP to a new file with the name 'APT_COR_updated.itp'.
+
+To use this script, you would need to provide it with the input ITP
+file name and the information about the new HN3 atoms. The StandAlone
+class is used to generate test data for new HN3 atoms when running the
+script independently.
 """
 
 import sys
