@@ -3,8 +3,9 @@
 import typing
 import pandas as pd
 import logger
-import update_itp as upitp
 from colors_text import TextColor as bcolors
+if typing.TYPE_CHECKING:
+    from update_itp import UpdateItp, WrapperUpdateItp
 
 
 class WriteItp:
@@ -15,7 +16,7 @@ class WriteItp:
     info_msg = 'Message from WriteItp:\n'
 
     def __init__(self,
-                 itp: upitp.UpdateItp,  # Dataframes of updated sections
+                 itp: 'UpdateItp',  # Dataframes of updated sections
                  fname: str,  # Name of the updated itp file
                  log: logger.logging.Logger
                  ) -> None:
@@ -26,7 +27,7 @@ class WriteItp:
         self.info_msg = ''  # clean the msg
 
     def write_itp(self,
-                  itp: upitp.UpdateItp  # Dataframes of updated sections
+                  itp: 'UpdateItp'  # Dataframes of updated sections
                   ) -> None:
         """write itp file for all the residues, and return the name of itp"""
         print(f'{bcolors.OKBLUE}{self.__class__.__name__}: '
@@ -152,13 +153,13 @@ class WrapperWriteItp:
     A wrapper class to cover all the itp files
     """
     def __init__(self,
-                 itps: upitp.WrapperUpdateItp,
+                 itps: 'WrapperUpdateItp',
                  log: logger.logging.Logger
                  ) -> None:
         self.write_itp_files(itps, log)
 
     def write_itp_files(self,
-                        itps: upitp.WrapperUpdateItp,
+                        itps: 'WrapperUpdateItp',
                         log: logger.logging.Logger
                         ) -> None:
         """loop over all the itp files"""
