@@ -162,9 +162,7 @@ class WrapperWriteItp:
                         log: logger.logging.Logger
                         ) -> None:
         """loop over all the itp files"""
-        print(type(itps))
         for nano_p, itp_item in itps.updated_itp.items():
-            print(self.mk_out_name(nano_p))
             WriteItp(itp_item, self.mk_out_name(nano_p), log)
 
     @staticmethod
