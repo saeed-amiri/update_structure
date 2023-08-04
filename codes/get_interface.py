@@ -230,7 +230,7 @@ class WrapperGetSurface:
                  ) -> None:
         self.interface_std, self.interface_z = \
             self.get_all_surfaces(residues_atoms, log, param)
-        self.__write_msg()
+        self.__write_msg(log)
 
     def get_all_surfaces(self,
                          residues_atoms: dict[str, pd.DataFrame],
