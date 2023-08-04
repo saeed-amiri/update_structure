@@ -96,11 +96,6 @@ class ReadParam:
     str_keys: list[str] = ["FILE", "LINE"]
     list_keys: list = [float_keys, integer_keys, boolen_keys, files_keys,
                        str_keys, itp_keys]
-    essential_keys: list[str] = [
-        "ANGLE", "RADIUS", "READ", "FILE", "INTERFACE", "INTERFACE_WIDTH",
-        "NUMSAMPLE", "ION_DISTANCE", "ION_ATTEPTS", "NP_ZLOC", "LINE",
-        "BETTER_POS", "NP_ITP", "DEBUG", "TOPOFILE"]
-
     def __init__(self,
                  log: logger.logging.Logger
                  ) -> None:
