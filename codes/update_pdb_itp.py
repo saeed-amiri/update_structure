@@ -29,7 +29,10 @@ if __name__ == '__main__':
     if STYLE == 'GRO':
         gro_data = \
             update_residues_gro.UpdateResidues(sys.argv[1], log=LOG)
-        write_gro_file.write_gromacs_gro(gro_data, 'updated_system.gro')
+        write_gro_file.write_gromacs_gro(gro_data.combine_residues,
+                                         'updated_system.gro',
+                                         pbc_box=gro_data.pbc_box,
+                                         title=gro_data.title)
         new_hn3_dict: dict[str, pd.DataFrame] = gro_data.new_hn3
     else:
         sys.exit('\nDEPRECTED! CANNOT READ THIS! USE GRO FILES\n')
