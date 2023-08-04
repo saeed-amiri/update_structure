@@ -136,7 +136,7 @@ class GetSurface:
                     max_z_index.append(ind_in_mesh[0][max_z])
         water_surface: pd.DataFrame = cuboid_with_hole.iloc[max_z_index]
         if self.write_debug != 'None':
-            wrpdb.WriteResiduePdb(water_surface, 'water_surface.pdb')
+            wrpdb.WriteResiduePdb(water_surface, 'water_surface_ebug.pdb')
         return water_surface
 
     def __get_water_no_np(self,
@@ -161,7 +161,7 @@ class GetSurface:
         # Filter the dataframe using the mask
         df_filtered: pd.DataFrame = waters_oxy[mask]
         if self.write_debug != 'None':
-            wrpdb.WriteResiduePdb(df_filtered, 'o_waters.pdb')
+            wrpdb.WriteResiduePdb(df_filtered, 'o_waters_ebug.pdb')
         self.info_msg += '\tOnly oxygen atoms [OH2] are selected for the' + \
             ' looking for the surface.\n'
         return df_filtered
@@ -180,7 +180,7 @@ class GetSurface:
         and their difference will be the radius * 2 ."""
         # Calculate the center of mass
         if self.write_debug != 'None':
-            wrpdb.WriteResiduePdb(aptes, 'APTES.pdb')
+            wrpdb.WriteResiduePdb(aptes, 'APTES_ebug.pdb')
         aptes_com: np.ndarray = np.average(aptes[['x', 'y', 'z']], axis=0)
         max_z: np.float64 = np.max(aptes['z'])
         min_z: np.float64 = np.min(aptes['z'])
