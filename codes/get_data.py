@@ -462,7 +462,9 @@ class ProcessData:
 
         # Get the atoms in the bounding box enclosing the NP and add
         # them to the dictionary
-        residues_atoms['box'] = self.__get_np_box(residues_atoms)
+        for aptes in self.param['aptes']:
+            residues_atoms[f'box_{aptes}'] = \
+                self.__get_np_box(residues_atoms, aptes)
 
         return residues_atoms
 
@@ -488,7 +490,8 @@ class ProcessData:
         return residues_atoms
 
     def __get_np_box(self,
-                     residues_atoms: dict[str, pd.DataFrame]
+                     residues_atoms: dict[str, pd.DataFrame],
+                     aptes: str  # Name of the aptes chains
                      ) -> pd.DataFrame:
         """
         Get area around NP and obtain a box of all the residues in that
@@ -507,7 +510,7 @@ class ProcessData:
         zrange: tuple[float, float]  # Range of NP in z direction
         # Get the x, y, and z ranges of the NP using  calculate_np_xyz_range
         xrange, yrange, zrange = \
-            self.calculate_np_xyz_range(residues_atoms['APT'])
+            self.calculate_np_xyz_range(residues_atoms[aptes])
         # Get the atoms inside the bounding box using the __get_inside_box
         # method.
         return self.__get_inside_box(xrange, yrange, zrange)
