@@ -221,6 +221,7 @@ class WrapperGetSurface:
 
     interface_std: np.float64
     interface_z: np.float64
+    info_msg: str = 'Message from WrapperGetSurface:\n'  # Message for logging
 
     def __init__(self,
                  residues_atoms: dict[str, pd.DataFrame],  # All atoms in ress
@@ -229,6 +230,7 @@ class WrapperGetSurface:
                  ) -> None:
         self.interface_std, self.interface_z = \
             self.get_all_surfaces(residues_atoms, log, param)
+        self.__write_msg()
 
     def get_all_surfaces(self,
                          residues_atoms: dict[str, pd.DataFrame],
@@ -248,6 +250,8 @@ class WrapperGetSurface:
             interface_std_lst.append(water_surface.interface_std)
         interface_std, interface_z = \
             self.set_attributes(interface_z_lst, interface_std_lst)
+        self.info_msg += f'\tMean of interface_z: `{interface_z}`\n'
+        self.info_msg += f'\tMean of interface_std: `{interface_std}`\n'
         return interface_std, interface_z
 
     @staticmethod
@@ -258,6 +262,15 @@ class WrapperGetSurface:
         interface_z: np.float64 = np.mean(interface_z_lst)
         interface_std: np.float64 = np.mean(interface_std_lst)
         return interface_std, interface_z
+
+
+    def __write_msg(self,
+                    log: logger.logging.Logger,  # To log info in it
+                    ) -> None:
+        """write and log messages"""
+        print(f'{bcolors.OKCYAN}{WrapperGetSurface.__module__}:\n'
+              f'\t{self.info_msg}{bcolors.ENDC}')
+        log.info(self.info_msg)
 
 
 if __name__ == '__main__':
