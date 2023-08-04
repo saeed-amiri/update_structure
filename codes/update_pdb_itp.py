@@ -21,6 +21,7 @@ import write_pdb_file
 import update_itp
 import write_itp_file
 import write_gro_file
+import update_topo
 
 
 STYLE: str = 'GRO'
@@ -42,3 +43,4 @@ if __name__ == '__main__':
     itp = update_itp.WrapperUpdateItp(
         param=gro_data.param, hn3_dict=new_hn3_dict)
     write_itp_file.WrapperWriteItp(itp, log=LOG)
+    update_topo.ReadTop(gro_data.nr_atoms_residues, gro_data.param, log=LOG)
