@@ -1,9 +1,12 @@
 """writing the partially or total pdb file with updated dataframes"""
 
 import sys
+import typing
 import pandas as pd
 import update_residues_pdb as residues
 from colors_text import TextColor as bcolors
+if typing.TYPE_CHECKING:
+    from update_residues_pdb import UpdateResidues
 
 
 class WriteResiduePdb:
@@ -76,12 +79,12 @@ class WritePdb:
     needed"""
 
     def __init__(self,
-                 residues_atoms  # residues.UpdateResidues  # All and updates
+                 residues_atoms:  'UpdateResidues'  # All and updates
                  ) -> None:
         self.write_pdb(residues_atoms)
 
     @staticmethod
-    def write_pdb(residues_atoms  # residues.UpdateResidues  # Updates res
+    def write_pdb(residues_atoms: 'UpdateResidues'  # Updates res
                   ) -> None:
         """write all the residues into file, and also the main data"""
         for res, v_df in residues_atoms.updated_residues.items():
