@@ -4,8 +4,9 @@ ions, since the nanoparticle data read as one molecule, the number
 there does not need to be updated."""
 
 import typing
-import my_tools
+import datetime
 import logger
+import my_tools
 from colors_text import TextColor as bcolors
 
 
@@ -21,6 +22,9 @@ class ReadTop:
                  ) -> None:
 
         self.read_topo(nr_atoms_residues ,param, log)
+        current_datetime = datetime.datetime.now()
+        formatted_datetime = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
+        self.info_msg += f'\tDone at:{formatted_datetime}\n'
         self.write_log_msg(log)
 
     def read_topo(self,
