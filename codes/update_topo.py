@@ -67,7 +67,7 @@ class ReadTop:
         out_name: str = f"{fname.split('.')[0]}_updated.{fname.split('.')[1]}"
         self.info_msg += f'\tUpdate: {fname} -> {out_name}\n'
         self.info_msg += \
-            '\n\t\tUPDATE THE NAME OF ITP FILES! I DONT DO IT!\n\n'
+            '\n\t\t>>>>>PDATE THE NAME OF ITP FILES! I DONT DO IT!<<<<<\n\n'
         return out_name
 
     def write_log_msg(self,
