@@ -72,10 +72,10 @@ Classes:
 """
 
 import sys
-import typing
 import json
-import my_tools
+import typing
 import logger
+import my_tools
 from colors_text import TextColor as bcolors
 
 
@@ -87,6 +87,15 @@ class ReadParam:
     """
     info_msg: str = 'Message:\n'  # Message to pass for logging and writing
     fname: str = 'update_param'
+    float_keys: list[str] = ["ANGLE", "RADIUS", "INTERFACE",
+                             "INTERFACE_WIDTH", "ION_DISTANCE", "NP_ZLOC"]
+    integer_keys: list[str] = ["NUMSAMPLE", "ION_ATTEPTS", "BETTER_POS"]
+    boolen_keys: list[str] = ["READ", "DEBUG"]
+    files_keys: list[str] = ["TOPOFILE"]
+    itp_keys: list[str] = ["NP_ITP"]
+    str_keys: list[str] = ["FILE", "LINE"]
+    list_keys: list = [float_keys, integer_keys, boolen_keys, files_keys,
+                       str_keys, itp_keys]
     essential_keys: list[str] = [
         "ANGLE", "RADIUS", "READ", "FILE", "INTERFACE", "INTERFACE_WIDTH",
         "NUMSAMPLE", "ION_DISTANCE", "ION_ATTEPTS", "NP_ZLOC", "LINE",
@@ -98,6 +107,7 @@ class ReadParam:
         self.param: dict[str, typing.Any] = {}
         self.load_param_from_file(log)
         self.get_names_of_parts()
+        self.check_inputs(log)
         self.__write_msg(log)
         self.info_msg = ''  # Empety the msg
 
@@ -120,7 +130,9 @@ class ReadParam:
 
         # Perform a sanity check on the read parameters to ensure that
         # all important keys exist.
-        self.check_essential_keys_exist()
+        essential_keys = \
+            [item for sublist in self.list_keys for item in sublist]
+        self.check_essential_keys_exist(essential_keys)
 
     def read_param(self) -> None:
         """
@@ -195,7 +207,9 @@ class ReadParam:
         except ValueError:
             return data[0], data[1]
 
-    def check_essential_keys_exist(self) -> None:
+    def check_essential_keys_exist(self,
+                                   essential_keys: list[str]
+                                   ) -> None:
         """
         Check if all the important keys exist and have a value.
 
@@ -205,7 +219,7 @@ class ReadParam:
         """
         # Find the missing items from essential_keys in param dictionary
         missing_items = \
-            [item for item in self.essential_keys if item not in self.param]
+            [item for item in essential_keys if item not in self.param]
 
         # Check if there are any missing items
         if missing_items:
@@ -218,6 +232,22 @@ class ReadParam:
                      f'`{self.fname}`:\n\t{missing_items_str}'
                      f'{bcolors.ENDC}')
 
+    def check_inputs(self,
+                     log: logger.logging.Logger
+                     ) -> None:
+        """
+        Check the input of parameter file. Check numbers, files,...
+        """
+        self.check_files([self.param[item] for item in self.files_keys], log)
+
+    @staticmethod
+    def check_files(file_list: list[str],
+                    log: logger.logging.Logger
+                    ) -> None:
+        """check all the files if their exist"""
+        for ifile in file_list:
+            my_tools.check_file_exist(ifile, log, logging=False)
+
     def __write_msg(self,
                     log: logger.logging.Logger
                     ) -> None:
@@ -228,4 +258,4 @@ class ReadParam:
 
 
 if __name__ == '__main__':
-    read = ReadParam(log=logger.setup_logger('update.log'))
+    read = ReadParam(log=logger.setup_logger('read_parm.log'))
