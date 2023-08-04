@@ -51,6 +51,8 @@ import logger
 import my_tools
 import ionization
 from colors_text import TextColor as bcolors
+if typing.TYPE_CHECKING:
+    from ionization import IonizationSol
 
 
 class UpdateBaseDf:
@@ -421,7 +423,7 @@ class UpdateIonDf(UpdateBaseDf):
 
 class UpdateResidues:
     """get all the dataframes as an object
-    data: ionization.IonizationSol has following attributes:
+    data: 'IonizationSol' has following attributes:
 
         'atoms': pd.DataFrame -> All atoms from get_data.py
 
@@ -519,7 +521,7 @@ class UpdateResidues:
         return combine_residues
 
     def get_residues(self,
-                     data: ionization.IonizationSol  # All the data
+                     data: 'IonizationSol'  # All the data
                      ) -> None:
         """get all the residues"""
 
@@ -561,7 +563,7 @@ class UpdateResidues:
         self.info_msg += '\n'
 
     def add_nanoparticles_to_updated_residues(self,
-                                              data: ionization.IonizationSol,
+                                              data: 'IonizationSol',
                                               update_ion: UpdateIonDf,
                                               updated_aptes: dict[str,
                                                                   pd.DataFrame]
@@ -594,7 +596,7 @@ class UpdateResidues:
             last_residue = int(np.max(df_c['residue_number']))
 
     def update_nanoparticles(self,
-                             data: ionization.IonizationSol,
+                             data: 'IonizationSol',
                              updated_aptes:  dict[str, pd.DataFrame]
                              ) -> dict[str, pd.DataFrame]:
         """update nanoparticles"""
@@ -620,7 +622,7 @@ class UpdateResidues:
         return pd.concat([atoms, new_hn3, new_ions])
 
     def get_aptes(self,
-                  data: ionization.IonizationSol  # All the data
+                  data: 'IonizationSol'  # All the data
                   ) -> tuple[dict[str, pd.DataFrame], pd.DataFrame]:
         """get updated aptes dataframe"""
         aptes_df_dict: dict[str, pd.DataFrame] = {}
@@ -633,7 +635,7 @@ class UpdateResidues:
         return updated_aptes.update_aptes, updated_aptes.new_nh3
 
     @staticmethod
-    def get_cor(data: ionization.IonizationSol  # All the data
+    def get_cor(data: 'IonizationSol'  # All the data
                 ) -> pd.DataFrame:
         """return core atoms of NP residues"""
         cores_atoms: dict[str, pd.DataFrame] = {}  # All the cores atoms
@@ -643,7 +645,7 @@ class UpdateResidues:
         return updated_cors.update_cor
 
     @staticmethod
-    def get_sol(data: ionization.IonizationSol  # All the data
+    def get_sol(data: 'IonizationSol'  # All the data
                 ) -> pd.DataFrame:
         """return water residues"""
         updated_sol = UpdateSolDf(data.residues_atoms['SOL'],
@@ -651,7 +653,7 @@ class UpdateResidues:
         return updated_sol
 
     @staticmethod
-    def get_oil(data: ionization.IonizationSol,  # All the data
+    def get_oil(data: 'IonizationSol',  # All the data
                 sol_last_res: int,  # Last residue index in water
                 sol_last_atom: int  # Last atom index in water
                 ) -> pd.DataFrame:
@@ -663,7 +665,7 @@ class UpdateResidues:
         return updated_oils
 
     @staticmethod
-    def get_oda(data: ionization.IonizationSol,  # All the data
+    def get_oda(data: 'IonizationSol',  # All the data
                 oil_last_res: int,  # Last residue index in water
                 oil_last_atom: int  # Last atom index in water
                 ) -> UpdateOdaDf:
@@ -676,7 +678,7 @@ class UpdateResidues:
         return updated_oda
 
     @staticmethod
-    def get_ions(data: ionization.IonizationSol,  # All the data
+    def get_ions(data: 'IonizationSol',  # All the data
                  oda_last_res: int,
                  oda_last_atom: int
                  ) -> UpdateIonDf:
