@@ -59,7 +59,6 @@ class ReadTop:
                 res_nr = 1
             new_line: str = f'{res:<15}{res_nr:>10}\n'
             f_w.write(new_line)
-        self.info_msg += f'\tUpdated ion line is: {new_line}'
 
     def __mk_out_name(self,
                       fname: str,  # Name of the input file
