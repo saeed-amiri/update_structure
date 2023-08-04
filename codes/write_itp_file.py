@@ -30,9 +30,6 @@ class WriteItp:
                   itp: 'UpdateItp'  # Dataframes of updated sections
                   ) -> None:
         """write itp file for all the residues, and return the name of itp"""
-        print(f'{bcolors.OKBLUE}{self.__class__.__name__}: '
-              f'({self.__module__})\n'
-              f'\tITP file is `{self.fname}`{bcolors.ENDC}')
         with open(self.fname, 'w', encoding="utf8") as f_w:
             f_w.write('; input pdb SMILES:\n')
             f_w.write('; Updated itp file for nanoparticle:\n')
