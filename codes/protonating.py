@@ -154,7 +154,8 @@ class FindHPosition(get_data.ProcessData):
             if 'vx' in df_nh.columns:
                 all_h_vels[ind] = self.__get_velocity(df_nh)
             v_mean, _ = self.__get_hbond_len_angle(v_nh1, v_nh2)
-            atoms_around_n = self.__get_atoms_around_n(df_nh, v_mean)
+            atoms_around_n: pd.DataFrame = \
+                self.__get_atoms_around_n(df_nh, v_mean, aptes)
             possible_loc = self.__get_possible_pos(v_nh1, v_nh2, v_mean, df_nh)
             h_loc = self.__find_h_place(atoms_around_n, possible_loc, v_mean)
             all_h_locs[ind] = h_loc
@@ -448,7 +449,8 @@ class FindHPosition(get_data.ProcessData):
 
     def __get_atoms_around_n(self,
                              df_nh: pd.DataFrame,  # N and H dataframe
-                             v_mean: np.float64  # Average length of N-H bonds
+                             v_mean: np.float64,  # Average length of N-H bonds
+                             aptes: str  # Name of the aptes chains
                              ) -> pd.DataFrame:
         """
         Generate a DataFrame that includes atoms within a specified
@@ -507,8 +509,9 @@ class FindHPosition(get_data.ProcessData):
                 ProcessData.__get_atoms_around_n(df_nh, v_mean)
         """
         # Extract the x, y, z coordinates from the dataframe
+        box: str = f'box_{aptes}'
         coordinates: np.ndarray = \
-            self.residues_atoms['box'][['x', 'y', 'z']].values
+            self.residues_atoms[box][['x', 'y', 'z']].values
         # Build the KD-tree
         tree = KDTree(coordinates)
         # Getting the position of the N atom
@@ -520,7 +523,7 @@ class FindHPosition(get_data.ProcessData):
         # Find the indices of points within the radius
         indices: list[int] = tree.query_ball_point(n_pos, radius)
         # Return the points within the radius
-        return self.residues_atoms['box'].iloc[indices]
+        return self.residues_atoms[box].iloc[indices]
 
     @staticmethod
     def __get_hbond_len_angle(v_nh1: np.ndarray,  # Vector from N to H1
