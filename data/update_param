@@ -8,6 +8,8 @@ Name of the NP itp files, write them in list of list. The names of the APTES cha
 should follow the the name of the files. First the name of APTES than the name of the COR
 And seperate them with silicolon, like [file1, APT, COR], [file2, APU, COS]
 @NP_ITP=[APT_COR, APT, COR]; [APU_COS, APU, COS]
+Topology file
+@TOPOFILE=topol.top
 ############### INTERACTIVE VALUES ###########
 intereface location -> caculated by analysing script
 If READ then read it from the READ file, otherwise from the fixed value set in here
