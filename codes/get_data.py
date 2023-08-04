@@ -576,11 +576,18 @@ class ProcessData:
     def calculate_maximum_np_radius(self) -> np.float64:
         """get the maximum radius of NP, since APTES are most outward,
         here only looking at APTES residues"""
-        aptes_atoms: pd.DataFrame = self.residues_atoms['APT']
-        diameter: list[float] = []  # To save the diameters in each direction
-        for xyz in ['x', 'y', 'z']:
-            diameter.append(aptes_atoms[xyz].max() - aptes_atoms[xyz].min())
-        return np.max(diameter)
+        np_diameters: list[np.float64] = []
+        for aptes in self.param['aptes']:
+            aptes_atoms: pd.DataFrame = self.residues_atoms[aptes]
+            diameter: list[float] = []  # Save the diameters in each direction
+            for xyz in ['x', 'y', 'z']:
+                diameter.append(
+                    aptes_atoms[xyz].max() - aptes_atoms[xyz].min())
+            np_diameters.append(np.max(diameter))
+        max_diameter: np.float64 = np.max(np_diameters)
+        self.info_msg += \
+            f'\tMaximum radius of between all NPs: `{max_diameter/2}`\n'
+        return max_diameter
 
     def get_unique_residue_names(self) -> list[str]:
         """
