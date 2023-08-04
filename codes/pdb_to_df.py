@@ -222,4 +222,4 @@ class Pdb:
 
 
 if __name__ == '__main__':
-    pdb = Pdb(sys.argv[1], log=logger.logging.Logger('pdb_to_df.log'))
+    pdb = Pdb(sys.argv[1], log=logger.setup_logger('update.log'))

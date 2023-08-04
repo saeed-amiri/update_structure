@@ -616,4 +616,4 @@ if __name__ == '__main__':
                             hn3=StandAlone().new_nh3,
                             aptes='APT',
                             core='COR'), fname='APT_COR_updated.itp',
-                            log=logger.logging.Logger('update_itp.log'))
+                            log=logger.setup_logger('update.log'))
