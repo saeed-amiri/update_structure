@@ -303,8 +303,8 @@ class ProcessData:
             # Combine the results from each process
             for result in results:
                 aptes_list.extend(result)
-            self.info_msg += (f'\tThe number of aptes: `{aptes}` '
-                              f'is {len(aptes_list)}\n')
+            self.info_msg += ('\tThe number of unprotonated aptes in water: '
+                              f'`{aptes}` is {len(aptes_list)}\n')
             unprotonated_aptes[aptes] = aptes_list
 
         # Return the list of unprotonated APTES indices
