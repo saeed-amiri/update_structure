@@ -15,7 +15,7 @@ class ReadTop:
     info_msg: str = 'message:\n' # Meesage from methods to log at the end
 
     def __init__(self,
-                 nr_atoms_residues: dict[str, int],
+                 nr_atoms_residues: dict[str, dict[str, int]],
                  param: dict[str, typing.Any],
                  log: logger.logging.Logger,
                  ) -> None:
@@ -24,7 +24,7 @@ class ReadTop:
         self.write_log_msg(log)
 
     def read_topo(self,
-                  nr_atoms_residues: dict[str, int],
+                  nr_atoms_residues: dict[str, dict[str, int]],
                   param: dict[str, typing.Any],
                   log: logger.logging.Logger,
                   ) -> None:
@@ -42,10 +42,10 @@ class ReadTop:
                     break
                 if not line:
                     break
-            line = self.write_residues(nr_atoms_residues, f_w)
+            self.write_residues(nr_atoms_residues, f_w)
 
     def write_residues(self,
-                       nr_atoms_residues: dict[str, int],  # Number of residues
+                       nr_atoms_residues: dict[str, dict[str, int]],
                        f_w: typing.IO
                        ) -> None:
         """update the number of ions in the file"""
@@ -53,7 +53,7 @@ class ReadTop:
         f_w.write('; Compound			#mols\n')
         for res, numbers in nr_atoms_residues.items():
             if 'itp' not in res:
-                nr: int = numbers['nr_residues']
+                nr = int(numbers['nr_residues'])
             else:
                 res = res.split('.')[0]
                 nr = 1
@@ -81,6 +81,6 @@ class ReadTop:
 
 
 if __name__ == '__main__':
-    ReadTop(nr_atoms_residues={'SOL': 100, 'ODN': 10},
+    ReadTop(nr_atoms_residues={'SOL': {"nr_atoms": 5900, "nr_residues": 100}},
             param={'TOPOFILE': 'topol.top'},
             log = logger.setup_logger('update_topo.log'))
