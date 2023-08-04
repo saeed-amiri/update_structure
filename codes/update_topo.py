@@ -19,7 +19,7 @@ class ReadTop:
                  param: dict[str, typing.Any],
                  log: logger.logging.Logger,
                  ) -> None:
-        
+
         self.read_topo(nr_atoms_residues ,param, log)
         self.write_log_msg(log)
 
@@ -53,11 +53,11 @@ class ReadTop:
         f_w.write('; Compound			#mols\n')
         for res, numbers in nr_atoms_residues.items():
             if 'itp' not in res:
-                nr = int(numbers['nr_residues'])
+                res_nr = int(numbers['nr_residues'])
             else:
                 res = res.split('.')[0]
-                nr = 1
-            new_line: str = f'{res:<15}{nr:>10}\n'
+                res_nr = 1
+            new_line: str = f'{res:<15}{res_nr:>10}\n'
             f_w.write(new_line)
         self.info_msg += f'\tUpdated ion line is: {new_line}'
 
