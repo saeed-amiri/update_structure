@@ -15,6 +15,7 @@ most outward particles.
 """
 
 
+import typing
 import numpy as np
 import pandas as pd
 import logger
@@ -25,7 +26,7 @@ from colors_text import TextColor as bcolors
 class GetSurface:
     """find water surface of the system"""
 
-    info_msg: str = 'Message:\n'  # Message to pass for logging and writing
+    info_msg: str = 'Message from GetSurface:\n'  # Message for logging
     # Set in "get_water_surface" method:
     interface_z: np.float64  # Average place of the water suraface at interface
     interface_std: np.float64  # standard diviasion of the water suraface
@@ -33,22 +34,25 @@ class GetSurface:
 
     def __init__(self,
                  residues_atoms: dict[str, pd.DataFrame],  # All atoms in ress
+                 aptes: str,  # Name of the APTES chains
                  log: logger.logging.Logger,  # To log info in it
                  write_debug: bool = False,  # If wanted to write the pdb file
                  ) -> None:
         self.write_debug: bool = write_debug
-        self.get_interface(residues_atoms)
+        self.get_interface(residues_atoms, aptes)
         self.__write_msg(log)
         self.info_msg = ''  # Empety the msg
 
     def get_interface(self,
-                      residues_atoms: dict[str, pd.DataFrame]  # All atoms
+                      residues_atoms: dict[str, pd.DataFrame],  # All atoms
+                      aptes: str,  # Name of the APTES chains
                       ) -> None:
         """get the water surface"""
         aptes_com: np.ndarray  # Center of mass of NP
         aptes_r: np.float64  # Radius of NP
         self.info_msg += '\tUnit for GRO file is [nm] and for PDB is [A]\n'
-        aptes_com, aptes_r = self.__get_np_radius_com(residues_atoms['APT'])
+        self.info_msg += f'\tNanoparticle: {aptes}\n'
+        aptes_com, aptes_r = self.__get_np_radius_com(residues_atoms[aptes])
         self.get_water_surface(residues_atoms['SOL'], aptes_com, aptes_r)
 
     def get_water_surface(self,
@@ -131,7 +135,7 @@ class GetSurface:
                     max_z = np.argmax(z_data[ind_in_mesh])
                     max_z_index.append(ind_in_mesh[0][max_z])
         water_surface: pd.DataFrame = cuboid_with_hole.iloc[max_z_index]
-        if self.write_debug:
+        if self.write_debug != 'None':
             wrpdb.WriteResiduePdb(water_surface, 'water_surface.pdb')
         return water_surface
 
@@ -156,7 +160,7 @@ class GetSurface:
 
         # Filter the dataframe using the mask
         df_filtered: pd.DataFrame = waters_oxy[mask]
-        if self.write_debug:
+        if self.write_debug != 'None':
             wrpdb.WriteResiduePdb(df_filtered, 'o_waters.pdb')
         self.info_msg += '\tOnly oxygen atoms [OH2] are selected for the' + \
             ' looking for the surface.\n'
@@ -175,7 +179,7 @@ class GetSurface:
         """find the radius of the NP, just find max and min of points in z-axis
         and their difference will be the radius * 2 ."""
         # Calculate the center of mass
-        if self.write_debug:
+        if self.write_debug != 'None':
             wrpdb.WriteResiduePdb(aptes, 'APTES.pdb')
         aptes_com: np.ndarray = np.average(aptes[['x', 'y', 'z']], axis=0)
         max_z: np.float64 = np.max(aptes['z'])
@@ -183,7 +187,7 @@ class GetSurface:
         aptes_r: np.float64 = np.round(max_z-min_z, 3) / 2
         self.info_msg += f'\tThe center of mass of NP is: {aptes_com}\n'
         self.info_msg += f'\tThe radius of NP is: {aptes_r} but {aptes_r*1.1}'
-        self.info_msg += f' is used for getting the interface\n'
+        self.info_msg += ' is used for getting the interface\n'
         return aptes_com, aptes_r*1.1
 
     @staticmethod
@@ -210,6 +214,50 @@ class GetSurface:
         print(f'{bcolors.OKCYAN}{GetSurface.__module__}:\n'
               f'\t{self.info_msg}{bcolors.ENDC}')
         log.info(self.info_msg)
+
+
+class WrapperGetSurface:
+    """class for getting all the nanoparticles"""
+
+    interface_std: np.float64
+    interface_z: np.float64
+
+    def __init__(self,
+                 residues_atoms: dict[str, pd.DataFrame],  # All atoms in ress
+                 log: logger.logging.Logger,  # To log info in it
+                 param: dict[str, typing.Any]  # If wanted to write pdb file
+                 ) -> None:
+        self.interface_std, self.interface_z = \
+            self.get_all_surfaces(residues_atoms, log, param)
+
+    def get_all_surfaces(self,
+                         residues_atoms: dict[str, pd.DataFrame],
+                         log: logger.logging.Logger,
+                         param: dict[str, typing.Any]
+                         ) -> tuple[np.float64, np.float64]:
+        """get the situations of all the nanoparticles"""
+        interface_z: np.float64
+        interface_std: np.float64
+        interface_z_lst: list[np.float64] = []
+        interface_std_lst: list[np.float64] = []
+
+        for aptes in param['aptes']:
+            water_surface = \
+                GetSurface(residues_atoms, aptes, log, param['DEBUG'])
+            interface_z_lst.append(water_surface.interface_z)
+            interface_std_lst.append(water_surface.interface_std)
+        interface_std, interface_z = \
+            self.set_attributes(interface_z_lst, interface_std_lst)
+        return interface_std, interface_z
+
+    @staticmethod
+    def set_attributes(interface_z_lst: list[np.float64],
+                       interface_std_lst: list[np.float64],
+                       ) -> tuple[np.float64, np.float64]:
+        """get average of the water surface"""
+        interface_z: np.float64 = np.mean(interface_z_lst)
+        interface_std: np.float64 = np.mean(interface_std_lst)
+        return interface_std, interface_z
 
 
 if __name__ == '__main__':
