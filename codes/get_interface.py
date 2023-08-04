@@ -36,7 +36,7 @@ class GetSurface:
                  residues_atoms: dict[str, pd.DataFrame],  # All atoms in ress
                  aptes: str,  # Name of the APTES chains
                  log: logger.logging.Logger,  # To log info in it
-                 write_debug: bool = False,  # If wanted to write the pdb file
+                 write_debug: bool,  # If wanted to write the pdb file
                  ) -> None:
         self.write_debug: bool = write_debug
         self.get_interface(residues_atoms, aptes)
