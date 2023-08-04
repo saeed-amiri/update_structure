@@ -112,12 +112,14 @@ import multiprocessing as multip
 import typing
 import numpy as np
 import pandas as pd
-import pdb_to_df as pdbf
+import logger
 import gro_to_df as grof
+import pdb_to_df as pdbf
 import read_param as param
 import get_interface as pdb_surf
-import logger
 from colors_text import TextColor as bcolors
+if typing.TYPE_CHECKING:
+    from get_interface import WrapperGetSurface
 
 
 class ProcessData:
@@ -219,8 +221,9 @@ class ProcessData:
               ated APTES residues to be protonated.
         """
         # Get the water surface
-        water_surface = \
-            pdb_surf.GetSurface(self.residues_atoms, log, write_debug=False)
+        water_surface = pdb_surf.WrapperGetSurface(self.residues_atoms,
+                                                   log,
+                                                   self.param)
 
         # Get the z-axis range of the water surface interface
         zrange: tuple[float, float] = \
@@ -371,7 +374,7 @@ class ProcessData:
         return aptes_index_dict
 
     def find_interface_z_range(self,
-                               water_surface: typing.Any  # pdb_surf.GetSurface
+                               water_surface: 'WrapperGetSurface'
                                ) -> tuple[float, float]:
         """Find all the APTES residues at the interface.
 
@@ -604,4 +607,4 @@ class ProcessData:
 
 
 if __name__ == '__main__':
-    data = ProcessData(sys.argv[1], log=logger.setup_logger('update.log'))
+    data = ProcessData(sys.argv[1], log=logger.setup_logger('get_data.log'))
