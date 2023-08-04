@@ -239,6 +239,7 @@ class ReadParam:
         Check the input of parameter file. Check numbers, files,...
         """
         self.check_files([self.param[item] for item in self.files_keys], log)
+        self.check_files(self.param['itp_files'], log)
 
     @staticmethod
     def check_files(file_list: list[str],
