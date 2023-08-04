@@ -65,7 +65,7 @@ def drop_string(input_string: str,
     output_string = input_string
     for string_to_drop in strings_to_drop:
         output_string = output_string.replace(string_to_drop, "")
-    
+
     # Return the resulting modified string.
     return output_string
 

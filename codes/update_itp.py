@@ -36,8 +36,9 @@ import sys
 import typing
 import numpy as np
 import pandas as pd
-import itp_to_df as itp
+import logger
 import my_tools
+import itp_to_df as itp
 from colors_text import TextColor as bcolors
 
 
@@ -614,4 +615,5 @@ if __name__ == '__main__':
                             fname=sys.argv[1],
                             hn3=StandAlone().new_nh3,
                             aptes='APT',
-                            core='COR'), fname='APT_COR_updated.itp')
+                            core='COR'), fname='APT_COR_updated.itp',
+                            log=logger.logging.Logger('update_itp.log'))

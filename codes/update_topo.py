@@ -57,7 +57,6 @@ class ReadTop:
         ReadTop.info_msg += f'\tUpdate: {fname} -> {out_name}\n'
         return out_name
 
-    @classmethod
     def write_log_msg(self,
                       log: logger.logging.Logger  # Name of the output file
                       ) -> None:
@@ -68,6 +67,5 @@ class ReadTop:
 
 
 if __name__ == '__main__':
-    
     ReadTop(ionnr=200, ionname='CLA',
             log = logger.setup_logger('update.log'))

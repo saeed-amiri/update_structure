@@ -555,7 +555,7 @@ class UpdateResidues:
                                                    update_ion,
                                                    updated_aptes)
         self.get_nr_atoms_residues_in_np(data.param)
-        
+
         self.info_msg += '\tNumber of residues and atoms in each residue:\n'
         self.info_msg += json.dumps(self.nr_atoms_residues, indent=8)
         self.info_msg += '\n'

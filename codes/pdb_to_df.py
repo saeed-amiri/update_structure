@@ -103,7 +103,7 @@ class Pdb:
                  ) -> list:
         """Reading line by line of the pdb file"""
         data_list: list[typing.Any] = []
-        with open(fname, 'r') as f_i:
+        with open(fname, 'r', encoding='utf8') as f_i:
             while True:
                 line = f_i.readline()
                 if line.strip().startswith("ATOM"):
@@ -222,4 +222,4 @@ class Pdb:
 
 
 if __name__ == '__main__':
-    pdb = Pdb(sys.argv[1])
+    pdb = Pdb(sys.argv[1], log=logger.logging.Logger('pdb_to_df.log'))
