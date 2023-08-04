@@ -112,7 +112,7 @@ class IonizationSol(proton.FindHPosition):
 
     def __init__(self,
                  fname: str,  # Name of the pdb file
-                 log = logger.setup_logger('update.log')
+                 log: logger.logging.Logger
                  ) -> None:
         super().__init__(fname, log)
         self.info_msg = 'Message:\n'
