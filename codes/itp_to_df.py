@@ -262,7 +262,7 @@ class BondsInfo:
                   ) -> tuple[list[int], list[int], list[int], list[str]]:
         """return bonds dataframe to make bonds dataframe"""
         columns: list[str]  # Columns of the bonds wild
-        columns = ['ai', 'aj', 'funct', 'r', 'k', 'name']
+        columns = ['ai', 'aj', 'typ', 'cmt', 'name']
         a_i: list[int] = []  # index of the 1st atoms in the bonds
         a_j: list[int] = []  # index of the 2nd atoms in the bonds
         funct: list[int] = []  # Type of the function of the bond
@@ -350,7 +350,7 @@ class AnglesInfo:
                               list[int], list[str]]:
         """return bonds dataframe to make angles dataframe"""
         columns: list[str]  # Columns of the angles wild
-        columns = ['ai', 'aj', 'ak', 'funct', 'theta', 'cth', 'name']
+        columns = ['ai', 'aj', 'ak', 'typ', 'cmt', 'name']
         a_i: list[int] = []  # index of the 1st atoms in the angles
         a_j: list[int] = []  # index of the 2nd atoms in the angles
         a_k: list[int] = []  # index of the 3rd atoms in the angles
@@ -451,8 +451,7 @@ class DihedralsInfo:
                       ) -> pd.DataFrame:  # DataFrame of the dihedrals
         """return bonds dataframe to make dihedrals dataframe"""
         columns: list[str]  # Columns of the dihedrals wild
-        columns = ['ai', 'aj', 'ak', 'ah', 'funct', 'C0', 'C1', 'C2',
-                   'C3', 'C4', 'C5', 'name']
+        columns = ['ai', 'aj', 'ak', 'ah', 'typ', 'cmt', 'name']
         a_i: list[int] = []  # index of the 1st atoms in the dihedrals
         a_j: list[int] = []  # index of the 2nd atoms in the dihedrals
         a_k: list[int] = []  # index of the 3rd atoms in the dihedrals
