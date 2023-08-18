@@ -498,8 +498,18 @@ class UpdateAtom:
     def __get_indices(atoms: pd.DataFrame,  # Atoms of the itp file
                       hn3: pd.DataFrame  # New HN3 to add to the atoms
                       ) -> np.int64:
-        """return the maximum value of the atoms and check mismatch
-        residue numbers"""
+        """
+        Calculate and return the maximum value of atom and residue
+        indices, checking for mismatched residue numbers.
+
+        Args:
+            atoms (pd.DataFrame): DataFrame containing atom information
+            from the itp file.
+            hn3 (pd.DataFrame): New HN3 to add to the atoms.
+
+        Returns:
+            np.int64: Maximum value of atom and residue indices.
+        """
         atoms['atomnr'] = pd.to_numeric(atoms['atomnr'], errors='coerce')
         atoms['resnr'] = pd.to_numeric(atoms['resnr'], errors='coerce')
 
