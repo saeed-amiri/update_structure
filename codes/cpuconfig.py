@@ -119,15 +119,15 @@ class ConfigCpuNr:
         aval_core_nr: int = self.get_core_nr()
         if self.hostname == self.local_host:
             # In local machine only using half of the cores
-            core_nr = aval_core_nr // 2
+            core_nr = int(aval_core_nr // 2)
         elif self.hostname[:6] in self.server_front_host:
             # On frontend use only 4 since it is for all
             core_nr = 4
         elif self.hostname[:3] in self.server_host_list:
             # On the backends use all the physical cores
-            core_nr = aval_core_nr // 2
+            core_nr = int(aval_core_nr // 2)
         else:
-            core_nr = aval_core_nr
+            core_nr = int(aval_core_nr)
         self.info_msg += (f'\t\tNumber of cores for this computation is'
                           f' set to: `{core_nr}`\n')
         return core_nr
