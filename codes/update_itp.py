@@ -626,13 +626,14 @@ class StandAlone:
     def __init__(self) -> None:
         self.new_nh3 = self.mk_data_standalone()
 
-    def mk_data_standalone(self):
+    def mk_data_standalone(self) -> pd.DataFrame:
         """
         prepare new NH3 positions and velocities for testing the script
         """
+        generate: bool = False
         start, end = 1611, 1621
 
-        ind_range = self.generate_list(start, end)
+        ind_range: list[int] = self.generate_list(start, end, generate)
         print(f'{bcolors.CAUTION}{self.__module__}, {self.__class__}:\n'
               '\tUsing the module as standalone, make sure items in the '
               f'list:\n\t{ind_range}\n'
@@ -644,9 +645,13 @@ class StandAlone:
         return self.prepare_hydrogens(poistion, velocity)
 
     @staticmethod
-    def generate_list(start, end):
+    def generate_list(start: int,
+                      end: int,
+                      generate: bool
+                      ) -> list[int]:
         """generate a list"""
-        # return list(range(start, end + 1))
+        if generate:
+            return list(range(start, end + 1))
         return [1611, 1613, 1614, 1615, 1617, 1619]
 
     @staticmethod
