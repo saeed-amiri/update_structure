@@ -348,14 +348,14 @@ class UpdateAtom:
     Methods:
         __init__(self, atoms_np, hn3, aptes, core)
         update_atoms(self, atoms_np, hn3, aptes, core)
-        __charge_check(updates_np)
-        mk_np(cor_atoms, updated_aptes)
-        __concat_aptes(prepare_hn3, atoms)
-        __update_chains(atoms, h_n_df, res_numbers)
-        __get_n_h_proton_info(atoms)
-        __mk_hn3_itp_df(hn3, h_n_df, lst_atom)
-        __get_info_dict(df_info, key)
-        __get_indices(atoms, hn3)
+        __perform_charge_check(updates_np)
+        __create_updated_atoms_section(cor_atoms, updated_aptes)
+        __concat_aptes_and_hn3(prepare_hn3, atoms)
+        __update_chain_charges(atoms, h_n_df, res_numbers)
+        __get_protonated_hn_info(atoms)
+        __prepare_hn3_itp_df(hn3, h_n_df, lst_atom)
+        __get_atom_info_dict(df_info, key)
+        __calculate_max_indices(atoms, hn3)
     """
 
     atoms_updated: pd.DataFrame  # Updated atoms section of the itp file
@@ -390,27 +390,30 @@ class UpdateAtom:
         """
         # Sanity check of indeces and return the atom index in atoms
         lst_atom: np.int64  # index of the final atoms
-        lst_atom = self.__get_indices(atoms_np, hn3)
+        lst_atom = self.__calculate_max_indices(atoms_np, hn3)
         # Get only APT atoms
         atoms: pd.DataFrame = atoms_np[atoms_np['resname'] == aptes]
         # Get COR atoms
         cor_atoms: pd.DataFrame = atoms_np[atoms_np['resname'] == core]
         # Get information for protonated H-N group from the itp file
-        h_n_df: pd.DataFrame = self.__get_n_h_proton_info(atoms)
+        h_n_df: pd.DataFrame = self.__get_protonated_hn_info(atoms)
         # Make a dataframe in format of itp for new nh3
-        prepare_hn3: pd.DataFrame = self.__mk_hn3_itp_df(hn3, h_n_df, lst_atom)
+        prepare_hn3: pd.DataFrame = \
+            self.__prepare_hn3_itp_df(hn3, h_n_df, lst_atom)
         # Update N, HN1, and HN2 charges in the protonated chains
-        atoms = \
-            self.__update_chains(atoms, h_n_df, list(hn3['residue_number']))
-        updated_aptes: pd.DataFrame = self.__concat_aptes(prepare_hn3, atoms)
+        atoms = self.__update_chain_charges(
+            atoms, h_n_df, list(hn3['residue_number']))
+        updated_aptes: pd.DataFrame = \
+            self.__concat_aptes_and_hn3(prepare_hn3, atoms)
         # get the final atoms section of itp file
-        updates_np: pd.DataFrame = self.mk_np(cor_atoms, updated_aptes)
-        self.__charge_check(updates_np)
+        updates_np: pd.DataFrame = \
+            self.__create_updated_atoms_section(cor_atoms, updated_aptes)
+        self.perform_charge_check(updates_np)
         return updates_np
 
     @staticmethod
-    def __charge_check(updates_np: pd.DataFrame  # updated Nanoparticle
-                       ) -> None:
+    def perform_charge_check(updates_np: pd.DataFrame  # updated Nanoparticle
+                             ) -> None:
         """sanity check of the charges in the nanoparticle"""
         # Convert column 'A' to numeric type
         updates_np['charge'] = pd.to_numeric(updates_np['charge'])
@@ -423,18 +426,18 @@ class UpdateAtom:
                      f'\tTotal charge: is `{charge_sum}`\n{bcolors.ENDC}')
 
     @staticmethod
-    def mk_np(cor_atoms: pd.DataFrame,  # Atoms belong to sili
-              updated_aptes: pd.DataFrame  # Chains with new hn3 and updated q
-              ) -> pd.DataFrame:
+    def __create_updated_atoms_section(cor_atoms: pd.DataFrame,  # Si atoms
+                                       updated_aptes: pd.DataFrame  # Chains
+                                       ) -> pd.DataFrame:
         """make the final dataframe by appending updated aptes and core
         atoms of the nanoparticle"""
         return pd.concat([cor_atoms, updated_aptes],
                          axis=0, ignore_index=False)
 
     @staticmethod
-    def __concat_aptes(prepare_hn3: pd.DataFrame,  # Prepared HN3 dataframe
-                       atoms: pd.DataFrame  # Updated chain with charges
-                       ) -> pd.DataFrame:
+    def __concat_aptes_and_hn3(prepare_hn3: pd.DataFrame,  # Prepared HN3 df
+                               atoms: pd.DataFrame  # Updated chain with charge
+                               ) -> pd.DataFrame:
         """concate the dataframes and sort them based on the residue
         indices"""
         updated_atoms: pd.DataFrame = \
@@ -445,20 +448,20 @@ class UpdateAtom:
         return updated_atoms
 
     @staticmethod
-    def __update_chains(atoms: pd.DataFrame,  # APTES atoms
-                        h_n_df: pd.DataFrame,  # Protonated N-H group info
-                        res_numbers: list[int]  # Index of the chains to prtons
-                        ) -> pd.DataFrame:
+    def __update_chain_charges(atoms: pd.DataFrame,  # APTES atoms
+                               h_n_df: pd.DataFrame,  # Protonated N-H info
+                               res_numbers: list[int]  # Index-chains to prtons
+                               ) -> pd.DataFrame:
         """update the N, HN1, and HN2 in the chains which should be
         updated"""
         n_q: float  # Charge of N atom in protonated state
         ct_q: float  # Charge of CT atom in protonated state
         h1_q: float  # Charge of HN1 atom in protonated state
         h2_q: float  # Charge of HN1 atom in protonated state
-        n_q = UpdateAtom.__get_info_dict(h_n_df, 'N')[1]['charge']
-        ct_q = UpdateAtom.__get_info_dict(h_n_df, 'CT')[1]['charge']
-        h1_q = UpdateAtom.__get_info_dict(h_n_df, 'HN1')[1]['charge']
-        h2_q = UpdateAtom.__get_info_dict(h_n_df, 'HN2')[1]['charge']
+        n_q = UpdateAtom.__get_atom_info_dict(h_n_df, 'N')[1]['charge']
+        ct_q = UpdateAtom.__get_atom_info_dict(h_n_df, 'CT')[1]['charge']
+        h1_q = UpdateAtom.__get_atom_info_dict(h_n_df, 'HN1')[1]['charge']
+        h2_q = UpdateAtom.__get_atom_info_dict(h_n_df, 'HN2')[1]['charge']
         # Create a condition for selecting rows that need to be updated
         condition = (atoms['atomname'].isin(['CT', 'N', 'HN1', 'HN2'])) & \
                     (atoms['resnr'].isin(res_numbers))
@@ -472,8 +475,8 @@ class UpdateAtom:
         return atoms
 
     @staticmethod
-    def __get_n_h_proton_info(atoms: pd.DataFrame,  # Atoms of the itp file
-                              ) -> pd.DataFrame:
+    def __get_protonated_hn_info(atoms: pd.DataFrame,  # Atoms of the itp file
+                                 ) -> pd.DataFrame:
         """get and return info for protonated H-N group from the itp
         file"""
         df_tmp: pd.DataFrame  # One protonated APTES
@@ -492,15 +495,15 @@ class UpdateAtom:
         return df_one
 
     @staticmethod
-    def __mk_hn3_itp_df(hn3: pd.DataFrame,  # New HN3 atoms, in pdb format
-                        h_n_df: pd.DataFrame,  # Info for H-N protonated group
-                        lst_atom: np.int64  # Last atom index in hn3
-                        ) -> pd.DataFrame:
+    def __prepare_hn3_itp_df(hn3: pd.DataFrame,  # New HN3 atoms, in pdb format
+                             h_n_df: pd.DataFrame,  # Info H-N protonated group
+                             lst_atom: np.int64  # Last atom index in hn3
+                             ) -> pd.DataFrame:
         """make a dataframe in the itp format, for appending to the
         main atom section"""
         columns: list[str]  # Name of the columns
         info: dict[str, typing.Any]  # Info in the row of the df
-        columns, info = UpdateAtom.__get_info_dict(h_n_df, 'HN3')
+        columns, info = UpdateAtom.__get_atom_info_dict(h_n_df, 'HN3')
         hn3_itp = pd.DataFrame(columns=columns)
         for item, row in hn3.iterrows():
             atom_id = lst_atom + item + 1
@@ -516,9 +519,9 @@ class UpdateAtom:
         return hn3_itp
 
     @staticmethod
-    def __get_info_dict(df_info: pd.DataFrame,  # The data frame to take info
-                        key: str,  # The name of the atom
-                        ) -> tuple[list[str], dict[str, typing.Any]]:
+    def __get_atom_info_dict(df_info: pd.DataFrame,  # Dataframe to take info
+                             key: str,  # The name of the atom
+                             ) -> tuple[list[str], dict[str, typing.Any]]:
         """return dictionay of info in the row of df"""
         columns: list[str] = ['atomnr', 'atomtype', 'resnr', 'resname',
                               'atomname', 'chargegrp', 'charge', 'mass',
@@ -529,10 +532,10 @@ class UpdateAtom:
                 df_info.loc[df_info['atomname'] == key, item].values[0]
         return columns, info
 
-    def __get_indices(self,
-                      atoms: pd.DataFrame,  # Atoms of the itp file
-                      hn3: pd.DataFrame  # New HN3 to add to the atoms
-                      ) -> np.int64:
+    def __calculate_max_indices(self,
+                                atoms: pd.DataFrame,  # Atoms of the itp file
+                                hn3: pd.DataFrame  # New HN3 to add to atoms
+                                ) -> np.int64:
         """
         Calculate and return the maximum value of atom and residue
         indices, checking for mismatched residue numbers.
@@ -691,4 +694,4 @@ if __name__ == '__main__':
                             hn3=StandAlone().new_nh3,
                             aptes='APT',
                             core='COR'), fname='APT_COR_updated.itp',
-                            log=logger.setup_logger('update.log'))
+                            log=logger.setup_logger('update_itp.log'))
