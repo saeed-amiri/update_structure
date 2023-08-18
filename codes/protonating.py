@@ -84,10 +84,14 @@ class FindHPosition(get_data.ProcessData):
         """
         # All the H locations wtih index
         results: list[tuple[dict[int, np.ndarray], dict[int, np.ndarray]]]
-        num_processes: int = multip.cpu_count() // 2
+        
         h_porotonations: dict[str, dict[int, np.ndarray]] = {}  # dicts of locs
         h_velocities: dict[str, dict[int, np.ndarray]] = {}  # dicts of velocs
         for aptes, items in self.unprot_aptes_ind.items():
+            if len(items) > self.core_nr:
+                num_processes = self.core_nr
+            else:
+                num_processes = len(items)
             chunk_size: int = len(items) // num_processes
             chunks = [items[i:i+chunk_size] for i in
                       range(0, len(items), chunk_size)]
