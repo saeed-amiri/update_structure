@@ -33,7 +33,7 @@ class ConfigCpuNr:
         if self.hostname == self.local_host:
             # In local machine only using half of the cores
             core_nr = aval_core_nr // 2
-        elif self.hostname[:4] in self.server_front_host:
+        elif self.hostname[:6] in self.server_front_host:
             # On frontend use only 4 since it is for all
             core_nr = 4
         elif self.hostname[:3] in self.server_host_list:
