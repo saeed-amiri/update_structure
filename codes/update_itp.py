@@ -494,8 +494,8 @@ class UpdateAtom:
                 df_info.loc[df_info['atomname'] == key, item].values[0]
         return columns, info
 
-    @staticmethod
-    def __get_indices(atoms: pd.DataFrame,  # Atoms of the itp file
+    def __get_indices(self,
+                      atoms: pd.DataFrame,  # Atoms of the itp file
                       hn3: pd.DataFrame  # New HN3 to add to the atoms
                       ) -> np.int64:
         """
@@ -521,9 +521,10 @@ class UpdateAtom:
         lst_nh3_res: np.int64  # index of the final residue
         lst_nh3_res = list(hn3['residue_number'])[-1]
         if np.max(np.array([max_resnr, lst_resnr])) != lst_nh3_res:
-            sys.exit(f'{bcolors.FAIL}{UpdateAtom.__module__}:\n'
-                     '\tThere is mismatch in the new HN3 and initial'
-                     f' APTES list.\n{bcolors.ENDC}')
+            print(f'{bcolors.CAUTION}{UpdateAtom.__module__}:\n'
+                  '\tThere is a possible mismatch in the new HN3 and initial'
+                  ' APTES list or the itp file was updated once before.\n'
+                  f'{bcolors.ENDC}')
         return np.max(np.array([max_atomnr, lst_atomnr]))
 
 
