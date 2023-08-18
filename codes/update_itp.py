@@ -579,6 +579,11 @@ class StandAlone:
         start, end = 1611, 1621
 
         ind_range = self.generate_list(start, end)
+        print(f'{bcolors.CAUTION}{self.__class__}:\n'
+              '\tUsing the module as standalone, make sure items in the '
+              f'list:\n\t{ind_range}\n'
+              '\tdo not already have HN3 atoms.\n'
+              f'{bcolors.ENDC}')
         poistion = \
             {key: self.generate_random_np_array(100) for key in ind_range}
         velocity = {key: self.generate_random_np_array(1) for key in ind_range}
@@ -587,7 +592,8 @@ class StandAlone:
     @staticmethod
     def generate_list(start, end):
         """generate a list"""
-        return list(range(start, end + 1))
+        # return list(range(start, end + 1))
+        return [1611, 1613, 1614, 1615, 1617, 1619]
 
     @staticmethod
     def generate_random_np_array(lim: int  # The limit of the return values
