@@ -75,8 +75,7 @@ Module Dependencies:
 - `multiprocessing`: Enables multi-core processing and CPU count
     retrieval.
 - `logger`: An external logger module for logging purposes.
-- `colors_text`: An external module for text color formatting (not
-    provided).
+- `colors_text`: An external module for text color formatting.
 
 Notes:
 ------
@@ -84,8 +83,8 @@ Notes:
 - To use this module effectively, ensure that the necessary dependencies
     are available.
 - This module makes use of a custom logger module (not provided) and a
-text color formatting module (not provided) for enhanced logging and
-console output.
+    text color formatting module (not provided) for enhanced logging and
+    console output.
 
 """
 
@@ -158,4 +157,4 @@ class ConfigCpuNr:
 
 
 if __name__ == '__main__':
-    ConfigCpuNr(log=logger.setup_logger(log_name='ConfigeCpu.log'))
+    ConfigCpuNr(log=logger.setup_logger(log_name='ConfigCpu.log'))
