@@ -579,7 +579,7 @@ class StandAlone:
         start, end = 1611, 1621
 
         ind_range = self.generate_list(start, end)
-        print(f'{bcolors.CAUTION}{self.__class__}:\n'
+        print(f'{bcolors.CAUTION}{self.__module__}, {self.__class__}:\n'
               '\tUsing the module as standalone, make sure items in the '
               f'list:\n\t{ind_range}\n'
               '\tdo not already have HN3 atoms.\n'
