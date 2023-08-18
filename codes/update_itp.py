@@ -333,8 +333,30 @@ class UpdateBond:
 
 
 class UpdateAtom:
-    """update atom section by adding new hn3 and updating the N, HN1,
-    HN2"""
+    """
+    Update atom section by adding new HN3 and updating the N, HN1, and
+    HN2 atoms.
+
+    This class provides methods to update the atom section of an itp
+    file by adding new HN3 atoms and updating charges and atom
+    information for N, HN1, and HN2 atoms.
+
+    Attributes:
+        atoms_updated (pd.DataFrame): Updated atoms section of the itp
+        file.
+
+    Methods:
+        __init__(self, atoms_np, hn3, aptes, core)
+        update_atoms(self, atoms_np, hn3, aptes, core)
+        __charge_check(updates_np)
+        mk_np(cor_atoms, updated_aptes)
+        __concat_aptes(prepare_hn3, atoms)
+        __update_chains(atoms, h_n_df, res_numbers)
+        __get_n_h_proton_info(atoms)
+        __mk_hn3_itp_df(hn3, h_n_df, lst_atom)
+        __get_info_dict(df_info, key)
+        __get_indices(atoms, hn3)
+    """
 
     atoms_updated: pd.DataFrame  # Updated atoms section of the itp file
 
@@ -352,7 +374,20 @@ class UpdateAtom:
                      aptes: str,  # Name of the APTES branches
                      core: str  # Name of the CORE residues
                      ) -> pd.DataFrame:
-        """update the atoms"""
+        """
+        Update the atom section of the itp file with new HN3 atoms and
+        updated charges.
+
+        Args:
+            atoms_np (pd.DataFrame): Atoms from the itp file for the
+            nanoparticle.
+            hn3 (pd.DataFrame): New HN3 to add to the atoms.
+            aptes (str): Name of the APTES branches.
+            core (str): Name of the CORE residues.
+
+        Returns:
+            pd.DataFrame: Updated atoms section of the itp file.
+        """
         # Sanity check of indeces and return the atom index in atoms
         lst_atom: np.int64  # index of the final atoms
         lst_atom = self.__get_indices(atoms_np, hn3)
