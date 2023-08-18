@@ -541,7 +541,25 @@ class WrapperUpdateItp:
                           param: dict[str, typing.Any],  # All the parameters
                           hn3_dict: dict[str, pd.DataFrame]
                           ) -> dict[str, UpdateItp]:
-        """get all the files and update them"""
+        """
+        Update all itp files with HN3 molecules.
+
+        This method iterates through each nanoparticle in the hn3_dict
+        and corresponding itp files in param['itp_files'].
+        It checks if the nanoparticle name (aptes) is present in the
+        itp file name, and if so, extracts the core name.
+        Then, it creates an UpdateItp object with the extracted
+        information and the HN3 data for the nanoparticle.
+        The updated itp object is added to the dictionary updated_itp.
+
+        Args:
+            param (dict[str, typing.Any]): All the parameters.
+            hn3_dict (dict[str, pd.DataFrame]): Dictionary containing
+            HN3 data for each nanoparticle.
+
+        Returns:
+            dict[str, UpdateItp]: A dictionary of updated itp files.
+        """
         updated_itp: dict[str, UpdateItp] = {}
         for aptes, item in hn3_dict.items():
             for fname_i in param['itp_files']:
