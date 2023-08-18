@@ -348,14 +348,14 @@ class UpdateAtom:
     Methods:
         __init__(self, atoms_np, hn3, aptes, core)
         update_atoms(self, atoms_np, hn3, aptes, core)
-        __perform_charge_check(updates_np)
-        __create_updated_atoms_section(cor_atoms, updated_aptes)
-        __concat_aptes_and_hn3(prepare_hn3, atoms)
-        __update_chain_charges(atoms, h_n_df, res_numbers)
-        __get_protonated_hn_info(atoms)
-        __prepare_hn3_itp_df(hn3, h_n_df, lst_atom)
-        __get_atom_info_dict(df_info, key)
-        __calculate_max_indices(atoms, hn3)
+        _calculate_max_indices(atoms, hn3)
+        _get_protonated_hn_info(atoms)
+        _prepare_hn3_itp_df(hn3, h_n_df, lst_atom)
+        _get_atom_info_dict(df_info, key)
+        _update_chain_charges(atoms, h_n_df, res_numbers)
+        _concatenate_aptes_and_hn3(prepare_hn3, atoms)
+        _create_updated_atoms_section(cor_atoms, updated_aptes)
+        _perform_charge_check(updates_np)
     """
 
     atoms_updated: pd.DataFrame  # Updated atoms section of the itp file
@@ -411,68 +411,38 @@ class UpdateAtom:
         self.perform_charge_check(updates_np)
         return updates_np
 
-    @staticmethod
-    def perform_charge_check(updates_np: pd.DataFrame  # updated Nanoparticle
-                             ) -> None:
-        """sanity check of the charges in the nanoparticle"""
-        # Convert column 'A' to numeric type
-        updates_np['charge'] = pd.to_numeric(updates_np['charge'])
+    def __calculate_max_indices(self,
+                                atoms: pd.DataFrame,  # Atoms of the itp file
+                                hn3: pd.DataFrame  # New HN3 to add to atoms
+                                ) -> np.int64:
+        """
+        Calculate and return the maximum value of atom and residue
+        indices, checking for mismatched residue numbers.
 
-        # Get the sum of column 'charge'
-        charge_sum = updates_np['charge'].sum()
-        if int(charge_sum) != round(charge_sum, 3):
-            sys.exit(f'{bcolors.FAIL}{UpdateAtom.__module__}:\n'
-                     '\tThe total sum of charges is not a complete number\n'
-                     f'\tTotal charge: is `{charge_sum}`\n{bcolors.ENDC}')
+        Args:
+            atoms (pd.DataFrame): DataFrame containing atom information
+            from the itp file.
+            hn3 (pd.DataFrame): New HN3 to add to the atoms.
 
-    @staticmethod
-    def __create_updated_atoms_section(cor_atoms: pd.DataFrame,  # Si atoms
-                                       updated_aptes: pd.DataFrame  # Chains
-                                       ) -> pd.DataFrame:
-        """make the final dataframe by appending updated aptes and core
-        atoms of the nanoparticle"""
-        return pd.concat([cor_atoms, updated_aptes],
-                         axis=0, ignore_index=False)
+        Returns:
+            np.int64: Maximum value of atom and residue indices.
+        """
+        atoms['atomnr'] = pd.to_numeric(atoms['atomnr'], errors='coerce')
+        atoms['resnr'] = pd.to_numeric(atoms['resnr'], errors='coerce')
 
-    @staticmethod
-    def __concat_aptes_and_hn3(prepare_hn3: pd.DataFrame,  # Prepared HN3 df
-                               atoms: pd.DataFrame  # Updated chain with charge
-                               ) -> pd.DataFrame:
-        """concate the dataframes and sort them based on the residue
-        indices"""
-        updated_atoms: pd.DataFrame = \
-            pd.concat([atoms, prepare_hn3], axis=0, ignore_index=False)
+        max_atomnr: np.int64 = np.max(atoms['atomnr'])
+        lst_atomnr: int = atoms['atomnr'].iloc[-1]
+        max_resnr: np.int64 = np.max(atoms['resnr'])
+        lst_resnr: int = atoms['resnr'].iloc[-1]
 
-        updated_atoms = updated_atoms.sort_values(by=['atomnr', 'resnr'],
-                                                  ascending=[True, True])
-        return updated_atoms
-
-    @staticmethod
-    def __update_chain_charges(atoms: pd.DataFrame,  # APTES atoms
-                               h_n_df: pd.DataFrame,  # Protonated N-H info
-                               res_numbers: list[int]  # Index-chains to prtons
-                               ) -> pd.DataFrame:
-        """update the N, HN1, and HN2 in the chains which should be
-        updated"""
-        n_q: float  # Charge of N atom in protonated state
-        ct_q: float  # Charge of CT atom in protonated state
-        h1_q: float  # Charge of HN1 atom in protonated state
-        h2_q: float  # Charge of HN1 atom in protonated state
-        n_q = UpdateAtom.__get_atom_info_dict(h_n_df, 'N')[1]['charge']
-        ct_q = UpdateAtom.__get_atom_info_dict(h_n_df, 'CT')[1]['charge']
-        h1_q = UpdateAtom.__get_atom_info_dict(h_n_df, 'HN1')[1]['charge']
-        h2_q = UpdateAtom.__get_atom_info_dict(h_n_df, 'HN2')[1]['charge']
-        # Create a condition for selecting rows that need to be updated
-        condition = (atoms['atomname'].isin(['CT', 'N', 'HN1', 'HN2'])) & \
-                    (atoms['resnr'].isin(res_numbers))
-
-        # Update the 'charge' column for the selected rows
-        atoms.loc[condition, 'charge'] = \
-            atoms.loc[condition, 'atomname'].map({'N': n_q,
-                                                  'CT': ct_q,
-                                                  'HN1': h1_q,
-                                                  'HN2': h2_q})
-        return atoms
+        lst_nh3_res: np.int64  # index of the final residue
+        lst_nh3_res = list(hn3['residue_number'])[-1]
+        if np.max(np.array([max_resnr, lst_resnr])) != lst_nh3_res:
+            print(f'{bcolors.CAUTION}{UpdateAtom.__module__}:\n'
+                  '\tThere is a possible mismatch in the new HN3 and initial'
+                  ' APTES list or the itp file was updated once before.\n'
+                  f'{bcolors.ENDC}')
+        return np.max(np.array([max_atomnr, lst_atomnr]))
 
     @staticmethod
     def __get_protonated_hn_info(atoms: pd.DataFrame,  # Atoms of the itp file
@@ -519,6 +489,55 @@ class UpdateAtom:
         return hn3_itp
 
     @staticmethod
+    def __update_chain_charges(atoms: pd.DataFrame,  # APTES atoms
+                               h_n_df: pd.DataFrame,  # Protonated N-H info
+                               res_numbers: list[int]  # Index-chains to prtons
+                               ) -> pd.DataFrame:
+        """update the N, HN1, and HN2 in the chains which should be
+        updated"""
+        n_q: float  # Charge of N atom in protonated state
+        ct_q: float  # Charge of CT atom in protonated state
+        h1_q: float  # Charge of HN1 atom in protonated state
+        h2_q: float  # Charge of HN1 atom in protonated state
+        n_q = UpdateAtom.__get_atom_info_dict(h_n_df, 'N')[1]['charge']
+        ct_q = UpdateAtom.__get_atom_info_dict(h_n_df, 'CT')[1]['charge']
+        h1_q = UpdateAtom.__get_atom_info_dict(h_n_df, 'HN1')[1]['charge']
+        h2_q = UpdateAtom.__get_atom_info_dict(h_n_df, 'HN2')[1]['charge']
+        # Create a condition for selecting rows that need to be updated
+        condition = (atoms['atomname'].isin(['CT', 'N', 'HN1', 'HN2'])) & \
+                    (atoms['resnr'].isin(res_numbers))
+
+        # Update the 'charge' column for the selected rows
+        atoms.loc[condition, 'charge'] = \
+            atoms.loc[condition, 'atomname'].map({'N': n_q,
+                                                  'CT': ct_q,
+                                                  'HN1': h1_q,
+                                                  'HN2': h2_q})
+        return atoms
+
+    @staticmethod
+    def __concat_aptes_and_hn3(prepare_hn3: pd.DataFrame,  # Prepared HN3 df
+                               atoms: pd.DataFrame  # Updated chain with charge
+                               ) -> pd.DataFrame:
+        """concate the dataframes and sort them based on the residue
+        indices"""
+        updated_atoms: pd.DataFrame = \
+            pd.concat([atoms, prepare_hn3], axis=0, ignore_index=False)
+
+        updated_atoms = updated_atoms.sort_values(by=['atomnr', 'resnr'],
+                                                  ascending=[True, True])
+        return updated_atoms
+
+    @staticmethod
+    def __create_updated_atoms_section(cor_atoms: pd.DataFrame,  # Si atoms
+                                       updated_aptes: pd.DataFrame  # Chains
+                                       ) -> pd.DataFrame:
+        """make the final dataframe by appending updated aptes and core
+        atoms of the nanoparticle"""
+        return pd.concat([cor_atoms, updated_aptes],
+                         axis=0, ignore_index=False)
+
+    @staticmethod
     def __get_atom_info_dict(df_info: pd.DataFrame,  # Dataframe to take info
                              key: str,  # The name of the atom
                              ) -> tuple[list[str], dict[str, typing.Any]]:
@@ -532,38 +551,19 @@ class UpdateAtom:
                 df_info.loc[df_info['atomname'] == key, item].values[0]
         return columns, info
 
-    def __calculate_max_indices(self,
-                                atoms: pd.DataFrame,  # Atoms of the itp file
-                                hn3: pd.DataFrame  # New HN3 to add to atoms
-                                ) -> np.int64:
-        """
-        Calculate and return the maximum value of atom and residue
-        indices, checking for mismatched residue numbers.
+    @staticmethod
+    def perform_charge_check(updates_np: pd.DataFrame  # updated Nanoparticle
+                             ) -> None:
+        """sanity check of the charges in the nanoparticle"""
+        # Convert column 'A' to numeric type
+        updates_np['charge'] = pd.to_numeric(updates_np['charge'])
 
-        Args:
-            atoms (pd.DataFrame): DataFrame containing atom information
-            from the itp file.
-            hn3 (pd.DataFrame): New HN3 to add to the atoms.
-
-        Returns:
-            np.int64: Maximum value of atom and residue indices.
-        """
-        atoms['atomnr'] = pd.to_numeric(atoms['atomnr'], errors='coerce')
-        atoms['resnr'] = pd.to_numeric(atoms['resnr'], errors='coerce')
-
-        max_atomnr: np.int64 = np.max(atoms['atomnr'])
-        lst_atomnr: int = atoms['atomnr'].iloc[-1]
-        max_resnr: np.int64 = np.max(atoms['resnr'])
-        lst_resnr: int = atoms['resnr'].iloc[-1]
-
-        lst_nh3_res: np.int64  # index of the final residue
-        lst_nh3_res = list(hn3['residue_number'])[-1]
-        if np.max(np.array([max_resnr, lst_resnr])) != lst_nh3_res:
-            print(f'{bcolors.CAUTION}{UpdateAtom.__module__}:\n'
-                  '\tThere is a possible mismatch in the new HN3 and initial'
-                  ' APTES list or the itp file was updated once before.\n'
-                  f'{bcolors.ENDC}')
-        return np.max(np.array([max_atomnr, lst_atomnr]))
+        # Get the sum of column 'charge'
+        charge_sum = updates_np['charge'].sum()
+        if int(charge_sum) != round(charge_sum, 3):
+            sys.exit(f'{bcolors.FAIL}{UpdateAtom.__module__}:\n'
+                     '\tThe total sum of charges is not a complete number\n'
+                     f'\tTotal charge: is `{charge_sum}`\n{bcolors.ENDC}')
 
 
 class WrapperUpdateItp:
