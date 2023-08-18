@@ -263,7 +263,11 @@ class IonizationSol(proton.FindHPosition):
                   for y_i in y_chunks
                   for z_i in z_chunks]
 
-        with multip.Pool() as pool:
+        if len(chunks) > self.core_nr:
+            num_processes = self.core_nr
+        else:
+            num_processes = len(chunks)
+        with multip.Pool(processes=num_processes) as pool:
             ion_info: list[tuple[np.ndarray, np.ndarray, float]] = \
                 pool.starmap(self._process_chunk_box, chunks)
         ion_poses: list[np.ndarray] = [item[0] for item in ion_info]
