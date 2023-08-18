@@ -14,7 +14,7 @@ class ConfigCpuNr:
     Find the number of core
     """
 
-    info_msg: str = 'message from ConfigCpuNr:\n' # Meesage from methods to log
+    info_msg: str = 'message from ConfigCpuNr:\n'  # Meesage in methods to log
 
     def __init__(self,
                  log: logger.logging.Logger
@@ -42,6 +42,7 @@ class ConfigCpuNr:
         log.info(self.info_msg)
         print(f'{bcolors.OKBLUE}{self.__module__}:\n'
               f'\t{self.info_msg}\n{bcolors.ENDC}')
+
 
 if __name__ == '__main__':
     ConfigCpuNr(log=logger.setup_logger(log_name='ConfigeCpu.log'))
