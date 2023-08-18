@@ -43,13 +43,15 @@ from colors_text import TextColor as bcolors
 
 
 class UpdateItp(itp.Itp):
-    """updating the itp file for each section"""
-    # object from itp class
-    # atoms: pd.DataFrame -> Section of initial itp file
-    # bonds: pd.DataFrame -> Section of initial itp file
-    # angles: pd.DataFrame -> Section of initial itp file
-    # dihedrals: pd.DataFrame -> Section of initial itp file
-    # molecules: pd.DataFrame -> Section of initial itp file
+    """
+    Updating the itp file for each section.
+        The object from itp class
+        - atoms: pd.DataFrame -> Section of initial itp file
+        - bonds: pd.DataFrame -> Section of initial itp file
+        - angles: pd.DataFrame -> Section of initial itp file
+        - dihedrals: pd.DataFrame -> Section of initial itp file
+        - molecules: pd.DataFrame -> Section of initial itp file
+    """
 
     atoms_updated: pd.DataFrame  # Updated atoms section
     bonds_updated: pd.DataFrame  # Updated bonds section
