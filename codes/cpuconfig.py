@@ -15,8 +15,8 @@ class ConfigCpuNr:
     """
 
     info_msg: str = 'message from ConfigCpuNr:\n'  # Meesage in methods to log
-    server_front_host: str = 'glogin'  # Name of the goettingen front of HLRN
     local_host: str = 'hmigws03'  # Name of the host in the office
+    server_front_host: list[str] = ['glogin', 'blogin']  # Front names in HLRN
     # Name of the goettingen of HLRN
     server_host_list: list[str] = ['gcn', 'gfn', 'gsn', 'bcn', 'bfn', 'bsn']
 
@@ -33,7 +33,7 @@ class ConfigCpuNr:
         if self.hostname == self.local_host:
             # In local machine only using half of the cores
             core_nr = aval_core_nr // 2
-        elif self.hostname == self.server_front_host:
+        elif self.hostname[:4] in self.server_front_host:
             # On frontend use only 4 since it is for all
             core_nr = 4
         elif self.hostname[:3] in self.server_host_list:
