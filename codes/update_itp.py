@@ -180,7 +180,18 @@ class UpdateAngle:
                       hn3: pd.DataFrame,  # New HN3 to add to the atoms
                       atoms: pd.DataFrame  # Updated APTES chains by UpAtom
                       ) -> pd.DataFrame:
-        """update angles"""
+        """
+        Update the angles section of the itp file with new angles
+        involving HN3 atoms.
+
+        Args:
+            angle_np (pd.DataFrame): Angles from the itp file.
+            hn3 (pd.DataFrame): New HN3 to add to the atoms.
+            atoms (pd.DataFrame): Updated APTES chains by UpAtom class.
+
+        Returns:
+            pd.DataFrame: Updated angles section with new angles.
+        """
         # Find the angles which involved N and HN3
         unique_angles: pd.DataFrame = self.__get_angles(angle_np)
         # Get the index of the residues with new HN3 atoms
@@ -195,7 +206,18 @@ class UpdateAngle:
                   new_proton_res: list[int],  # Index of the protonated APTES
                   unique_angles: pd.DataFrame  # Type of angle to create
                   ) -> pd.DataFrame:
-        """make dataframe from new angles"""
+        """
+        Make dataframe for new angles involving HN3 atoms.
+
+        Args:
+            atoms (pd.DataFrame): Updated APTES chains' atoms.
+            new_proton_res (list[int]): Index of the protonated APTES
+            residues.
+            unique_angles (pd.DataFrame): Type of angles to create.
+
+        Returns:
+            pd.DataFrame: DataFrame of new angles involving HN3 atoms.
+        """
         third_atom_angle: dict[str, int]  # Third atoms name in each angle
         third_atom_angle = \
             UpdateAngle.get_atom_in_angdihd(unique_angles,
@@ -211,7 +233,18 @@ class UpdateAngle:
     def __get_angles_res(df_res: pd.DataFrame,  # Only one residues
                          third_atom_angle: dict[str, int]  # Atoms and type
                          ) -> pd.DataFrame:
-        """create angles for each residue"""
+        """
+        Create angles for each residue involving HN3 atoms.
+
+        Args:
+            df_res (pd.DataFrame): DataFrame containing atoms of a
+            single residue.
+            third_atom_angle (dict[str, int]): Atoms and angle types.
+
+        Returns:
+            pd.DataFrame: DataFrame of angles involving HN3 atoms for
+            the residue.
+        """
         n_index: int = \
             df_res.loc[df_res['atomname'] == 'N', 'atomnr'].values[0]
         hn3_index: int = \
