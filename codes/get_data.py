@@ -113,6 +113,7 @@ import typing
 import numpy as np
 import pandas as pd
 import logger
+import cpuconfig
 import gro_to_df as grof
 import pdb_to_df as pdbf
 import read_param as param
@@ -157,6 +158,9 @@ class ProcessData:
         # Read parameters from the param file
         self.param = param.ReadParam(log=log).param
 
+        # Get the number of cores on the host
+        self.core_nr: int = self.get_nr_cores(log)
+
         # Load atoms data from the specified file
         self.atoms = self.__get_data(fname, log)
 
@@ -175,6 +179,13 @@ class ProcessData:
 
         # Empty the message
         self.info_msg = ''
+
+    def get_nr_cores(self,
+                     log: logger.logging.Logger
+                     ) -> int:
+        """get the number of the available cores"""
+        cpu_info = cpuconfig.ConfigCpuNr(log=log)
+        return cpu_info.core_nr
 
     def __get_data(self,
                    fname: str,  # Name of the pdb file
@@ -287,13 +298,12 @@ class ProcessData:
             df_apt: pd.DataFrame = self.residues_atoms[aptes]
 
             # Split the sol_phase_aptes into chunks for parallel processing
-            num_processes: int = multip.cpu_count() // 2
-            chunk_size: int = len(item) // num_processes
+            chunk_size: int = len(item) // self.core_nr
             chunks = [item[i:i + chunk_size] for i in
                       range(0, len(item), chunk_size)]
 
             # Create a Pool of processes
-            with multip.Pool(processes=num_processes) as pool:
+            with multip.Pool(processes=self.core_nr) as pool:
                 # Process chunks in parallel using the process_chunk function
                 results = pool.starmap(self.process_chunk,
                                        [(chunk, df_apt) for chunk in chunks])
