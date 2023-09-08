@@ -368,8 +368,8 @@ class AnglesInfo:
                 if 'Total' not in l_line and l_line != columns:
                     if l_line != alter_columns:
                         sys.exit(f'{bcolors.FAIL}{self.__class__.__name__}:\n'
-                                f'\tError in the [ angles ] header of the '
-                                f'itp file\n{bcolors.ENDC}')
+                                 f'\tError in the [ angles ] header of the '
+                                 f'itp file\n{bcolors.ENDC}')
             else:
                 tmp = line.strip().split('\t')
                 tmp = [item for item in tmp if item]
@@ -455,6 +455,8 @@ class DihedralsInfo:
         """return bonds dataframe to make dihedrals dataframe"""
         columns: list[str]  # Columns of the dihedrals wild
         columns = ['ai', 'aj', 'ak', 'ah', 'typ', 'cmt', 'name']
+        alter_columns: list[str] = ['ai', 'aj', 'ak', 'ah', 'funct',
+                                    'C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'name']
         a_i: list[int] = []  # index of the 1st atoms in the dihedrals
         a_j: list[int] = []  # index of the 2nd atoms in the dihedrals
         a_k: list[int] = []  # index of the 3rd atoms in the dihedrals
@@ -464,10 +466,8 @@ class DihedralsInfo:
         for line in dihedrals:
             if line.startswith(';'):  # line start with ';' are commets&header
                 l_line = free_char_line(line)
-                if 'Total' not in l_line:  # Not header!
-                    if l_line == columns:
-                        pass
-                    else:
+                if 'Total' not in l_line and l_line != columns:
+                    if l_line != alter_columns:
                         sys.exit(f'{bcolors.FAIL}{self.__class__.__name__}:\n'
                                  f'\tError in the [ dihedrals ] header of the'
                                  f' itp file\n{bcolors.ENDC}')
