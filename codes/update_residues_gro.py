@@ -510,7 +510,7 @@ class UpdateResidues:
                          ) -> pd.DataFrame:
         """concate all the residues in one dataframe, The order is
         very important. it should follow the order in the main file"""
-        cols_order: list[str] = ['SOL', 'D10', 'ODN', 'CLA']
+        cols_order: list[str] = ['SOL', 'D10', 'ODN', 'CLA', 'POT']
         for item in param['itp_files']:
             np_name: str = my_tools.drop_string(item, '.itp')
             cols_order.append(np_name)
@@ -550,6 +550,13 @@ class UpdateResidues:
         self.updated_residues['CLA'] = update_ion.update_df
         self.nr_atoms_residues['CLA'] = {'nr_atoms': update_ion.nr_atoms,
                                          'nr_residues': update_ion.nr_residues}
+        try:
+            self.updated_residues['POT'] = update_ion.update_df
+            self.nr_atoms_residues['POT'] = \
+                {'nr_atoms': update_ion.nr_atoms, 
+                'nr_residues': update_ion.nr_residues}
+        except KeyError:
+            pass
 
         updated_aptes: dict[str, pd.DataFrame]  # All the updated aptes groups
         updated_aptes, self.new_hn3 = self.get_aptes(data)
@@ -798,4 +805,5 @@ def repeat_items(lst: list[int],  # List index which should repeat for residues
 
 
 if __name__ == '__main__':
-    UpdateResidues(sys.argv[1], log=logger.setup_logger('update.log'))
+    updated = UpdateResidues(sys.argv[1], log=logger.setup_logger('update.log'))
+    print(updated.updated_atoms)
