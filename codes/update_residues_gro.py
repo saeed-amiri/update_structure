@@ -360,6 +360,7 @@ class UpdateOdaDf(UpdateBaseDf):
         if debug != 'None':
             self.update_df.to_csv(f'{name}_res_update.debug', sep=' ')
 
+
 class UpdatePotDf(UpdateBaseDf):
     """preparing ODA residue for updating.The residue index should be
     changed"""
@@ -575,7 +576,7 @@ class UpdateResidues:
             self.updated_residues['POT'] = update_pot.update_df
             self.nr_atoms_residues['POT'] = \
                 {'nr_atoms': update_pot.nr_atoms,
-                'nr_residues': update_pot.nr_residues}
+                 'nr_residues': update_pot.nr_residues}
         except KeyError:
             pass
 
@@ -839,5 +840,4 @@ def repeat_items(lst: list[int],  # List index which should repeat for residues
 
 
 if __name__ == '__main__':
-    updated = UpdateResidues(sys.argv[1], log=logger.setup_logger('update.log'))
-    print(updated.updated_atoms)
+    UpdateResidues(sys.argv[1], log=logger.setup_logger('update.log'))
