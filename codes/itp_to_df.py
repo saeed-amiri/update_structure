@@ -355,6 +355,7 @@ class AnglesInfo:
         """return bonds dataframe to make angles dataframe"""
         columns: list[str]  # Columns of the angles wild
         columns = ['ai', 'aj', 'ak', 'typ', 'cmt', 'name']
+        alter_columns = ['ai', 'aj', 'ak', 'funct', 'theta', 'cth', 'name']
         a_i: list[int] = []  # index of the 1st atoms in the angles
         a_j: list[int] = []  # index of the 2nd atoms in the angles
         a_k: list[int] = []  # index of the 3rd atoms in the angles
@@ -364,13 +365,11 @@ class AnglesInfo:
         for line in angles:
             if line.startswith(';'):  # line start with ';' are commets&header
                 l_line = free_char_line(line)
-                if 'Total' not in l_line:  # Not header!
-                    if l_line == columns:
-                        pass
-                    else:
+                if 'Total' not in l_line and l_line != columns:
+                    if l_line != alter_columns:
                         sys.exit(f'{bcolors.FAIL}{self.__class__.__name__}:\n'
-                                 f'\tError in the [ angles ] header of the '
-                                 f'itp file\n{bcolors.ENDC}')
+                                f'\tError in the [ angles ] header of the '
+                                f'itp file\n{bcolors.ENDC}')
             else:
                 tmp = line.strip().split('\t')
                 tmp = [item for item in tmp if item]
