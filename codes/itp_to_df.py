@@ -274,7 +274,8 @@ class BondsInfo:
                 l_line = free_char_line(line)
                 if ('Total' not in l_line and
                    l_line != header_columns):
-                    if l_line != alter_header_columns:
+                    header_columns = alter_header_columns.copy()
+                    if l_line != header_columns:
                         sys.exit(f'{bcolors.FAIL}{self.__class__.__name__}:\n'
                                  f'\tError in the [ bonds ] header of the '
                                  f'itp file\n{bcolors.ENDC}')
