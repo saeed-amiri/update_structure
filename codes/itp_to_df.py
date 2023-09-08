@@ -262,41 +262,32 @@ class BondsInfo:
                   ) -> tuple[list[int], list[int], list[int], list[str]]:
         """return bonds dataframe to make bonds dataframe"""
         header_columns: list[str]  # Columns of the bonds wild
+        alter_header_columns: list[str]  # Columns of the bonds wild, 2nd
         header_columns = ['ai', 'aj', 'typ', 'cmt', 'name']
+        alter_header_columns = ['ai', 'aj', 'funct', 'r', 'k', 'name']
         a_i: list[int] = []  # index of the 1st atoms in the bonds
         a_j: list[int] = []  # index of the 2nd atoms in the bonds
         funct: list[int] = []  # Type of the function of the bond
         names: list[str] = []  # name of the bonds
         for line in bonds:
             if line.startswith(';'):  # line start with ';' are commets&header
-                parsed_header = self.parse_header_line(line)
-                if ('Total' not in parsed_header and
-                   parsed_header != header_columns):
-                    sys.exit(f'{bcolors.FAIL}{self.__class__.__name__}:\n'
-                             f'\tError in the [ bonds ] header of the '
-                             f'itp file\n{bcolors.ENDC}')
+                l_line = free_char_line(line)
+                if ('Total' not in l_line and
+                   l_line != header_columns):
+                    if l_line != alter_header_columns:
+                        sys.exit(f'{bcolors.FAIL}{self.__class__.__name__}:\n'
+                                 f'\tError in the [ bonds ] header of the '
+                                 f'itp file\n{bcolors.ENDC}')
             else:
-                ai_val, aj_val, funct_val, name_val = \
-                    self.parse_data_line(line)
-                a_i.append(ai_val)
-                a_j.append(aj_val)
-                funct.append(funct_val)
-                names.append(name_val)
-
+                tmp = line.split()
+                tmp = [item for item in tmp if item]
+                line = ' '.join(tmp)
+                l_line = free_char_line(line)
+                a_i.append(int(l_line[0]))
+                a_j.append(int(l_line[1]))
+                funct.append(int(l_line[2]))
+                names.append(l_line[3])
         return a_i, a_j, funct, names
-
-    @staticmethod
-    def parse_header_line(line: str  # Line from itp file
-                          ) -> list[str]:
-        """Parse header lines and return list of header items."""
-        return free_char_line(line)
-
-    @staticmethod
-    def parse_data_line(line: str  # Line from itp file
-                        ) -> tuple[int, int, int, str]:
-        """Parse data lines and return tuple of data items."""
-        l_line = free_char_line(line)
-        return int(l_line[0]), int(l_line[1]), int(l_line[2]), l_line[3]
 
     def mk_df(self,
               a_i: list[int],  # index of the 1st atom in the bonds
