@@ -360,6 +360,24 @@ class UpdateOdaDf(UpdateBaseDf):
         if debug != 'None':
             self.update_df.to_csv(f'{name}_res_update.debug', sep=' ')
 
+class UpdatePotDf(UpdateBaseDf):
+    """preparing ODA residue for updating.The residue index should be
+    changed"""
+
+    def __init__(self,
+                 atoms: pd.DataFrame,
+                 ion_last_res: int,
+                 ion_last_atom: int,
+                 debug: bool
+                 ) -> None:
+        name = 'pot'
+        first_res = ion_last_res + 1
+        first_atom = ion_last_atom + 1
+        atoms_per_res = 1
+        super().__init__(atoms, first_res, first_atom, atoms_per_res)
+        if debug != 'None':
+            self.update_df.to_csv(f'{name}_res_update.debug', sep=' ')
+
 
 class UpdateIonDf(UpdateBaseDf):
     """preparing ION residue for updating. The new counterions should
@@ -551,10 +569,13 @@ class UpdateResidues:
         self.nr_atoms_residues['CLA'] = {'nr_atoms': update_ion.nr_atoms,
                                          'nr_residues': update_ion.nr_residues}
         try:
-            self.updated_residues['POT'] = update_ion.update_df
+            update_pot: UpdatePotDf = self.get_pots(data,
+                                                    update_ion.last_res,
+                                                    update_ion.last_atom)
+            self.updated_residues['POT'] = update_pot.update_df
             self.nr_atoms_residues['POT'] = \
-                {'nr_atoms': update_ion.nr_atoms, 
-                'nr_residues': update_ion.nr_residues}
+                {'nr_atoms': update_pot.nr_atoms,
+                'nr_residues': update_pot.nr_residues}
         except KeyError:
             pass
 
@@ -695,6 +716,19 @@ class UpdateResidues:
                                    data.ion_velos,
                                    oda_last_res,
                                    oda_last_atom,
+                                   data.param['DEBUG']
+                                   )
+        return updated_ions
+
+    @staticmethod
+    def get_pots(data: 'IonizationSol',  # All the data
+                 ion_last_res: int,
+                 ion_last_atom: int
+                 ) -> UpdatePotDf:
+        """get updated POT ion data frame"""
+        updated_ions = UpdatePotDf(data.residues_atoms['POT'],
+                                   ion_last_res,
+                                   ion_last_atom,
                                    data.param['DEBUG']
                                    )
         return updated_ions
