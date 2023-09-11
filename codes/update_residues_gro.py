@@ -348,13 +348,13 @@ class UpdateOdaDf(UpdateBaseDf):
 
     def __init__(self,
                  atoms: pd.DataFrame,
-                 oil_last_res: int,
-                 oil_last_atom: int,
+                 last_res: int,
+                 last_atom: int,
                  debug: bool
                  ) -> None:
         name = 'oda'
-        first_res = oil_last_res + 1
-        first_atom = oil_last_atom + 1
+        first_res = last_res + 1
+        first_atom = last_atom + 1
         atoms_per_res = 59
         super().__init__(atoms, first_res, first_atom, atoms_per_res)
         if debug != 'None':
@@ -388,14 +388,14 @@ class UpdateIonDf(UpdateBaseDf):
                  atoms: pd.DataFrame,  # All ION atoms
                  ion_poses: list[np.ndarray],  # Position for the new ions
                  ion_velos: list[np.ndarray],  # Velocities for the new ions
-                 oda_last_res: int,
-                 oda_last_atom: int,
+                 last_res: int,
+                 last_atom: int,
                  debug: bool
                  ) -> None:
         all_ion = self.update_ion_df(atoms, ion_poses, ion_velos)
         name = 'ion'
-        first_res = oda_last_res + 1
-        first_atom = oda_last_atom + 1
+        first_res = last_res + 1
+        first_atom = last_atom + 1
         atoms_per_res = 1
         super().__init__(all_ion, first_res, first_atom, atoms_per_res)
         if debug != 'None':
@@ -555,17 +555,20 @@ class UpdateResidues:
         self.updated_residues['D10'] = update_oil.update_df
         self.nr_atoms_residues['D10'] = {'nr_atoms': update_oil.nr_atoms,
                                          'nr_residues': update_oil.nr_residues}
+        last_res: int = update_oil.last_res
+        last_atom: int = update_oil.last_atom
 
-        update_oda: UpdateOdaDf = self.get_oda(data,
-                                               update_oil.last_res,
-                                               update_oil.last_atom)
-        self.updated_residues['ODN'] = update_oda.update_df
-        self.nr_atoms_residues['ODN'] = {'nr_atoms': update_oda.nr_atoms,
+        try:
+            update_oda: UpdateOdaDf = self.get_oda(data, last_res, last_atom)
+            self.updated_residues['ODN'] = update_oda.update_df
+            self.nr_atoms_residues['ODN'] = {'nr_atoms': update_oda.nr_atoms,
                                          'nr_residues': update_oda.nr_residues}
+            last_res = update_oda.last_res
+            last_atom = update_oda.last_atom
+        except KeyError:
+            pass
 
-        update_ion: UpdateIonDf = self.get_ions(data,
-                                                update_oda.last_res,
-                                                update_oda.last_atom)
+        update_ion: UpdateIonDf = self.get_ions(data, last_res, last_atom)
         self.updated_residues['CLA'] = update_ion.update_df
         self.nr_atoms_residues['CLA'] = {'nr_atoms': update_ion.nr_atoms,
                                          'nr_residues': update_ion.nr_residues}
