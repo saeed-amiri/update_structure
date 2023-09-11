@@ -533,10 +533,15 @@ class UpdateResidues:
         for item in param['itp_files']:
             np_name: str = my_tools.drop_string(item, '.itp')
             cols_order.append(np_name)
+        # Drop unesist residues
+        for res in ['ODN', 'POT']:
+            if res not in self.updated_residues:
+                cols_order.remove(res)
         # Concatenate DataFrames in the desired order
         combine_residues: pd.DataFrame = \
             pd.concat([self.updated_residues[col] for col in cols_order],
                       axis=0, ignore_index=True)
+
         return combine_residues
 
     def get_residues(self,
