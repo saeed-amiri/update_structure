@@ -36,7 +36,7 @@ if __name__ == '__main__':
                                          title=gro_data.title)
         new_hn3_dict: dict[str, pd.DataFrame] = gro_data.new_hn3
     else:
-        sys.exit('\nDEPRECTED! CANNOT READ THIS! USE GRO FILES\n')
+        sys.exit('\DEPRECATED! CANNOT READ THIS! USE GRO FILES\n')
         up_data = update_residues_pdb.UpdateResidues(sys.argv[1])
         write_pdb_file.WritePdb(up_data)
         new_hn3 = up_data.new_hn3
