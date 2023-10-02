@@ -85,7 +85,7 @@ class GetSurface:
         Fig 5b of Mass paper (Joeri Smith, 2022), based on the mean
         of the interface"""
         h_depth: float  # Depth of NP in water
-        h_depth = aptes_r + (aptes_com[2] - self.interface_z)
+        h_depth = aptes_r + np.abs(aptes_com[2] - self.interface_z)
         contact_angle: np.float64 = np.arccos((h_depth/aptes_r) - 1)
         self.info_msg += f'\tThe contact angle is: {contact_angle} [rad]'
         self.info_msg += f', {np.rad2deg(contact_angle)} [deg]\n'
