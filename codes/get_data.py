@@ -449,6 +449,11 @@ class ProcessData:
                 '\tChecks APTES under the interface - standard deviation\n'
             z_range = (0, interface_z - interface_w/2 + aptes_com)
             print(z_range)
+        elif self.param['LINE'] == 'DOUBLELOWERBOUND':
+            self.info_msg += \
+                '\tChecks APTES under the interface - standard deviation\n'
+            z_range = (0, interface_z - interface_w + aptes_com)
+            print(z_range)
         elif self.param['LINE'] == 'UPPERBOUND':
             self.info_msg += \
                 '\tChecks APTES under the interface + standard deviation\n'
