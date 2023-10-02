@@ -261,7 +261,7 @@ class ProcessData:
         """
         for apt, item in unproton_aptes.items():
             if len(item) > (aptes_nr := int(self.param['NUMAPTES'])):
-                self.find_lowest_amino_groups(item, aptes_nr)
+                print(self.find_lowest_amino_groups(item, aptes_nr))
         return unproton_aptes
     
     @staticmethod
@@ -272,8 +272,8 @@ class ProcessData:
         df_c: pd.DataFrame = unproton_aptes[unproton_aptes['atom_name'] == "N"]
         lowest_amino_index: list[int] = \
             df_c.nsmallest(aptes_nr, 'z')['residue_number']
-        print(lowest_amino_index)
-        print(df_c)
+        return unproton_aptes[
+            unproton_aptes['residue_number'].isin(lowest_amino_index)]
 
     def get_aptes_unproto(self,
                           unprot_aptes_ind: dict[str, list[int]]  # Aptes index
