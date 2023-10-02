@@ -168,10 +168,12 @@ class ProcessData:
         self.residues_atoms = self.__get_atoms()
 
         # Find unprotonated APTES residues at the interface
-        self.unproton_aptes, self.unprot_aptes_ind = \
+        unproton_aptes, unprot_aptes_ind = \
             self.find_unprotonated_aptes(log)
-        print(self.unproton_aptes, self.unprot_aptes_ind )
-        print(self.select_lowest_aptes(self.unproton_aptes))
+        self.info_msg += ('\tThe number of unprotonated aptes in interface'
+                          f' is {len(unprot_aptes_ind)}\n')
+        self.unproton_aptes, self.unprot_aptes_ind = \
+            self.select_lowest_aptes(unproton_aptes)
         # Get the diameter of the NP
         self.np_diameter = self.calculate_maximum_np_radius()
 
@@ -254,19 +256,20 @@ class ProcessData:
         return self.get_aptes_unproto(unprot_aptes_ind), unprot_aptes_ind
 
     def select_lowest_aptes(self,
-                             unproton_aptes: dict[str, pd.DataFrame]
-                             ) -> tuple[dict[str, pd.DataFrame], ...]:
+                            unproton_aptes: dict[str, pd.DataFrame]
+                            ) -> tuple[dict[str, pd.DataFrame], ...]:
         """if the numbers of found aptes is more then NUMAPTES
         chose the lowest one
         """
         lowest_amino: dict[str, pd.DataFrame] = {}
         lowest_amino_ind: dict[str, int] = {}
-        for apt, item in unproton_aptes.items():
-            if len(item) > (aptes_nr := int(self.param['NUMAPTES'])):
-                lowest_amino[apt], lowest_amino_ind[apt] = \
-                    self.find_lowest_amino_groups(item, aptes_nr)
+        if (aptes_nr := int(self.param['NUMAPTES'])) != -1:
+            for apt, item in unproton_aptes.items():
+                if len(item) > aptes_nr:
+                    lowest_amino[apt], lowest_amino_ind[apt] = \
+                        self.find_lowest_amino_groups(item, aptes_nr)
         return unproton_aptes, lowest_amino_ind
-    
+
     @staticmethod
     def find_lowest_amino_groups(unproton_aptes: pd.DataFrame,
                                  aptes_nr: int
@@ -278,7 +281,7 @@ class ProcessData:
 
         return unproton_aptes[
             unproton_aptes['residue_number'].isin(lowest_amino_index)], \
-                list(lowest_amino_index)
+            list(lowest_amino_index)
 
     def get_aptes_unproto(self,
                           unprot_aptes_ind: dict[str, list[int]]  # Aptes index
