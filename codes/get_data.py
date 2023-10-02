@@ -255,7 +255,7 @@ class ProcessData:
 
     def select_lowest_aptes(self,
                              unproton_aptes: dict[str, pd.DataFrame]
-                             ) -> dict[str, pd.DataFrame]:
+                             ) -> tuple[dict[str, pd.DataFrame], ...]:
         """if the numbers of found aptes is more then NUMAPTES
         chose the lowest one
         """
@@ -265,7 +265,7 @@ class ProcessData:
             if len(item) > (aptes_nr := int(self.param['NUMAPTES'])):
                 lowest_amino[apt], lowest_amino_ind[apt] = \
                     self.find_lowest_amino_groups(item, aptes_nr)
-        return unproton_aptes
+        return unproton_aptes, lowest_amino_ind
     
     @staticmethod
     def find_lowest_amino_groups(unproton_aptes: pd.DataFrame,
