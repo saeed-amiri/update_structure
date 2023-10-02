@@ -271,7 +271,7 @@ class ProcessData:
         print(aptes_nr)
         nitro_list = []
         for key, item in unproton_aptes.items():
-            nitro_list.append([item["atom_name"] == "N"]['z'])
+            nitro_list.append(item[item["atom_name"] == "N"]['z'])
         print(nitro_list)
 
     def get_aptes_unproto(self,
