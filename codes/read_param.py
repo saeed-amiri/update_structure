@@ -104,8 +104,8 @@ class ReadParam:
         self.param: dict[str, typing.Any] = {}
         self.load_param_from_file(log)
         self.get_names_of_parts()
-        self.check_inputs(log)
         self.check_optinal_keys()
+        self.check_inputs(log)
         self.__write_msg(log)
         self.info_msg = ''  # Empety the msg
 
