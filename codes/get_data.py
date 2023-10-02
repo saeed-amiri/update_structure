@@ -170,8 +170,9 @@ class ProcessData:
         # Find unprotonated APTES residues at the interface
         unproton_aptes, unprot_aptes_ind = \
             self.find_unprotonated_aptes(log)
-        self.info_msg += ('\tThe number of unprotonated aptes in interface'
-                          f' is {len(unprot_aptes_ind)}\n')
+        if self.param['NUMAPTES'] != -1:
+            self.info_msg += ('\tThe number of unprotonated aptes is set'
+                              f' to {len(unprot_aptes_ind)}\n')
         self.unproton_aptes, self.unprot_aptes_ind = \
             self.select_lowest_aptes(unproton_aptes)
         # Get the diameter of the NP
