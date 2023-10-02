@@ -278,7 +278,7 @@ class ProcessData:
 
         return unproton_aptes[
             unproton_aptes['residue_number'].isin(lowest_amino_index)], \
-                lowest_amino_index
+                list(lowest_amino_index)
 
     def get_aptes_unproto(self,
                           unprot_aptes_ind: dict[str, list[int]]  # Aptes index
