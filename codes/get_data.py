@@ -438,14 +438,17 @@ class ProcessData:
                 '\tOnly checks APTES in the width of the interface\n'
             z_range = (interface_z - interface_w/2 + aptes_com,
                        interface_z + interface_w/2 + aptes_com)
+            print(z_range)
         elif self.param['LINE'] == 'INTERFACE':
             self.info_msg += \
                 '\tChecks APTES under the interface (average value)\n'
             z_range = (0, interface_z + aptes_com)
+            print(z_range)
         elif self.param['LINE'] == 'LOWERBOUND':
             self.info_msg += \
                 '\tChecks APTES under the interface - standard deviation\n'
             z_range = (0, interface_z - interface_w/2 + aptes_com)
+            print(z_range)
         elif self.param['LINE'] == 'UPPERBOUND':
             self.info_msg += \
                 '\tChecks APTES under the interface + standard deviation\n'
