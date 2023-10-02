@@ -270,10 +270,11 @@ class ProcessData:
                                  ) -> pd.DataFrame:
         """find lowest amino groups"""
         nitro_dict: dict[int, float] = {}
-        for key, row in unproton_aptes.iterrows():
-            nitro_dict[key] = {row['residue_number']:
-            row[row["atom_name"] == "N"]['z']}
-        print(nitro_dict)
+        for item, row in unproton_aptes.iterrows():
+            print(item, row)
+            # nitro_dict[item] = {row['residue_number']:
+            # row[row["atom_name"] == "N"]['z']}
+        # print(nitro_dict)
 
     def get_aptes_unproto(self,
                           unprot_aptes_ind: dict[str, list[int]]  # Aptes index
