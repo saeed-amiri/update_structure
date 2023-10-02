@@ -259,19 +259,20 @@ class ProcessData:
         """if the numbers of found aptes is more then NUMAPTES
         chose the lowest one
         """
-        if len(unproton_aptes) > (aptes_nr := int(self.param['NUMAPTES'])):
-            self.find_lowest_amino_groups(unproton_aptes, aptes_nr)
+        for apt, item in unproton_aptes.items():
+            if len(item) > (aptes_nr := int(self.param['NUMAPTES'])):
+                self.find_lowest_amino_groups(item, aptes_nr)
         return unproton_aptes
     
     @staticmethod
-    def find_lowest_amino_groups(unproton_aptes: dict[str, pd.DataFrame],
+    def find_lowest_amino_groups(unproton_aptes: pd.DataFrame,
                                  aptes_nr: int
-                                 ) -> dict[str, pd.DataFrame]:
+                                 ) -> pd.DataFrame:
         """find lowest amino groups"""
-        nitro_dict: dict[str, dict[int, float]] = {}
-        for key, item in unproton_aptes.items():
-            nitro_dict[key] = {item['residue_number']:
-            item[item["atom_name"] == "N"]['z']}
+        nitro_dict: dict[int, float] = {}
+        for key, row in unproton_aptes.iterrows():
+            nitro_dict[key] = {row['residue_number']:
+            row[row["atom_name"] == "N"]['z']}
         print(nitro_dict)
 
     def get_aptes_unproto(self,
