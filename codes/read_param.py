@@ -96,6 +96,8 @@ class ReadParam:
     str_keys: list[str] = ["FILE", "LINE"]
     list_keys: list = [float_keys, integer_keys, boolen_keys, files_keys,
                        str_keys, itp_keys]
+    optional_keys: list[str] = ["NUMAPTES"]
+
     def __init__(self,
                  log: logger.logging.Logger
                  ) -> None:
@@ -103,6 +105,7 @@ class ReadParam:
         self.load_param_from_file(log)
         self.get_names_of_parts()
         self.check_inputs(log)
+        self.check_optinal_keys()
         self.__write_msg(log)
         self.info_msg = ''  # Empety the msg
 
@@ -235,6 +238,15 @@ class ReadParam:
         """
         self.check_files([self.param[item] for item in self.files_keys], log)
         self.check_files(self.param['itp_files'], log)
+
+    def check_optinal_keys(self) -> None:
+        """check if the optinal keys have values, otherwise give them
+        -1
+        """
+        for item in self.optional_keys:
+            if item not in self.param:
+                self.param[item] = -1
+                self.info_msg += f'\tThe value for {item} is set to `-1`\n'
 
     @staticmethod
     def check_files(file_list: list[str],
