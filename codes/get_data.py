@@ -170,8 +170,6 @@ class ProcessData:
         # Find unprotonated APTES residues at the interface
         self.unproton_aptes, self.unprot_aptes_ind = \
             self.find_unprotonated_aptes(log)
-        print(self.unproton_aptes)
-        print(self.unprot_aptes_ind)
 
         # Get the diameter of the NP
         self.np_diameter = self.calculate_maximum_np_radius()
