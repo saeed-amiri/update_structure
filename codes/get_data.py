@@ -271,7 +271,7 @@ class ProcessData:
         """find lowest amino groups"""
         df_c: pd.DataFrame = unproton_aptes[unproton_aptes['atom_name'] == "N"]
         lowest_amino_index: list[int] = \
-            df_c.nsmallest(aptes_nr, 'z')['residues_number']
+            df_c.nsmallest(aptes_nr, 'z')['residue_number']
         print(lowest_amino_index)
         print(df_c)
 
