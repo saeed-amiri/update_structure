@@ -172,7 +172,7 @@ class ProcessData:
             self.find_unprotonated_aptes(log)
         if self.param['NUMAPTES'] != -1:
             self.info_msg += ('\tThe number of unprotonated aptes is set'
-                              f' to {len(unprot_aptes_ind)}\n')
+                              f' to {self.param["NUMAPTES"]}\n')
         self.unproton_aptes, self.unprot_aptes_ind = \
             self.select_lowest_aptes(unproton_aptes)
         # Get the diameter of the NP
