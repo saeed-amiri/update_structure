@@ -26,7 +26,8 @@ within the interface: WHITIN
 @LINE=UPPERBOUND
 the center of mass of the nanoparticle
 @NP_ZLOC=10
-
+the number of the maximum APTES to protonate -> Optional
+@NUMAPTES=10
 @BETTER_POS=100
 ############### Computation parameters ###########
 Number of points to make to try to put H of new protonation there, around 100
