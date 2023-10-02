@@ -104,7 +104,6 @@ class ReadParam:
         self.param: dict[str, typing.Any] = {}
         self.load_param_from_file(log)
         self.get_names_of_parts()
-        self.check_optinal_keys()
         self.check_inputs(log)
         self.__write_msg(log)
         self.info_msg = ''  # Empety the msg
@@ -126,6 +125,7 @@ class ReadParam:
         # self.param dictionary.
         self.read_param()
 
+        self.check_optinal_keys()
         # Perform a sanity check on the read parameters to ensure that
         # all important keys exist.
         essential_keys = \
