@@ -360,6 +360,23 @@ class UpdateOdaDf(UpdateBaseDf):
         if debug != 'None':
             self.update_df.to_csv(f'{name}_res_update.debug', sep=' ')
 
+class UpdateOdmDf(UpdateBaseDf):
+    """preparing ODA residue for updating.The residue index should be
+    changed"""
+
+    def __init__(self,
+                 atoms: pd.DataFrame,
+                 last_res: int,
+                 last_atom: int,
+                 debug: bool
+                 ) -> None:
+        name = 'odm'
+        first_res = last_res + 1
+        first_atom = last_atom + 1
+        atoms_per_res = 58
+        super().__init__(atoms, first_res, first_atom, atoms_per_res)
+        if debug != 'None':
+            self.update_df.to_csv(f'{name}_res_update.debug', sep=' ')
 
 class UpdatePotDf(UpdateBaseDf):
     """preparing ODA residue for updating.The residue index should be
@@ -529,12 +546,12 @@ class UpdateResidues:
                          ) -> pd.DataFrame:
         """concate all the residues in one dataframe, The order is
         very important. it should follow the order in the main file"""
-        cols_order: list[str] = ['SOL', 'D10', 'ODN', 'CLA', 'POT']
+        cols_order: list[str] = ['SOL', 'D10', 'ODN', 'CLA', 'POT', 'ODM']
         for item in param['itp_files']:
             np_name: str = my_tools.drop_string(item, '.itp')
             cols_order.append(np_name)
         # Drop unesist residues
-        for res in ['ODN', 'POT']:
+        for res in ['ODN', 'POT', 'ODM']:
             if res not in self.updated_residues:
                 cols_order.remove(res)
         # Concatenate DataFrames in the desired order
@@ -573,10 +590,15 @@ class UpdateResidues:
         except KeyError:
             pass
 
+
         update_ion: UpdateIonDf = self.get_ions(data, last_res, last_atom)
         self.updated_residues['CLA'] = update_ion.update_df
         self.nr_atoms_residues['CLA'] = {'nr_atoms': update_ion.nr_atoms,
                                          'nr_residues': update_ion.nr_residues}
+
+        last_res: int = update_ion.last_res
+        last_atom: int = update_ion.last_atom
+
         try:
             update_pot: UpdatePotDf = self.get_pots(data,
                                                     update_ion.last_res,
@@ -585,6 +607,16 @@ class UpdateResidues:
             self.nr_atoms_residues['POT'] = \
                 {'nr_atoms': update_pot.nr_atoms,
                  'nr_residues': update_pot.nr_residues}
+            last_res = update_pot.last_res
+            last_atom = update_pot.last_atom
+        except KeyError:
+            pass
+
+        try:
+            update_odm: UpdateOdmDf = self.get_odm(data, last_res, last_atom)
+            self.updated_residues['ODM'] = update_odm.update_df
+            self.nr_atoms_residues['ODM'] = {'nr_atoms': update_odm.nr_atoms,
+                                         'nr_residues': update_odm.nr_residues}
         except KeyError:
             pass
 
@@ -713,6 +745,19 @@ class UpdateResidues:
                                   data.param['DEBUG']
                                   )
         return updated_oda
+
+    @staticmethod
+    def get_odm(data: 'IonizationSol',  # All the data
+                last_res: int,  # Last residue index in water
+                last_atom: int  # Last atom index in water
+                ) -> UpdateOdaDf:
+        """get updated ions data frame"""
+        updated_odm = UpdateOdmDf(data.residues_atoms['ODN'],
+                                  last_res,
+                                  last_atom,
+                                  data.param['DEBUG']
+                                  )
+        return updated_odm
 
     @staticmethod
     def get_ions(data: 'IonizationSol',  # All the data
