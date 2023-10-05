@@ -360,6 +360,7 @@ class UpdateOdaDf(UpdateBaseDf):
         if debug != 'None':
             self.update_df.to_csv(f'{name}_res_update.debug', sep=' ')
 
+
 class UpdateOdmDf(UpdateBaseDf):
     """preparing ODA residue for updating.The residue index should be
     changed"""
@@ -377,6 +378,7 @@ class UpdateOdmDf(UpdateBaseDf):
         super().__init__(atoms, first_res, first_atom, atoms_per_res)
         if debug != 'None':
             self.update_df.to_csv(f'{name}_res_update.debug', sep=' ')
+
 
 class UpdatePotDf(UpdateBaseDf):
     """preparing ODA residue for updating.The residue index should be
@@ -583,21 +585,21 @@ class UpdateResidues:
         try:
             update_oda: UpdateOdaDf = self.get_oda(data, last_res, last_atom)
             self.updated_residues['ODN'] = update_oda.update_df
-            self.nr_atoms_residues['ODN'] = {'nr_atoms': update_oda.nr_atoms,
-                                         'nr_residues': update_oda.nr_residues}
+            self.nr_atoms_residues['ODN'] = \
+                {'nr_atoms': update_oda.nr_atoms,
+                 'nr_residues': update_oda.nr_residues}
             last_res = update_oda.last_res
             last_atom = update_oda.last_atom
         except KeyError:
             pass
-
 
         update_ion: UpdateIonDf = self.get_ions(data, last_res, last_atom)
         self.updated_residues['CLA'] = update_ion.update_df
         self.nr_atoms_residues['CLA'] = {'nr_atoms': update_ion.nr_atoms,
                                          'nr_residues': update_ion.nr_residues}
 
-        last_res: int = update_ion.last_res
-        last_atom: int = update_ion.last_atom
+        last_res = update_ion.last_res
+        last_atom = update_ion.last_atom
 
         try:
             update_pot: UpdatePotDf = self.get_pots(data,
@@ -615,8 +617,9 @@ class UpdateResidues:
         try:
             update_odm: UpdateOdmDf = self.get_odm(data, last_res, last_atom)
             self.updated_residues['ODM'] = update_odm.update_df
-            self.nr_atoms_residues['ODM'] = {'nr_atoms': update_odm.nr_atoms,
-                                         'nr_residues': update_odm.nr_residues}
+            self.nr_atoms_residues['ODM'] = \
+                {'nr_atoms': update_odm.nr_atoms,
+                 'nr_residues': update_odm.nr_residues}
         except KeyError:
             pass
 
@@ -750,7 +753,7 @@ class UpdateResidues:
     def get_odm(data: 'IonizationSol',  # All the data
                 last_res: int,  # Last residue index in water
                 last_atom: int  # Last atom index in water
-                ) -> UpdateOdaDf:
+                ) -> UpdateOdmDf:
         """get updated ions data frame"""
         updated_odm = UpdateOdmDf(data.residues_atoms['ODN'],
                                   last_res,
