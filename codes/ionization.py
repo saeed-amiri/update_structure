@@ -346,7 +346,7 @@ class IonizationSol(proton.FindHPosition):
             d_ion = self.param['ION_DISTANCE']  # Distance of Ions and others
             found_poistion: bool = False
             while d_ion > 0 and not found_poistion:
-                for _ in range(int(self.param['ION_ATTEPTS'])):
+                for _ in range(int(self.param['ION_ATTEMPTS'])):
                     # Generate random positions within the specified ranges
                     # for each dimension, Don't want to be at the edge of box
                     position = \
