@@ -86,10 +86,7 @@ class UpdateBaseDf:
         """
         atoms_c = atoms.copy()
         nr_atoms = len(atoms.index)
-        print(nr_atoms)
         updated_res_id = self.update_residue_index(nr_atoms)
-        print(len(updated_res_id))
-        print(len(atoms_c))
         atoms_c.loc[:, 'residue_number'] = updated_res_id
         updated_atom_id = self.update_atom_index(nr_atoms)
         atoms_c.loc[:, 'atom_id'] = updated_atom_id
