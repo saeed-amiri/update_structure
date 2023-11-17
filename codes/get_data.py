@@ -174,7 +174,7 @@ class ProcessData:
             self.info_msg += ('\tThe number of unprotonated aptes is set'
                               f' to {int(self.param["NUMAPTES"])}\n')
         self.unproton_aptes, self.unprot_aptes_ind = \
-            self.select_lowest_aptes(unproton_aptes)
+            self.select_lowest_aptes(unproton_aptes, unprot_aptes_ind)
         # Get the diameter of the NP
         self.np_diameter = self.calculate_maximum_np_radius()
 
@@ -257,7 +257,8 @@ class ProcessData:
         return self.get_aptes_unproto(unprot_aptes_ind), unprot_aptes_ind
 
     def select_lowest_aptes(self,
-                            unproton_aptes: dict[str, pd.DataFrame]
+                            unproton_aptes: dict[str, pd.DataFrame],
+                            unproton_aptes_ind: dict[str, int]
                             ) -> tuple[dict[str, pd.DataFrame], ...]:
         """if the numbers of found aptes is more then NUMAPTES
         chose the lowest one
@@ -269,7 +270,8 @@ class ProcessData:
                 if len(item) > aptes_nr:
                     lowest_amino[apt], lowest_amino_ind[apt] = \
                         self.find_lowest_amino_groups(item, aptes_nr)
-        return unproton_aptes, lowest_amino_ind
+            return lowest_amino, lowest_amino_ind
+        return unproton_aptes, unproton_aptes_ind
 
     @staticmethod
     def find_lowest_amino_groups(unproton_aptes: pd.DataFrame,
@@ -279,7 +281,6 @@ class ProcessData:
         df_c: pd.DataFrame = unproton_aptes[unproton_aptes['atom_name'] == "N"]
         lowest_amino_index: list[int] = \
             df_c.nsmallest(aptes_nr, 'z')['residue_number']
-
         return unproton_aptes[
             unproton_aptes['residue_number'].isin(lowest_amino_index)], \
             list(lowest_amino_index)
@@ -339,7 +340,6 @@ class ProcessData:
                 # Process chunks in parallel using the process_chunk function
                 results = pool.starmap(self.process_chunk,
                                        [(chunk, df_apt) for chunk in chunks])
-
             # Release memory by deleting the DataFrame
             del df_apt
             # Combine the results from each process
