@@ -86,7 +86,10 @@ class UpdateBaseDf:
         """
         atoms_c = atoms.copy()
         nr_atoms = len(atoms.index)
+        print(nr_atoms)
         updated_res_id = self.update_residue_index(nr_atoms)
+        print(len(updated_res_id))
+        print(len(atoms_c))
         atoms_c.loc[:, 'residue_number'] = updated_res_id
         updated_atom_id = self.update_atom_index(nr_atoms)
         atoms_c.loc[:, 'atom_id'] = updated_atom_id
@@ -582,7 +585,7 @@ class UpdateResidues:
         last_res: int = update_oil.last_res
         last_atom: int = update_oil.last_atom
 
-        try:
+        if 'ODN' in self.updated_residues:
             update_oda: UpdateOdaDf = self.get_oda(data, last_res, last_atom)
             self.updated_residues['ODN'] = update_oda.update_df
             self.nr_atoms_residues['ODN'] = \
@@ -590,8 +593,6 @@ class UpdateResidues:
                  'nr_residues': update_oda.nr_residues}
             last_res = update_oda.last_res
             last_atom = update_oda.last_atom
-        except KeyError:
-            pass
 
         update_ion: UpdateIonDf = self.get_ions(data, last_res, last_atom)
         self.updated_residues['CLA'] = update_ion.update_df
@@ -601,7 +602,7 @@ class UpdateResidues:
         last_res = update_ion.last_res
         last_atom = update_ion.last_atom
 
-        try:
+        if 'POT' in self.updated_residues:
             update_pot: UpdatePotDf = self.get_pots(data,
                                                     update_ion.last_res,
                                                     update_ion.last_atom)
@@ -611,17 +612,13 @@ class UpdateResidues:
                  'nr_residues': update_pot.nr_residues}
             last_res = update_pot.last_res
             last_atom = update_pot.last_atom
-        except KeyError:
-            pass
 
-        try:
+        if 'ODM' in self.updated_residues:
             update_odm: UpdateOdmDf = self.get_odm(data, last_res, last_atom)
             self.updated_residues['ODM'] = update_odm.update_df
             self.nr_atoms_residues['ODM'] = \
                 {'nr_atoms': update_odm.nr_atoms,
                  'nr_residues': update_odm.nr_residues}
-        except KeyError:
-            pass
 
         updated_aptes: dict[str, pd.DataFrame]  # All the updated aptes groups
         updated_aptes, self.new_hn3 = self.get_aptes(data)
