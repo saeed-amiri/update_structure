@@ -145,8 +145,6 @@ class IonizationSol(proton.FindHPosition):
         # Get the number of the chains to be protonated
         n_protonation: int  # Number of the protonation
         n_protonation = sum(len(lst) for lst in self.unprot_aptes_ind.values())
-        print(f'protonation: {n_protonation}')
-        print(f'len protonation: {len(n_protonation)}')
         # Get the chunk boxes to find atoms in them
         x_chunks, y_chunks, z_chunks = \
             self.__get_chunk_interval(x_dims, y_dims, z_dims, n_protonation)
