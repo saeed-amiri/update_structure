@@ -103,6 +103,7 @@ class GetSurface:
         self.info_msg += \
             (f'\tThe mean place of water`s surface is: `{z_mean:.3f}`\n'
              f'\tThe standard diviation of surface is: `{std_d:.3f}`\n')
+        return z_mean, std_d
 
     def __get_surface_topology(self,
                                cuboid_with_hole: pd.DataFrame,  # water's O
