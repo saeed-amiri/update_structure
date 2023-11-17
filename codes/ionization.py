@@ -262,11 +262,16 @@ class IonizationSol(proton.FindHPosition):
                   for x_i in x_chunks
                   for y_i in y_chunks
                   for z_i in z_chunks]
-
-        if len(chunks) > self.core_nr:
+        if (chunks_len := len(chunks)) == 0:
+            sys.exit(
+                f"{bcolors.FAIL}\n\tThere is problem in the data\n"
+                f"\tThe length of the dataframe is {len(sol_atoms)}\n"
+                f"\tThe length of the chunks is `{chunks_len}`{bcolors.ENDC}\n"
+                )
+        elif chunks_len > self.core_nr:
             num_processes = self.core_nr
         else:
-            num_processes = len(chunks)
+            num_processes = chunks_len
         with multip.Pool(processes=num_processes) as pool:
             ion_info: list[tuple[np.ndarray, np.ndarray, float]] = \
                 pool.starmap(self._process_chunk_box, chunks)
