@@ -87,8 +87,9 @@ class GetSurface:
         h_depth: float  # Depth of NP in water
         h_depth = aptes_r + np.abs(aptes_com[2] - self.interface_z)
         contact_angle: np.float64 = np.arccos((h_depth/aptes_r) - 1)
-        self.info_msg += f'\tThe contact angle is: {contact_angle} [rad]'
-        self.info_msg += f', {np.rad2deg(contact_angle)} [deg]\n'
+        self.info_msg += \
+            (f'\tThe contact angle is: `{contact_angle:.3f}` [rad]'
+             f', `{np.rad2deg(contact_angle):.3f}` [deg]\n')
         return contact_angle
 
     def __analyse_surface(self,
@@ -99,8 +100,10 @@ class GetSurface:
         """
         z_mean: np.float64 = np.mean(water_surface['z'])
         std_d: np.float64 = np.std(water_surface['z'])
-        self.info_msg += f'\tThe mean place of water`s surface is: {z_mean}\n'
-        self.info_msg += f'\tThe standard diviation of surface is: {std_d}\n'
+        self.info_msg += \
+            f'\tThe mean place of water`s surface is: `{z_mean:.3f}`\n'
+        self.info_msg += \
+            f'\tThe standard diviation of surface is: `{std_d:.3f}`\n'
         return z_mean, std_d
 
     def __get_surface_topology(self,
@@ -185,9 +188,10 @@ class GetSurface:
         max_z: np.float64 = np.max(aptes['z'])
         min_z: np.float64 = np.min(aptes['z'])
         aptes_r: np.float64 = np.round(max_z-min_z, 3) / 2
-        self.info_msg += f'\tThe center of mass of NP is: {aptes_com}\n'
-        self.info_msg += f'\tThe radius of NP is: {aptes_r} but {aptes_r*1.1}'
-        self.info_msg += ' is used for getting the interface\n'
+        self.info_msg += \
+            (f'\tThe center of mass of NP is: `{aptes_com}`\n'
+             f'\tThe radius of NP is: `{aptes_r:.3f}` but `{aptes_r*1.1:.3f}`'
+             ' is used for getting the interface\n')
         return aptes_com, aptes_r*1.1
 
     @staticmethod
@@ -250,8 +254,8 @@ class WrapperGetSurface:
             interface_std_lst.append(water_surface.interface_std)
         interface_std, interface_z = \
             self.set_attributes(interface_z_lst, interface_std_lst)
-        self.info_msg += f'\tMean of interface_z: `{interface_z}`\n'
-        self.info_msg += f'\tMean of interface_std: `{interface_std}`\n'
+        self.info_msg += (f'\tMean of interface_z: `{interface_z:.3f}`\n'
+                          f'\tMean of interface_std: `{interface_std:.3f}`\n')
         return interface_std, interface_z
 
     @staticmethod
@@ -262,7 +266,6 @@ class WrapperGetSurface:
         interface_z: np.float64 = np.mean(interface_z_lst)
         interface_std: np.float64 = np.mean(interface_std_lst)
         return interface_std, interface_z
-
 
     def __write_msg(self,
                     log: logger.logging.Logger,  # To log info in it
