@@ -632,7 +632,7 @@ class ProcessData:
             np_diameters.append(np.max(diameter))
         max_diameter: np.float64 = np.max(np_diameters)
         self.info_msg += \
-            f'\tMaximum radius of between all NPs: `{max_diameter/2}`\n'
+            f'\tMaximum radius of between all NPs: `{max_diameter/2:.4f}`\n'
         return max_diameter
 
     def get_unique_residue_names(self) -> list[str]:
