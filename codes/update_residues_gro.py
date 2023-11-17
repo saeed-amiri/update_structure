@@ -582,7 +582,7 @@ class UpdateResidues:
         last_res: int = update_oil.last_res
         last_atom: int = update_oil.last_atom
 
-        if 'ODN' in self.updated_residues:
+        if 'ODN' in self.updated_residues.keys():
             update_oda: UpdateOdaDf = self.get_oda(data, last_res, last_atom)
             self.updated_residues['ODN'] = update_oda.update_df
             self.nr_atoms_residues['ODN'] = \
@@ -599,7 +599,7 @@ class UpdateResidues:
         last_res = update_ion.last_res
         last_atom = update_ion.last_atom
 
-        if 'POT' in self.updated_residues:
+        if 'POT' in self.updated_residues.keys():
             update_pot: UpdatePotDf = self.get_pots(data,
                                                     update_ion.last_res,
                                                     update_ion.last_atom)
@@ -610,7 +610,7 @@ class UpdateResidues:
             last_res = update_pot.last_res
             last_atom = update_pot.last_atom
 
-        if 'ODM' in self.updated_residues:
+        if 'ODM' in self.updated_residues.keys():
             update_odm: UpdateOdmDf = self.get_odm(data, last_res, last_atom)
             self.updated_residues['ODM'] = update_odm.update_df
             self.nr_atoms_residues['ODM'] = \
