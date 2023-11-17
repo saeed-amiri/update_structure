@@ -98,10 +98,10 @@ class ReadGro:
                 counter += 1
                 if not line.strip():
                     break
-        ReadGro.info_msg += f'\tFile name is {fname}\n'        
-        ReadGro.info_msg += f'\tSystem title is {self.title}\n'
-        ReadGro.info_msg += f'\tNumber of atoms is {self.number_atoms}\n'
-        ReadGro.info_msg += f'\tBox boundary is {self.pbc_box}\n'
+        ReadGro.info_msg += (f'\tFile name is `{fname}`\n'
+                             f'\tSystem title is `{self.title}`\n'
+                             f'\tNumber of atoms is `{self.number_atoms}`\n'
+                             f'\tBox boundary is `{self.pbc_box}`\n')
         return pd.DataFrame(processed_line)
 
     @staticmethod
