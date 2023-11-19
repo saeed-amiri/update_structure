@@ -574,9 +574,9 @@ class UpdateResidues:
 
         last_res: int = 0
         last_atom: int = 0
-        for res in ['SOL', 'D10', 'ODN']:
+        for res in ['SOL', 'D10', 'ODN', 'CLA', 'POT', 'ODM']:
             if res in residues_in_system:
-                update_func: function = getattr(self, f'get_{res.lower()}')
+                update_func: "function" = getattr(self, f'get_{res.lower()}')
                 func_args: tuple = \
                     self._get_update_func_args(res, data, last_res, last_atom)
                 update_residue = update_func(*func_args)
@@ -585,44 +585,12 @@ class UpdateResidues:
                     'nr_atoms': update_residue.nr_atoms,
                     'nr_residues': update_residue.nr_residues
                 }
-
                 last_res = update_residue.last_res
                 last_atom = update_residue.last_atom
+                if res == 'CLA':
+                    update_ion = update_residue
             else:
                 self._check_existence_of_residues(res, log)
-
-        if (res := 'CLA') in residues_in_system:
-            update_ion: UpdateIonDf = self.get_ions(data, last_res, last_atom)
-            self.updated_residues[res] = update_ion.update_df
-            self.nr_atoms_residues[res] = \
-                {'nr_atoms': update_ion.nr_atoms,
-                 'nr_residues': update_ion.nr_residues}
-            last_res = update_ion.last_res
-            last_atom = update_ion.last_atom
-        else:
-            self._check_existence_of_residues(res, log)
-
-        if (res := 'POT') in residues_in_system:
-            update_pot: UpdatePotDf = self.get_pots(data,
-                                                    update_ion.last_res,
-                                                    update_ion.last_atom)
-            self.updated_residues['POT'] = update_pot.update_df
-            self.nr_atoms_residues['POT'] = \
-                {'nr_atoms': update_pot.nr_atoms,
-                 'nr_residues': update_pot.nr_residues}
-            last_res = update_pot.last_res
-            last_atom = update_pot.last_atom
-        else:
-            self._check_existence_of_residues(res, log)
-
-        if 'ODM' in data.residues_atoms.keys():
-            update_odm: UpdateOdmDf = self.get_odm(data, last_res, last_atom)
-            self.updated_residues['ODM'] = update_odm.update_df
-            self.nr_atoms_residues['ODM'] = \
-                {'nr_atoms': update_odm.nr_atoms,
-                 'nr_residues': update_odm.nr_residues}
-        else:
-            self._check_existence_of_residues(res, log)
 
         updated_aptes: dict[str, pd.DataFrame]  # All the updated aptes groups
         updated_aptes, self.new_hn3 = self.get_aptes(data)
@@ -791,10 +759,10 @@ class UpdateResidues:
         return updated_odm
 
     @staticmethod
-    def get_ions(data: 'IonizationSol',  # All the data
-                 oda_last_res: int,
-                 oda_last_atom: int
-                 ) -> UpdateIonDf:
+    def get_cla(data: 'IonizationSol',  # All the data
+                oda_last_res: int,
+                oda_last_atom: int
+                ) -> UpdateIonDf:
         """get updated ions data frame"""
         updated_ions = UpdateIonDf(data.residues_atoms['CLA'],
                                    data.ion_poses,
@@ -806,10 +774,10 @@ class UpdateResidues:
         return updated_ions
 
     @staticmethod
-    def get_pots(data: 'IonizationSol',  # All the data
-                 ion_last_res: int,
-                 ion_last_atom: int
-                 ) -> UpdatePotDf:
+    def get_pot(data: 'IonizationSol',  # All the data
+                ion_last_res: int,
+                ion_last_atom: int
+                ) -> UpdatePotDf:
         """get updated POT ion data frame"""
         updated_ions = UpdatePotDf(data.residues_atoms['POT'],
                                    ion_last_res,
