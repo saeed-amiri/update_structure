@@ -520,7 +520,7 @@ class UpdateResidues:
         data = ionization.IonizationSol(fname, log)
         self.title = data.title
         self.pbc_box = data.pbc_box
-        self.get_residues(data)
+        self.get_residues(data, log)
         combine_residues = self.concate_residues(data.param)
         self.combine_residues = self.__set_atom_id(combine_residues,
                                                    data.param['DEBUG'])
@@ -564,42 +564,61 @@ class UpdateResidues:
         return combine_residues
 
     def get_residues(self,
-                     data: 'IonizationSol'  # All the data
+                     data: 'IonizationSol',  # All the data
+                     log: logger.logging.Logger
                      ) -> None:
         """get all the residues"""
-
+        residues_in_system: list[str] = list(data.residues_atoms.keys())
         update_sol: UpdateSolDf = self.get_sol(data)
-        self.updated_residues['SOL'] = update_sol.update_df
-        self.nr_atoms_residues['SOL'] = {'nr_atoms': update_sol.nr_atoms,
-                                         'nr_residues': update_sol.nr_residues}
+        self.info_msg += \
+            f'\tThe residues in the system:\n\t`{residues_in_system}`\n'
+        if (res:='SOL') in residues_in_system:
+            self.updated_residues[res] = update_sol.update_df
+            self.nr_atoms_residues[res] = \
+                {'nr_atoms': update_sol.nr_atoms,
+                 'nr_residues': update_sol.nr_residues}
+        else:
+            log.error(msg:=f'\tError! The residue `{res}` does not exist!\n')
+            raise KeyError(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
 
-        update_oil: UpdateOilDf = self.get_oil(data,
-                                               update_sol.last_res,
-                                               update_sol.last_atom)
-        self.updated_residues['D10'] = update_oil.update_df
-        self.nr_atoms_residues['D10'] = {'nr_atoms': update_oil.nr_atoms,
-                                         'nr_residues': update_oil.nr_residues}
-        last_res: int = update_oil.last_res
-        last_atom: int = update_oil.last_atom
+        if (res:='D10') in residues_in_system:
+            update_oil: UpdateOilDf = self.get_oil(data,
+                                                   update_sol.last_res,
+                                                   update_sol.last_atom)
+            self.updated_residues[res] = update_oil.update_df
+            self.nr_atoms_residues[res] = \
+                {'nr_atoms': update_oil.nr_atoms,
+                 'nr_residues': update_oil.nr_residues}
+            last_res: int = update_oil.last_res
+            last_atom: int = update_oil.last_atom
+        else:
+            log.error(msg:=f'\tError! The residue `{res}` does not exist!\n')
+            raise KeyError(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
 
-        if 'ODN' in self.updated_residues.keys():
+        if (res:='ODN') in residues_in_system:
             update_oda: UpdateOdaDf = self.get_oda(data, last_res, last_atom)
-            self.updated_residues['ODN'] = update_oda.update_df
-            self.nr_atoms_residues['ODN'] = \
+            self.updated_residues[res] = update_oda.update_df
+            self.nr_atoms_residues[res] = \
                 {'nr_atoms': update_oda.nr_atoms,
                  'nr_residues': update_oda.nr_residues}
             last_res = update_oda.last_res
             last_atom = update_oda.last_atom
+        else:
+            self.info_msg += f'\tSytem contains no `{res}`\n'
 
-        update_ion: UpdateIonDf = self.get_ions(data, last_res, last_atom)
-        self.updated_residues['CLA'] = update_ion.update_df
-        self.nr_atoms_residues['CLA'] = {'nr_atoms': update_ion.nr_atoms,
-                                         'nr_residues': update_ion.nr_residues}
+        if (res:='CLA') in residues_in_system:
+            update_ion: UpdateIonDf = self.get_ions(data, last_res, last_atom)
+            self.updated_residues[res] = update_ion.update_df
+            self.nr_atoms_residues[res] = \
+                {'nr_atoms': update_ion.nr_atoms,
+                 'nr_residues': update_ion.nr_residues}
+            last_res = update_ion.last_res
+            last_atom = update_ion.last_atom
+        else:
+            log.warning(msg:=f'\nThere is no ion `{res}`! Check the charges\n')
+            self.info_msg += msg
 
-        last_res = update_ion.last_res
-        last_atom = update_ion.last_atom
-
-        if 'POT' in self.updated_residues.keys():
+        if (res:='POT') in residues_in_system:
             update_pot: UpdatePotDf = self.get_pots(data,
                                                     update_ion.last_res,
                                                     update_ion.last_atom)
@@ -610,7 +629,7 @@ class UpdateResidues:
             last_res = update_pot.last_res
             last_atom = update_pot.last_atom
 
-        if 'ODM' in self.updated_residues.keys():
+        if 'ODM' in data.residues_atoms.keys():
             update_odm: UpdateOdmDf = self.get_odm(data, last_res, last_atom)
             self.updated_residues['ODM'] = update_odm.update_df
             self.nr_atoms_residues['ODM'] = \
