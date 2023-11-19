@@ -569,10 +569,10 @@ class UpdateResidues:
                      ) -> None:
         """get all the residues"""
         residues_in_system: list[str] = list(data.residues_atoms.keys())
-        update_sol: UpdateSolDf = self.get_sol(data)
         self.info_msg += \
             f'\tThe residues in the system:\n\t`{residues_in_system}`\n'
         if (res := 'SOL') in residues_in_system:
+            update_sol: UpdateSolDf = self.get_sol(data)
             self.updated_residues[res] = update_sol.update_df
             self.nr_atoms_residues[res] = \
                 {'nr_atoms': update_sol.nr_atoms,
