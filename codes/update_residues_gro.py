@@ -572,16 +572,15 @@ class UpdateResidues:
         update_sol: UpdateSolDf = self.get_sol(data)
         self.info_msg += \
             f'\tThe residues in the system:\n\t`{residues_in_system}`\n'
-        if (res:='SOL') in residues_in_system:
+        if (res := 'SOL') in residues_in_system:
             self.updated_residues[res] = update_sol.update_df
             self.nr_atoms_residues[res] = \
                 {'nr_atoms': update_sol.nr_atoms,
                  'nr_residues': update_sol.nr_residues}
         else:
-            log.error(msg:=f'\tError! The residue `{res}` does not exist!\n')
-            raise KeyError(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
+            self._check_existence_of_residues(res, log)
 
-        if (res:='D10') in residues_in_system:
+        if (res := 'D10') in residues_in_system:
             update_oil: UpdateOilDf = self.get_oil(data,
                                                    update_sol.last_res,
                                                    update_sol.last_atom)
@@ -592,10 +591,9 @@ class UpdateResidues:
             last_res: int = update_oil.last_res
             last_atom: int = update_oil.last_atom
         else:
-            log.error(msg:=f'\tError! The residue `{res}` does not exist!\n')
-            raise KeyError(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
+            self._check_existence_of_residues(res, log)
 
-        if (res:='ODN') in residues_in_system:
+        if (res := 'ODN') in residues_in_system:
             update_oda: UpdateOdaDf = self.get_oda(data, last_res, last_atom)
             self.updated_residues[res] = update_oda.update_df
             self.nr_atoms_residues[res] = \
@@ -604,9 +602,9 @@ class UpdateResidues:
             last_res = update_oda.last_res
             last_atom = update_oda.last_atom
         else:
-            self.info_msg += f'\tSytem contains no `{res}`\n'
+            self._check_existence_of_residues(res, log)
 
-        if (res:='CLA') in residues_in_system:
+        if (res := 'CLA') in residues_in_system:
             update_ion: UpdateIonDf = self.get_ions(data, last_res, last_atom)
             self.updated_residues[res] = update_ion.update_df
             self.nr_atoms_residues[res] = \
@@ -615,10 +613,9 @@ class UpdateResidues:
             last_res = update_ion.last_res
             last_atom = update_ion.last_atom
         else:
-            log.warning(msg:=f'\nThere is no ion `{res}`! Check the charges\n')
-            self.info_msg += msg
+            self._check_existence_of_residues(res, log)
 
-        if (res:='POT') in residues_in_system:
+        if (res := 'POT') in residues_in_system:
             update_pot: UpdatePotDf = self.get_pots(data,
                                                     update_ion.last_res,
                                                     update_ion.last_atom)
@@ -628,6 +625,8 @@ class UpdateResidues:
                  'nr_residues': update_pot.nr_residues}
             last_res = update_pot.last_res
             last_atom = update_pot.last_atom
+        else:
+            self._check_existence_of_residues(res, log)
 
         if 'ODM' in data.residues_atoms.keys():
             update_odm: UpdateOdmDf = self.get_odm(data, last_res, last_atom)
@@ -635,6 +634,8 @@ class UpdateResidues:
             self.nr_atoms_residues['ODM'] = \
                 {'nr_atoms': update_odm.nr_atoms,
                  'nr_residues': update_odm.nr_residues}
+        else:
+            self._check_existence_of_residues(res, log)
 
         updated_aptes: dict[str, pd.DataFrame]  # All the updated aptes groups
         updated_aptes, self.new_hn3 = self.get_aptes(data)
@@ -646,6 +647,20 @@ class UpdateResidues:
         self.info_msg += '\tNumber of residues and atoms in each residue:\n'
         self.info_msg += json.dumps(self.nr_atoms_residues, indent=8)
         self.info_msg += '\n'
+
+    def _check_existence_of_residues(self,
+                                     res: str,
+                                     log: logger.logging.Logger
+                                     ) -> None:
+        """check the if the residues are exist"""
+        essentials_res: list[str] = ['SOL', 'D10']
+        optional_res: list[str] = ['CLA', 'OPT', 'ODN', 'ODM']
+        if res in essentials_res:
+            log.error(msg := f'\tError! The residue `{res}` does not exist!\n')
+            raise KeyError(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
+        if res in optional_res:
+            log.warning(msg := f'\nThere is no residues `{res}`!\n')
+            self.info_msg += msg
 
     def add_nanoparticles_to_updated_residues(self,
                                               data: 'IonizationSol',
