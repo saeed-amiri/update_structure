@@ -158,8 +158,7 @@ class FindHPosition(get_data.ProcessData):
             if 'vx' in df_nh.columns:
                 all_h_vels[ind] = self.__get_velocity(df_nh)
             v_mean, _ = self.__get_hbond_len_angle(v_nh1, v_nh2)
-            atoms_around_n: pd.DataFrame = \
-                self.__get_atoms_around_n(df_nh, v_mean, aptes)
+            atoms_around_n = self.__get_atoms_around_n(df_nh, v_mean, aptes)
             possible_loc = self.__get_possible_pos(v_nh1, v_nh2, v_mean, df_nh)
             h_loc = self.__find_h_place(atoms_around_n, possible_loc, v_mean)
             all_h_locs[ind] = h_loc
