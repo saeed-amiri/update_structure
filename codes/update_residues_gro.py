@@ -571,27 +571,25 @@ class UpdateResidues:
         residues_in_system: list[str] = list(data.residues_atoms.keys())
         self.info_msg += \
             f'\tThe residues in the system:\n\t`{residues_in_system}`\n'
-        if (res := 'SOL') in residues_in_system:
-            update_sol: UpdateSolDf = self.get_sol(data)
-            self.updated_residues[res] = update_sol.update_df
-            self.nr_atoms_residues[res] = \
-                {'nr_atoms': update_sol.nr_atoms,
-                 'nr_residues': update_sol.nr_residues}
-        else:
-            self._check_existence_of_residues(res, log)
+        
+        last_res: int = 0
+        last_atom: int = 0
+        for res in ['SOL', 'D10']:
+            if res in residues_in_system:
+                update_func: function = getattr(self, f'get_{res.lower()}')
+                func_args: tuple = \
+                    self._get_update_func_args(res, data, last_res, last_atom)
+                update_residue = update_func(*func_args)
+                self.updated_residues[res] = update_residue.update_df
+                self.nr_atoms_residues[res] = {
+                    'nr_atoms': update_residue.nr_atoms,
+                    'nr_residues': update_residue.nr_residues
+                }
 
-        if (res := 'D10') in residues_in_system:
-            update_oil: UpdateOilDf = self.get_oil(data,
-                                                   update_sol.last_res,
-                                                   update_sol.last_atom)
-            self.updated_residues[res] = update_oil.update_df
-            self.nr_atoms_residues[res] = \
-                {'nr_atoms': update_oil.nr_atoms,
-                 'nr_residues': update_oil.nr_residues}
-            last_res: int = update_oil.last_res
-            last_atom: int = update_oil.last_atom
-        else:
-            self._check_existence_of_residues(res, log)
+                last_res = update_residue.last_res
+                last_atom = update_residue.last_atom
+            else:
+                    self._check_existence_of_residues(res, log)
 
         if (res := 'ODN') in residues_in_system:
             update_oda: UpdateOdaDf = self.get_oda(data, last_res, last_atom)
@@ -647,6 +645,19 @@ class UpdateResidues:
         self.info_msg += '\tNumber of residues and atoms in each residue:\n'
         self.info_msg += json.dumps(self.nr_atoms_residues, indent=8)
         self.info_msg += '\n'
+
+    def _get_update_func_args(self,
+                              res: str,
+                              data: 'IonizationSol',  # All the data
+                              last_res: int,
+                              last_atom: int
+                               ) -> typing.Union[tuple['IonizationSol'], 
+                                                 tuple['IonizationSol',
+                                                       int,
+                                                       int]]:
+        if res == 'D10':
+            return data, last_res, last_atom
+        return data,
 
     def _check_existence_of_residues(self,
                                      res: str,
@@ -753,7 +764,7 @@ class UpdateResidues:
         return updated_sol
 
     @staticmethod
-    def get_oil(data: 'IonizationSol',  # All the data
+    def get_d10(data: 'IonizationSol',  # All the data
                 sol_last_res: int,  # Last residue index in water
                 sol_last_atom: int  # Last atom index in water
                 ) -> pd.DataFrame:
