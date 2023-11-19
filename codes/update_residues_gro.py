@@ -571,10 +571,10 @@ class UpdateResidues:
         residues_in_system: list[str] = list(data.residues_atoms.keys())
         self.info_msg += \
             f'\tThe residues in the system:\n\t`{residues_in_system}`\n'
-        
+
         last_res: int = 0
         last_atom: int = 0
-        for res in ['SOL', 'D10']:
+        for res in ['SOL', 'D10', 'ODN']:
             if res in residues_in_system:
                 update_func: function = getattr(self, f'get_{res.lower()}')
                 func_args: tuple = \
@@ -589,18 +589,7 @@ class UpdateResidues:
                 last_res = update_residue.last_res
                 last_atom = update_residue.last_atom
             else:
-                    self._check_existence_of_residues(res, log)
-
-        if (res := 'ODN') in residues_in_system:
-            update_oda: UpdateOdaDf = self.get_oda(data, last_res, last_atom)
-            self.updated_residues[res] = update_oda.update_df
-            self.nr_atoms_residues[res] = \
-                {'nr_atoms': update_oda.nr_atoms,
-                 'nr_residues': update_oda.nr_residues}
-            last_res = update_oda.last_res
-            last_atom = update_oda.last_atom
-        else:
-            self._check_existence_of_residues(res, log)
+                self._check_existence_of_residues(res, log)
 
         if (res := 'CLA') in residues_in_system:
             update_ion: UpdateIonDf = self.get_ions(data, last_res, last_atom)
@@ -651,13 +640,13 @@ class UpdateResidues:
                               data: 'IonizationSol',  # All the data
                               last_res: int,
                               last_atom: int
-                               ) -> typing.Union[tuple['IonizationSol'], 
-                                                 tuple['IonizationSol',
-                                                       int,
-                                                       int]]:
-        if res == 'D10':
-            return data, last_res, last_atom
-        return data,
+                              ) -> typing.Union[tuple['IonizationSol'],
+                                                tuple['IonizationSol',
+                                                      int,
+                                                      int]]:
+        if res == 'SOL':
+            return (data,)
+        return data, last_res, last_atom
 
     def _check_existence_of_residues(self,
                                      res: str,
@@ -776,7 +765,7 @@ class UpdateResidues:
         return updated_oils
 
     @staticmethod
-    def get_oda(data: 'IonizationSol',  # All the data
+    def get_odn(data: 'IonizationSol',  # All the data
                 oil_last_res: int,  # Last residue index in water
                 oil_last_atom: int  # Last atom index in water
                 ) -> UpdateOdaDf:
