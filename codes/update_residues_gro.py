@@ -612,6 +612,10 @@ class UpdateResidues:
                                                 tuple['IonizationSol',
                                                       int,
                                                       int]]:
+        """
+        return the args for each method based on the name of the
+        residue
+        """
         if res == 'SOL':
             return (data,)
         return data, last_res, last_atom
@@ -620,15 +624,27 @@ class UpdateResidues:
                                      res: str,
                                      log: logger.logging.Logger
                                      ) -> None:
-        """check the if the residues are exist"""
-        essentials_res: list[str] = ['SOL', 'D10']
-        optional_res: list[str] = ['CLA', 'OPT', 'ODN', 'ODM']
-        if res in essentials_res:
-            log.error(msg := f'\tError! The residue `{res}` does not exist!\n')
-            raise KeyError(f'{bcolors.FAIL}{msg}{bcolors.ENDC}')
-        if res in optional_res:
-            log.warning(msg := f'\nThere is no residues `{res}`!\n')
-            self.info_msg += msg
+        """Checks whether the specified residue exists."""
+        essential_residues = ['SOL', 'D10']
+        optional_residues = ['CLA', 'OPT', 'ODN', 'ODM']
+        error_message = ''
+
+        if res in essential_residues:
+            error_message = \
+                f'\tError! The essential residue `{res}` does not exist!\n'
+            log.error(error_message)
+        elif res in optional_residues:
+            warning_message = \
+                f'\nNote: The optional residue `{res}` is not present.\n'
+            log.warning(warning_message)
+            self.info_msg += warning_message
+        else:
+            error_message = \
+                f'\tError! Unexpected residue `{res}` encountered.\n'
+            log.error(error_message)
+
+        if error_message:
+            raise KeyError(f'{bcolors.FAIL}{error_message}{bcolors.ENDC}')
 
     def add_nanoparticles_to_updated_residues(self,
                                               data: 'IonizationSol',
