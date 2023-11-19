@@ -258,13 +258,13 @@ class ProcessData:
 
     def select_lowest_aptes(self,
                             unproton_aptes: dict[str, pd.DataFrame],
-                            unproton_aptes_ind: dict[str, int]
+                            unproton_aptes_ind: dict[str, list[int]]
                             ) -> tuple[dict[str, pd.DataFrame], ...]:
         """if the numbers of found aptes is more then NUMAPTES
         chose the lowest one
         """
         lowest_amino: dict[str, pd.DataFrame] = {}
-        lowest_amino_ind: dict[str, int] = {}
+        lowest_amino_ind: dict[str, list[int]] = {}
         if (aptes_nr := int(self.param['NUMAPTES'])) != -1:
             for apt, item in unproton_aptes.items():
                 if len(item) > aptes_nr:
@@ -287,7 +287,7 @@ class ProcessData:
 
     def get_aptes_unproto(self,
                           unprot_aptes_ind: dict[str, list[int]]  # Aptes index
-                          ) -> tuple[str, dict[str, pd.DataFrame]]:
+                          ) -> dict[str, pd.DataFrame]:
         """Get all atoms in the chains of the unprotonated APTES.
 
         Parameters:
