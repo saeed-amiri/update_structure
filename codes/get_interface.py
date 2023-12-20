@@ -189,7 +189,7 @@ class GetSurface:
         aptes_r: np.float64 = np.round(max_z-min_z, 3) / 2
         self.info_msg += \
             (f'\tThe center of mass of NP is: `{aptes_com}`\n'
-             f'\tThe radius of NP is: `{aptes_r:.3f}` but `{aptes_r*1.1:.3f}`'
+             f'\tThe radius of NP_z: `{aptes_r:.3f}` but `{aptes_r*1.1:.3f}`'
              ' is used for getting the interface\n')
         return aptes_com, aptes_r*1.1
 
