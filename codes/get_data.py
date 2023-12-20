@@ -622,18 +622,61 @@ class ProcessData:
     def calculate_maximum_np_radius(self) -> np.float64:
         """get the maximum radius of NP, since APTES are most outward,
         here only looking at APTES residues"""
+        box_dimensions = [
+            float(item) for item in self.pbc_box.split(' ') if item]
         np_diameters: list[np.float64] = []
+
         for aptes in self.param['aptes']:
             aptes_atoms: pd.DataFrame = self.residues_atoms[aptes]
-            diameter: list[float] = []  # Save the diameters in each direction
-            for xyz in ['x', 'y', 'z']:
-                diameter.append(
-                    aptes_atoms[xyz].max() - aptes_atoms[xyz].min())
-            np_diameters.append(np.max(diameter))
-        max_diameter: np.float64 = np.max(np_diameters)
+            atom_pairs = [(i, j) for i in range(len(aptes_atoms))
+                          for j in range(i+1, len(aptes_atoms))]
+
+            chunk_size = len(atom_pairs) // self.core_nr
+            chunks: list[tuple[int, int]] = [
+                atom_pairs[i:i + chunk_size] for i in
+                range(0, len(atom_pairs), chunk_size)]
+            max_diameter_xyz: list[float] = [0.0, 0.0, 0.0]
+
+            with multip.Pool(processes=self.core_nr) as pool:
+                results = pool.starmap(
+                    self.process_atom_pair,
+                    [(chunk, aptes_atoms, box_dimensions) for chunk in chunks])
+
+            max_diameter_xyz = [0.0, 0.0, 0.0]
+            for result in results:
+                for k in range(3):
+                    max_diameter_xyz[k] = max(max_diameter_xyz[k], result[k])
+            max_diameters = np.max(max_diameter_xyz)
+            np_diameters.append(max_diameters)
+        max_diameter: np.float64 = np.max(max_diameters)
         self.info_msg += \
             f'\tMaximum radius of between all NPs: `{max_diameter/2:.4f}`\n'
         return max_diameter
+
+    def process_atom_pair(self,
+                          chunk: list[tuple[int, int]],
+                          aptes_atoms: pd.DataFrame,
+                          box_dimensions: list[float]
+                          ) -> list[float]:
+        """Process a chunk of atom pairs."""
+        max_diameter_xyz: list[float] = [0.0, 0.0, 0.0]
+        for i, j in chunk:
+            for k, dim in enumerate(['x', 'y', 'z']):
+                distance = self.mic_distance(
+                    aptes_atoms.iloc[i][dim],
+                    aptes_atoms.iloc[j][dim],
+                    box_dimensions[k])
+                max_diameter_xyz[k] = max(max_diameter_xyz[k], distance)
+        return max_diameter_xyz
+
+    def mic_distance(self,
+                     coord1: float,
+                     coord2: float,
+                     box_length: float
+                     ) -> float:
+        """Calculate MIC-adjusted distance between two coordinates."""
+        raw_distance: float = abs(coord1 - coord2)
+        return min(raw_distance, box_length - raw_distance)
 
     def get_unique_residue_names(self) -> list[str]:
         """
