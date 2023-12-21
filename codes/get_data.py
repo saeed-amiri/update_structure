@@ -630,9 +630,10 @@ class ProcessData:
             aptes_atoms: pd.DataFrame = self.residues_atoms[aptes]
             atom_pairs = [(i, j) for i in range(len(aptes_atoms))
                           for j in range(i+1, len(aptes_atoms))]
+            atoms_arr = aptes_atoms[['x', 'y', 'z']].to_numpy(dtype=float)
 
             chunk_size = len(atom_pairs) // self.core_nr
-            chunks: list[tuple[int, int]] = [
+            chunks: list[list[tuple[int, int]]] = [
                 atom_pairs[i:i + chunk_size] for i in
                 range(0, len(atom_pairs), chunk_size)]
             max_diameter_xyz: list[float] = [0.0, 0.0, 0.0]
@@ -640,31 +641,30 @@ class ProcessData:
             with multip.Pool(processes=self.core_nr) as pool:
                 results = pool.starmap(
                     self.process_atom_pair,
-                    [(chunk, aptes_atoms, box_dimensions) for chunk in chunks])
+                    [(chunk, atoms_arr, box_dimensions) for chunk in chunks])
 
             max_diameter_xyz = [0.0, 0.0, 0.0]
             for result in results:
                 for k in range(3):
                     max_diameter_xyz[k] = max(max_diameter_xyz[k], result[k])
-            max_diameters = np.max(max_diameter_xyz)
-            np_diameters.append(max_diameters)
-        max_diameter: np.float64 = np.max(max_diameters)
+            np_diameters.append(np.max(max_diameter_xyz))
+        max_diameter: np.float64 = np.max(np_diameters)
         self.info_msg += \
-            f'\tMaximum radius of between all NPs: `{max_diameter/2:.4f}`\n'
+            f'\tMaximum radius of between all NPs: `{max_diameter/2:.3f}`\n'
         return max_diameter
 
     def process_atom_pair(self,
-                          chunk: list[tuple[int, int]],
-                          aptes_atoms: pd.DataFrame,
+                          chunk: list[list[tuple[int, int]]],
+                          atoms_arr: np.ndarray,
                           box_dimensions: list[float]
                           ) -> list[float]:
         """Process a chunk of atom pairs."""
         max_diameter_xyz: list[float] = [0.0, 0.0, 0.0]
         for i, j in chunk:
-            for k, dim in enumerate(['x', 'y', 'z']):
+            for k in range(3):
                 distance = self.mic_distance(
-                    aptes_atoms.iloc[i][dim],
-                    aptes_atoms.iloc[j][dim],
+                    atoms_arr[i, k],
+                    atoms_arr[j, k],
                     box_dimensions[k])
                 max_diameter_xyz[k] = max(max_diameter_xyz[k], distance)
         return max_diameter_xyz
