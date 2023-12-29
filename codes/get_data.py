@@ -329,7 +329,8 @@ class ProcessData:
             aptes_list: list[int] = []
             # Get the DataFrame for APTES atoms
             df_apt: pd.DataFrame = self.residues_atoms[aptes]
-
+            self.info_msg += ('\tThe total number of the '
+                              f'`{aptes}` in water phase is {len(df_apt)}\n')
             # Split the sol_phase_aptes into chunks for parallel processing
             chunk_size: int = len(item) // self.core_nr
             chunks = [item[i:i + chunk_size] for i in
@@ -409,6 +410,8 @@ class ProcessData:
         aptes_index_dict: dict[str, list[int]] = {}
         for aptes in self.param['aptes']:
             df_apt = self.residues_atoms[aptes]
+            self.info_msg += \
+                f'\tTotal number of `{aptes}` in system is `{len(df_apt)}`\n'
             df_i = df_apt[(df_apt['atom_name'] == 'N') &
                           (df_apt['z'].between(zrange[0], zrange[1]))]
             # Get the 'residue_number' values for the filtered atoms
