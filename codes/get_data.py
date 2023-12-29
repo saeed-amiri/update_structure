@@ -410,8 +410,12 @@ class ProcessData:
             df_apt = self.residues_atoms[aptes]
             self.info_msg += (f'\tTotal number of `{aptes}` in system is '
                              f'`{len(df_apt[df_apt["atom_name"] == "N"])}`\n')
+
             df_i = df_apt[(df_apt['atom_name'] == 'N') &
                           (df_apt['z'].between(zrange[0], zrange[1]))]
+            self.info_msg += (f'\tTotal number of `{aptes}` in water phase is '
+                             f'`{len(df_i)}`\n')
+
             # Get the 'residue_number' values for the filtered atoms
             aptes_index_dict[aptes] = df_i['residue_number'].values
         return aptes_index_dict
